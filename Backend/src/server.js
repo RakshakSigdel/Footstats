@@ -1,16 +1,20 @@
-//npm run dev
-import express from 'express';
-import dotenv from 'dotenv';
+const express=require('express');
+const dotenv=require('dotenv');
+const authRoutes=require('./routes/authRoutes');
 
 dotenv.config();
 
-const app = express();
+const app=express();
 app.use(express.json());
 
-const PORT = process.env.PORT || 5555;
+//Routes
+app.use('/api/auth',authRoutes);
 
 app.get('/',(req,res)=>{
-    res.send('Hello, Server is running');
-})
+    res.send('Welcome to Footstat API');
+});
 
-app.listen(PORT,()=> console.log(`Server is running on port ${PORT}`))
+const PORT=process.env.PORT||5555;
+app.listen(PORT,()=>{
+    console.log(`Server is running on port ${PORT}`);
+});

@@ -2,3 +2,7 @@
 /node_modules/
 /Frontend/node_modules/
 /Backend/node_modules/
+# Keep environment variables out of version control
+/Backend/.env
+
+/Backend/src/generated/prisma
