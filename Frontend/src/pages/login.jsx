@@ -1,6 +1,5 @@
-
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import sidebg from "/images/sidebg.jpg";
 
 export default function Login() {
@@ -8,6 +7,7 @@ export default function Login() {
     email: "",
     password: "",
   });
+  const navigate = useNavigate();
 
   const handleChange = (e) =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -15,6 +15,8 @@ export default function Login() {
   const handleSubmit = (e) => {
     e.preventDefault();
     console.log("Sign-in data:", formData);
+    // Redirect to home page after login
+    navigate("/home");
   };
 
   return (
@@ -24,7 +26,7 @@ export default function Login() {
           style={{ backgroundImage: `url(${sidebg})` }}
         >
           <div className="text-white p-36 text-center space-y-2">
-            <h1 className="text-5xl font-serif font-bold">Welcome to FootStats</h1>
+            <h1 className="text-5xl font-serif font-bold">Welcome To FootStats</h1>
           </div>
         </div>
 
@@ -55,13 +57,13 @@ export default function Login() {
             />
 
             <div className="text-right -mt-2 mb-2">
-              <a
-                href="#"
-                className="text-sm font-medium"
+             <Link
+               to= "/forgot-password"
+               className="text-sm font-medium"
                 style={{ color: "#dc2626" }}
               >
                 Forgot Password?
-              </a>
+              </Link>
             </div>
 
             <button

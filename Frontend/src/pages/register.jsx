@@ -25,7 +25,7 @@ export default function Register() {
         style={{ backgroundImage: `url(${sidebg})` }}
       >
         <div className="text-white p-36 text-center space-y-2">
-          <h1 className="text-5xl font-serif font-bold">Welcome to FootStats</h1>
+          <h1 className="text-5xl font-serif font-bold">Welcome To FootStats</h1>
         </div>
       </div>
 
