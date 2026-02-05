@@ -22,10 +22,12 @@ const getAllPlayers = async (req, res) => {
   }
 };
 
-const getMyProfile = (req, res) => {
+const getMyProfile = async (req, res) => {
   try {
-    const userId = req.user.id;
-    // Logic to get player's profile by userId would go here
+    const userId = req.user.userId;
+    console.log("Logged in user ID:", userId);
+    const profile = await PlayerService.getPlayerByUserId(userId);
+    res.status(200).json({ profile });
   } catch (error) {
     res
       .status(500)
