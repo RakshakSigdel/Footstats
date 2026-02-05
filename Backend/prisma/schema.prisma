@@ -14,12 +14,12 @@ datasource db {
 }
 
 model User{
-  userId        Int       @id @default(autoincrement())
+  userId        Int           @id @default(autoincrement())
   firstName     String
   lastName      String
-  email         String    @unique
+  email         String        @unique
   password      String
-  role          Role      @default(PLAYER)
+  role          Role          @default(PLAYER)
 
   dateOfBirth   DateTime?
   gender        String?
@@ -27,8 +27,14 @@ model User{
   location      String?
   profilePhoto  String?
   position      String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  preferredFoot preferredFoot?
+  matchesPlayed Int?
+  goalsScored   Int?
+  assist        Int?
+  tournaments   Tournament[]  @relation("TournamentCreator")
+
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
 
   @@map("users")
 }
@@ -36,4 +42,39 @@ model User{
 enum Role{
   PLAYER
   SUPERADMIN
+}
+
+enum preferredFoot{
+  LEFT
+  RIGHT
+  BOTH
+}
+model Tournament{
+  tournamentId  Int         @id @default(autoincrement())
+  name          String
+  description   String
+  logo          String?
+  location      String
+  entryFee      Decimal     @db.Decimal(10,2)
+  startDate     DateTime
+  endDate       DateTime
+  format        Format
+  createdBy     Int
+  creator       User        @relation("TournamentCreator", fields:[createdBy], references:[userId])
+  status        Status
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+
+enum Status{
+  UPCOMING
+  ONGOING
+  COMPLETED
+  CANCELLED
+}
+
+enum Format{
+  KNOCKOUT
+  LEAGUE
 }

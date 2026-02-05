@@ -25,6 +25,27 @@ class PlayerService {
     return players;
   }
 
+  static async getPlayerByUserId(userId) {
+    const player = await prisma.user.findUnique({
+      where: { userId: Number(userId) },
+      select: {
+        userId: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        dateOfBirth: true,
+        gender: true,
+        Phone: true,
+        location: true,
+        profilePhoto: true,
+        position: true,
+        createdAt: true,
+      },
+    });
+    if (!player) throw { status: 404, message: "Player not found" };
+    return player;
+  }
+
   static async getPlayerById(id) {
     const player = await prisma.user.findUnique({
       where: { userId: Number(id) },
