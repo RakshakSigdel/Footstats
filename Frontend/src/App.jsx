@@ -4,12 +4,11 @@ import Register from "./pages/register";
 import Login from "./pages/login";
 import ForgotPassword from './pages/forgotPassword';
 import ResetPassword from './pages/resetPassword';
-import Home from './pages/home';
-import Tournaments from './pages/tournaments';
-import CreateClub from './components/CreateClub';
-import EditClub from './components/EditClub';
-import CreateTournament from './components/HostTournament';
-import EditTournament from './components/EditTournament';
+import Dashboard from './pages/Dashboard';
+import MyClubs from './pages/MyClubs';
+import Tournaments from './pages/Tournaments';
+import Sidebar from './components/Sidebar';
+import Topbar from './components/Topbar';
 
 function App() {
   const [isCreateClubOpen, setIsCreateClubOpen] = useState(false);
@@ -61,8 +60,12 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
-        <Route path="/home" element={<Home onOpenCreateClub={() => setIsCreateClubOpen(true)} onOpenEditClub={openEditClub} />} />
-        <Route path="/tournaments" element={<Tournaments onOpenCreateTournament={() => setIsCreateTournamentOpen(true)} onOpenEditTournament={openEditTournament} />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/clubs" element={<MyClubs />} />
+        <Route path="/my-clubs" element={<MyClubs />} />
+        <Route path="/tournaments" element={<Tournaments />} />
+        <Route path="/sidebar" element={<Sidebar />} />
+        <Route path="/topbar" element={<Topbar />} />
       </Routes>
 
       <CreateClub 
