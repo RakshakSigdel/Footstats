@@ -1,14 +1,22 @@
 import React, { useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import Register from "./pages/register";
-import Login from "./pages/login";
-import ForgotPassword from './pages/forgotPassword';
-import ResetPassword from './pages/resetPassword';
+//Authentication
+import Register from "./pages/Authentication/register";
+import Login from "./pages/Authentication/login";
+import ForgotPassword from './pages/Authentication/forgotPassword';
+import ResetPassword from './pages/Authentication/resetPassword';
+//Other Pages
 import Dashboard from './pages/Dashboard';
+import Home from './pages/home'
 import MyClubs from './pages/MyClubs';
 import Tournaments from './pages/Tournaments';
-import Sidebar from './components/Sidebar';
-import Topbar from './components/Topbar';
+import Sidebar from './components/Global/Sidebar';
+import Topbar from './components/Global/Topbar';
+//Model Form
+import CreateClub from './components/Club/CreateClub';
+import EditClub from './components/Club/EditClub';
+import CreateTournament from './components/Tournament/HostTournament'
+import EditTournament from './components/Tournament/EditTournament'
 
 function App() {
   const [isCreateClubOpen, setIsCreateClubOpen] = useState(false);
@@ -61,6 +69,7 @@ function App() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/dashboard" element={<Dashboard />} />
+        {/* <Route path="/home" element={<Home />} /> */}
         <Route path="/clubs" element={<MyClubs />} />
         <Route path="/my-clubs" element={<MyClubs />} />
         <Route path="/tournaments" element={<Tournaments />} />

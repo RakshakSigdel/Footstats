@@ -18,6 +18,9 @@ export default function Login() {
     // Redirect to home page after login
     navigate("/home");
   };
+  const handleRoute =(e) =>{
+    navigate("/dashboard")
+  }
 
   return (
       <div className=" flex flex-row min-h-screen">
@@ -69,6 +72,7 @@ export default function Login() {
             <button
               type="submit"
               className="w-full h-12 bg-black text-white rounded-xl font-semibold flex items-center justify-center gap-2 hover:bg-gray-800 transition"
+              onClick={handleRoute}
             >
               Sign In →
             </button>
