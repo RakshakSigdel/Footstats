@@ -1,0 +1,29 @@
+{
+  "name": "footstats",
+  "version": "1.0.0",
+  "description": "A full-stack application with React frontend and Express backend.",
+  "private": true,
+  "workspaces": [
+    "Backend",
+    "Frontend"
+  ],
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "concurrently \"npm run dev --workspace Backend\" \"npm run dev --workspace Frontend\"",
+    "start": "concurrently \"npm run start --workspace Backend\" \"npm run preview --workspace Frontend\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/RakshakSigdel/Footstats.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/RakshakSigdel/Footstats/issues"
+  },
+  "homepage": "https://github.com/RakshakSigdel/Footstats#readme",
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}
