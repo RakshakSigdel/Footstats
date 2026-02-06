@@ -1,7 +1,30 @@
+import { useState } from "react";
 import Sidebar from "../components/Global/Sidebar";
 import Topbar from "../components/Global/Topbar";
+import CreateClub from "../components/Club/CreateClub";
+import EditClub from "../components/Club/EditClub";
 
 export default function MyClubs() {
+  const [isCreateClubOpen, setIsCreateClubOpen] = useState(false);
+  const [isEditClubOpen, setIsEditClubOpen] = useState(false);
+  const [selectedClubData, setSelectedClubData] = useState(null);
+
+  const handleCreateClub = (formData) => {
+    console.log("Club created:", formData);
+    setIsCreateClubOpen(false);
+    // Add API call here to save club to backend
+  };
+
+  const handleEditClub = (formData) => {
+    console.log("Club updated:", formData);
+    setIsEditClubOpen(false);
+    // Add API call here to update club in backend
+  };
+
+  const openEditClub = (clubData) => {
+    setSelectedClubData(clubData);
+    setIsEditClubOpen(true);
+  };
   return (
     <div className="flex min-h-screen bg-gray-50">
       {/* Fixed Sidebar */}
@@ -24,20 +47,42 @@ export default function MyClubs() {
                 Join or create football clubs
               </p>
             </div>
-            <button className="bg-slate-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-800 transition-colors flex items-center gap-2">
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
+            <div className="flex items-center gap-3">
+              <button 
+                onClick={() => setIsCreateClubOpen(true)}
+                className="bg-slate-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-800 transition-colors flex items-center gap-2"
               >
-                <line x1="12" y1="5" x2="12" y2="19" />
-                <line x1="5" y1="12" x2="19" y2="12" />
-              </svg>
-              Create Club
-            </button>
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <line x1="12" y1="5" x2="12" y2="19" />
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+                Create Club
+              </button>
+              <button 
+                onClick={() => openEditClub({ name: "Test Club", location: "Kathmandu" })}
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors flex items-center gap-2"
+              >
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                </svg>
+                Edit Club
+              </button>
+            </div>
           </div>
 
           <div className="mb-8">
@@ -211,6 +256,19 @@ export default function MyClubs() {
           </div>
         </main>
       </div>
+
+      <CreateClub
+        isOpen={isCreateClubOpen}
+        onClose={() => setIsCreateClubOpen(false)}
+        onCreateClub={handleCreateClub}
+      />
+
+      <EditClub
+        isOpen={isEditClubOpen}
+        onClose={() => setIsEditClubOpen(false)}
+        onEditClub={handleEditClub}
+        clubData={selectedClubData}
+      />
     </div>
   );
 }
