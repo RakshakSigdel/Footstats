@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import sidebg from "/images/sidebg.jpg";
+import { login } from "../../services/api.auth";
 
 export default function Login() {
   const [formData, setFormData] = useState({
@@ -12,26 +13,30 @@ export default function Login() {
   const handleChange = (e) =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Sign-in data:", formData);
-    // Redirect to home page after login
-    navigate("/home");
+    console.log("Sign In Button Pressed");
+    try {
+      const data = await login(formData.email, formData.password);
+      localStorage.setItem("token", data.token);
+      navigate("/dashboard");
+    } catch (err) {
+      console.log(err.message);
+    }
   };
-  const handleRoute =(e) =>{
-    navigate("/dashboard")
-  }
-
+  
   return (
-      <div className=" flex flex-row min-h-screen">
-        <div
-          className="w-1/2 bg-cover bg-center flex items-center justify-center overflow-hidden"
-          style={{ backgroundImage: `url(${sidebg})` }}
-        >
-          <div className="text-white p-36 text-center space-y-2">
-            <h1 className="text-5xl font-serif font-bold">Welcome To FootStats</h1>
-          </div>
+    <div className=" flex flex-row min-h-screen">
+      <div
+        className="w-1/2 bg-cover bg-center flex items-center justify-center overflow-hidden"
+        style={{ backgroundImage: `url(${sidebg})` }}
+      >
+        <div className="text-white p-36 text-center space-y-2">
+          <h1 className="text-5xl font-serif font-bold">
+            Welcome To FootStats
+          </h1>
         </div>
+      </div>
 
       <div className="w-1/2 flex items-center justify-center p-12">
         <div className="  bg-gray-100 rounded-2xl p-10 w-full max-w-md shadow-lg">
@@ -60,9 +65,9 @@ export default function Login() {
             />
 
             <div className="text-right -mt-2 mb-2">
-             <Link
-               to= "/forgot-password"
-               className="text-sm font-medium"
+              <Link
+                to="/forgot-password"
+                className="text-sm font-medium"
                 style={{ color: "#dc2626" }}
               >
                 Forgot Password?
@@ -72,7 +77,6 @@ export default function Login() {
             <button
               type="submit"
               className="w-full h-12 bg-black text-white rounded-xl font-semibold flex items-center justify-center gap-2 hover:bg-gray-800 transition"
-              onClick={handleRoute}
             >
               Sign In →
             </button>
