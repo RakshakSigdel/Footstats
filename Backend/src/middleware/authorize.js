@@ -53,4 +53,39 @@ const authorizeTournamentOwnership = async (req, res, next) => {
   }
 };
 
-module.exports = { authorizeOwnership, authorizeTournamentOwnership };
+const authorizeClubOwnership = async (req, res, next) => {
+  const loggedInUserId = req.user.userId;
+  const clubId = parseInt(req.params.id);
+
+  console.log("Logged in user ID:", loggedInUserId);
+  console.log("Club ID:", clubId);
+
+  try {
+    const club = await prisma.club.findUnique({
+      where: { clubId: clubId },
+    });
+
+    if (!club) {
+      return res.status(404).json({ message: "Club not found" });
+    }
+
+    if (req.user.role === "SUPERADMIN") {
+      console.log("User is SUPERADMIN  " + req.user.role);
+      return next();
+    }
+
+    // Club creator can update/delete their own club
+    if (club.createdBy === loggedInUserId) {
+      return next();
+    }
+
+    return res.status(403).json({
+      message: "Forbidden: You do not have permission to access this resource",
+    });
+  } catch (error) {
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+
+module.exports = { authorizeOwnership, authorizeTournamentOwnership, authorizeClubOwnership };
