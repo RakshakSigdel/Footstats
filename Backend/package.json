@@ -9,7 +9,7 @@
     "dev": "nodemon src/server.js",
     "seed":"npx prisma db seed",
     "reset":"npx prisma migrate reset --force && npx prisma db seed",
-     "dev:full": "npx prisma migrate dev && npx prisma db seed && nodemon src/index.js"
+     "dev:full": "npx prisma migrate dev && npx prisma db seed && nodemon src/server.js"
   },
   "keywords": [],
   "author": "",
