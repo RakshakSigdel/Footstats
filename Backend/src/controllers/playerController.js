@@ -1,4 +1,4 @@
-const { PlayerService } = require("../services/playerServices");
+const { PlayerService } = require("../services/playerService");
 
 // const addPlayer = (req, res) => {
 //     try{
@@ -60,16 +60,18 @@ const updatePlayerById = async (req, res) => {
       profilePhoto,
       position,
     } = req.body;
-    const updatedPlayer = await PlayerService.updatePlayer(id, {
-      firstName,
-      lastName,
-      dateOfBirth,
-      gender,
-      Phone,
-      location,
-      profilePhoto,
-      position,
-    });
+    const updateData = {};
+
+    if (firstName !== undefined) updateData.firstName = firstName;
+    if (lastName !== undefined) updateData.lastName = lastName;
+    if (dateOfBirth !== undefined) updateData.dateOfBirth = dateOfBirth;
+    if (gender !== undefined) updateData.gender = gender;
+    if (Phone !== undefined) updateData.Phone = Phone;
+    if (location !== undefined) updateData.location = location;
+    if (profilePhoto !== undefined) updateData.profilePhoto = profilePhoto;
+    if (position !== undefined) updateData.position = position;
+
+    const updatedPlayer = await PlayerService.updatePlayer(id, updateData);
 
     res.status(200).json({ updatedPlayer });
   } catch (error) {

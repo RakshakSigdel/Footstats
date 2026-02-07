@@ -1,17 +1,17 @@
-import { PrismaClient } from "@prisma/client";
+const { PrismaClient } = require("@prisma/client");
 
 const prisma = new PrismaClient();
 
-export const authorizeOwnership = (req, res, next) => {
-  const loggedInUser = req.user.role; // decoded token: { id, role }
-  const loggedInUserId = req.params.id;
-  const resourceOwnerId = req.params.id;
+const authorizeOwnership = (req, res, next) => {
+  const loggedInUserId = req.user.userId; // decoded token: { userId, email, role }
+  const loggedInRole = req.user.role;
+  const resourceOwnerId = parseInt(req.params.id);
 
   // Super Admin can do anything
-  if (loggedInUser.role === "SUPERADMIN") return next();
+  if (loggedInRole === "SUPERADMIN") return next();
 
   // Player can only update/delete their own account
-  if (loggedInUser === "PLAYER" && loggedInUserId === resourceOwnerId) {
+  if (loggedInRole === "PLAYER" && loggedInUserId === resourceOwnerId) {
     return next();
   }
   return res.status(403).json({
@@ -19,7 +19,7 @@ export const authorizeOwnership = (req, res, next) => {
   });
 };
 
-export const authorizeTournamentOwnership = async (req, res, next) => {
+const authorizeTournamentOwnership = async (req, res, next) => {
   const loggedInUserId = req.user.userId;
   const tournamentId = parseInt(req.params.id);
 
@@ -52,3 +52,5 @@ export const authorizeTournamentOwnership = async (req, res, next) => {
     return res.status(500).json({ message: "Internal server error" });
   }
 };
+
+module.exports = { authorizeOwnership, authorizeTournamentOwnership };

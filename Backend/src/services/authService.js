@@ -2,7 +2,6 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const jwt = require("jsonwebtoken");
 const { hashPassword, comparePassword } = require("../utils/hashPassword");
-const { hash } = require("bcrypt");
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
@@ -45,17 +44,18 @@ static async login({email,password}){
         throw{ status:400, message: "Invalid password!!"};
     }
     const token= jwt.sign(
-        {userId:user.id,email:user.email},
+        {userId:user.userId,email:user.email,role:user.role},
         JWT_SECRET,
         {expiresIn:'12h'}   
     );
     return {
         token,
         user: {
-            id:user.id,
+            id:user.userId,
             firstName: user.firstName,
             lastName: user.lastName,
             email: user.email,
+            role: user.role,
         }
     }
 }
