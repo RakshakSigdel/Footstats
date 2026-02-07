@@ -32,7 +32,7 @@ model User{
   goalsScored   Int?
   assist        Int?
   tournaments   Tournament[]  @relation("TournamentCreator")
-
+  clubs         Club[]        @relation("ClubCreator")
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 
@@ -77,4 +77,18 @@ enum Status{
 enum Format{
   KNOCKOUT
   LEAGUE
+}
+
+model Club{
+  clubId        Int         @id @default(autoincrement())
+  name          String
+  description   String
+  logo          String?
+  location      String
+  foundedDate   DateTime
+  createdBy     Int
+  creator       User        @relation("ClubCreator", fields:[createdBy], references:[userId])
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
 }
