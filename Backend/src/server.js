@@ -1,5 +1,6 @@
 const express=require('express');
 const dotenv=require('dotenv');
+const cors = require('cors');
 
 //Routes Import
 const authRoutes=require('./routes/authRoutes');
@@ -10,6 +11,7 @@ const clubRoutes = require('./routes/clubRoute');
 dotenv.config();
 
 const app=express();
+app.use(cors());
 app.use(express.json());
 
 //Routes
