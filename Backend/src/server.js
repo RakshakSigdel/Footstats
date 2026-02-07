@@ -1,7 +1,7 @@
 const express=require('express');
 const dotenv=require('dotenv');
 const authRoutes=require('./routes/authRoutes');
-const platerRoutes = require('./routes/playerRoute');
+const playerRoutes = require('./routes/playerRoute');
 dotenv.config();
 
 const app=express();
@@ -9,7 +9,7 @@ app.use(express.json());
 
 //Routes
 app.use('/api/auth',authRoutes);
-app.use('/api',platerRoutes)
+app.use('/api/players',playerRoutes);
 
 app.get('/',(req,res)=>{
     res.send('Welcome to Footstat API');

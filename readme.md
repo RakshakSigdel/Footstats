@@ -35,6 +35,15 @@ The project uses `concurrently` to run both frontend and backend simultaneously 
    npx prisma generate
    cd ..
    ```
+4. Seed the data
+   4.1 Migrations + seed + start server
+      ```bash
+      npm run dev:full
+    ```
+   4.2 Fresh sample data
+      ```bash
+      npm run seed
+      ```
 
 4. Start both frontend and backend in development mode:
    ```bash
