@@ -40,7 +40,7 @@ const EditTournament = ({ isOpen, onClose, onEditTournament, tournamentData }) =
             onClick={onClose}
             className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-3xl leading-none"
           >
-            ×
+            
           </button>
         </div>
 
