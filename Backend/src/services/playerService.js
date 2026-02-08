@@ -39,6 +39,9 @@ class PlayerService {
         location: true,
         profilePhoto: true,
         position: true,
+        matchesPlayed: true,
+        goalsScored: true,
+        assist: true,
         createdAt: true,
       },
     });

@@ -1,7 +1,30 @@
+import { useEffect, useState } from "react";
 import Sidebar from "../components/Global/Sidebar";
 import Topbar from "../components/Global/Topbar";
+import { getMyProfile } from "../services/api.player";
 
 export default function Dashboard() {
+  const [profile, setProfile] = useState(null);
+
+  useEffect(() => {
+    let isCurrent = true;
+    (async () => {
+      try {
+        const data = await getMyProfile();
+        if (isCurrent) {
+          setProfile(data);
+        }
+      } catch (err) {
+        if (isCurrent) {
+          console.log("Couldnot load profile", err);
+        }
+      }
+    })();
+    
+    return () => {
+      isCurrent = false;
+    };
+  }, []);
   return (
     <div className="flex min-h-screen bg-gray-50">
       {/* Fixed Sidebar */}
@@ -20,7 +43,7 @@ export default function Dashboard() {
           {/* Header / Welcome */}
           <div className="mb-6">
             <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-1">
-              Welcome back, Rajeshi!
+              Welcome back, {profile?.firstName}!
             </h2>
             <p className="text-sm md:text-base text-gray-500">
               Here's what's happening with your football journey
@@ -52,7 +75,7 @@ export default function Dashboard() {
                 </span>
               </div>
               <p className="text-xs text-gray-600 mb-0.5">Appearances</p>
-              <h3 className="text-2xl font-bold text-gray-900">300</h3>
+              <h3 className="text-2xl font-bold text-gray-900">{profile?.matchesPlayed || 0}</h3>
               <p className="text-xs text-gray-500 mt-0.5">Till date</p>
             </div>
 
@@ -77,7 +100,7 @@ export default function Dashboard() {
                 </span>
               </div>
               <p className="text-xs text-gray-600 mb-0.5">Total Goals</p>
-              <h3 className="text-2xl font-bold text-gray-900">24</h3>
+              <h3 className="text-2xl font-bold text-gray-900">{profile?.goalsScored || 0}</h3>
               <p className="text-xs text-gray-500 mt-0.5">Till date</p>
             </div>
 
@@ -105,7 +128,7 @@ export default function Dashboard() {
                 </span>
               </div>
               <p className="text-xs text-gray-600 mb-0.5">Assists</p>
-              <h3 className="text-2xl font-bold text-gray-900">18</h3>
+              <h3 className="text-2xl font-bold text-gray-900">{profile?.assist || 0}</h3>
               <p className="text-xs text-gray-500 mt-0.5">Till date</p>
             </div>
 
