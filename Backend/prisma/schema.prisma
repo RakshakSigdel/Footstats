@@ -33,6 +33,7 @@ model User{
   assist        Int?
   tournaments   Tournament[]  @relation("TournamentCreator")
   clubs         Club[]        @relation("ClubCreator")
+  requests      Request[]
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 
@@ -88,7 +89,26 @@ model Club{
   foundedDate   DateTime
   createdBy     Int
   creator       User        @relation("ClubCreator", fields:[createdBy], references:[userId])
+  requests      Request[]
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
 
+}
+
+model Request{
+  requestId        Int         @id @default(autoincrement())
+  userId           Int          
+  clubId           Int
+  status           RequestStatus  @default(PENDING)
+  dateRequested    DateTime    @default(now())
+  user             User        @relation(fields: [userId], references: [userId])
+  club             Club        @relation(fields: [clubId], references: [clubId])
+
+  @@unique([userId, clubId])
+}
+
+enum RequestStatus{
+  PENDING
+  APPROVED
+  REJECTED
 }

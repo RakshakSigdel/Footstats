@@ -6,6 +6,7 @@ const authRoutes=require('./routes/authRoutes');
 const playerRoutes = require('./routes/playerRoute');
 const tournamentRoutes = require('./routes/tournamentRoutes');
 const clubRoutes = require('./routes/clubRoute');
+const requestRoutes = require('./routes/requestRoutes');
 
 dotenv.config();
 
@@ -17,6 +18,7 @@ app.use('/api/auth',authRoutes);
 app.use('/api/players',playerRoutes);
 app.use('/api/tournaments',tournamentRoutes);
 app.use('/api/clubs', clubRoutes);
+app.use('/api/requests', requestRoutes);
 app.get('/',(req,res)=>{
     res.send('Welcome to Footstat API');
 });
