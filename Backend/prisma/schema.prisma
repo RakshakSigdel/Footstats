@@ -13,102 +13,215 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User{
-  userId        Int           @id @default(autoincrement())
-  firstName     String
-  lastName      String
-  email         String        @unique
-  password      String
-  role          Role          @default(PLAYER)
+// =========================
+// USER MODEL
+// =========================
+model User {
+  userId    Int    @id @default(autoincrement())
+  firstName String
+  lastName  String
+  email     String @unique
+  password  String
+  role      Role   @default(PLAYER)
 
   dateOfBirth   DateTime?
   gender        String?
   Phone         String?
   location      String?
   profilePhoto  String?
-  position      String?
+  // position      String?
   preferredFoot preferredFoot?
-  matchesPlayed Int?
-  goalsScored   Int?
-  assist        Int?
-  tournaments   Tournament[]  @relation("TournamentCreator")
-  clubs         Club[]        @relation("ClubCreator")
+  // matchesPlayed Int?
+  // goalsScored   Int?
+  // assist        Int?
+  tournaments   Tournament[]   @relation("TournamentCreator")
+  clubs         Club[]         @relation("ClubCreator")
   requests      Request[]
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  userClubs     UserClub[]
 
   @@map("users")
 }
 
-enum Role{
+enum Role {
   PLAYER
   SUPERADMIN
 }
 
-enum preferredFoot{
+enum preferredFoot {
   LEFT
   RIGHT
   BOTH
 }
-model Tournament{
-  tournamentId  Int         @id @default(autoincrement())
-  name          String
-  description   String
-  logo          String?
-  location      String
-  entryFee      Decimal     @db.Decimal(10,2)
-  startDate     DateTime
-  endDate       DateTime
-  format        Format
-  createdBy     Int
-  creator       User        @relation("TournamentCreator", fields:[createdBy], references:[userId])
-  status        Status
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+
+// =========================
+// CLUB MODEL
+// =========================
+model Club {
+  clubId      Int        @id @default(autoincrement())
+  name        String
+  description String
+  logo        String?
+  location    String
+  foundedDate DateTime
+  createdBy   Int
+  creator     User       @relation("ClubCreator", fields: [createdBy], references: [userId])
+  requests    Request[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  userClubs   UserClub[]
+  schedules   Schedule[]
 }
 
+model Request {
+  requestId     Int           @id @default(autoincrement())
+  userId        Int
+  clubId        Int
+  status        RequestStatus @default(PENDING)
+  dateRequested DateTime      @default(now())
+  user          User          @relation(fields: [userId], references: [userId])
+  club          Club          @relation(fields: [clubId], references: [clubId])
 
-enum Status{
+  @@unique([userId, clubId])
+}
+
+enum RequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+// =========================
+// USERCLUB MODEL
+// =========================
+model UserClub {
+  userClubId Int @id @default(autoincrement())
+
+  user   User @relation(fields: [userId], references: [userId])
+  userId Int
+
+  club   Club @relation(fields: [clubId], references: [clubId])
+  clubId Int
+
+  position      String?
+  // matchesPlayed Int?
+  // goalsScored   Int?
+  // assist        Int?
+  JoinedAt      DateTime @default(now())
+
+  @@unique([userId, clubId])
+}
+
+// =========================
+// TOURNAMENT MODEL
+// =========================
+model Tournament {
+  tournamentId Int      @id @default(autoincrement())
+  name         String
+  description  String
+  logo         String?
+  location     String
+  entryFee     Decimal  @db.Decimal(10, 2)
+  startDate    DateTime
+  endDate      DateTime
+  format       Format
+  createdBy    Int
+  creator      User     @relation("TournamentCreator", fields: [createdBy], references: [userId])
+  status       Status
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+enum Status {
   UPCOMING
   ONGOING
   COMPLETED
   CANCELLED
 }
 
-enum Format{
+enum Format {
   KNOCKOUT
   LEAGUE
 }
 
-model Club{
-  clubId        Int         @id @default(autoincrement())
-  name          String
-  description   String
-  logo          String?
-  location      String
-  foundedDate   DateTime
-  createdBy     Int
-  creator       User        @relation("ClubCreator", fields:[createdBy], references:[userId])
-  requests      Request[]
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+// =========================
+// SCHEDULE MODEL
+// =========================
+model Schedule {
+  scheduleId     Int            @id @default(autoincrement())
+  scheduleStatus ScheduleStatus
+  scheduleType   String
+  location       String
+  date           DateTime
+  // teamOne Club @relation(fields:[teamOneId],references[clubId])
+  // teamOneId Int 
+  teamOne        Club           @relation(fields: [teamOneId], references: [clubId])
+  teamOneId      Int
+  teamTwo        Club           @relation(fields: [teamTwoId], references: [clubId])
+  teamTwoId      Int
 
+  match Match?
 }
 
-model Request{
-  requestId        Int         @id @default(autoincrement())
-  userId           Int          
-  clubId           Int
-  status           RequestStatus  @default(PENDING)
-  dateRequested    DateTime    @default(now())
-  user             User        @relation(fields: [userId], references: [userId])
-  club             Club        @relation(fields: [clubId], references: [clubId])
-
-  @@unique([userId, clubId])
+enum ScheduleStatus {
+  UPCOMING
+  FINISHED
+  ONGOING
+  CANCELLED
 }
 
-enum RequestStatus{
-  PENDING
-  APPROVED
-  REJECTED
+model Match {
+  matchId    Int      @id @default(autoincrement())
+  schedule   Schedule @relation(fields: [scheduleId], references: [scheduleId])
+  scheduleId Int      @unique
+
+  teamOneGoals Int
+  teamTwoGoals Int
+
+  playedAt DateTime
+
+  events  MatchEvent[]
+  lineups MatchLineup[]
+}
+
+model MatchEvent {
+  matchEventId Int   @id @default(autoincrement())
+  match        Match @relation(fields: [matchId], references: [matchId])
+  matchId      Int
+
+  user   User @relation(fields: [userId], references: [userId])
+  userId Int
+
+  assistBy   User?   @relation("AssistPlayer", fields: [assistById], references: [userId])
+  assistById Int?
+
+  club   Club @relation(fields: [clubId], references: [clubId])
+  clubId Int
+
+  eventType MatchEventType
+  minute    Int
+}
+
+enum MatchEventType {
+  GOAL
+  ASSIST
+  YELLOW_CARD
+  RED_CARD
+  SUBSTITUTION
+}
+
+model MatchLineup {
+  id      Int   @id @default(autoincrement())
+  match   Match @relation(fields: [matchId], references: [matchId])
+  matchId Int
+
+  user   User @relation(fields: [userId], references: [userId])
+  userId Int
+
+  club   Club @relation(fields: [clubId], references: [clubId])
+  clubId Int
+
+  isStarter     Boolean
+  minutesPlayed Int
 }

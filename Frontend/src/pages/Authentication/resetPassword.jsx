@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import sidebg from "/images/sidebg.jpg";
+import sidebg from "/images/sidebg.jpeg";
 import AuthenticationSideImage from "../../components/Design/authenticationsideimage";
 
 export default function ResetPassword() {
