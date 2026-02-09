@@ -1,8 +1,10 @@
 import { useState } from "react";
 import sidebg from "/images/sidebg.jpg";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { register } from "../../services/api.auth";
 
 export default function Register() {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -13,8 +15,10 @@ export default function Register() {
   const handleChange = (e) =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    await register(formData.firstName, formData.lastName, formData.email, formData.password);
+    navigate("/login");
     console.log("Form submitted:", formData);
   };
 
@@ -25,7 +29,9 @@ export default function Register() {
         style={{ backgroundImage: `url(${sidebg})` }}
       >
         <div className="text-white p-36 text-center space-y-2">
-          <h1 className="text-5xl font-serif font-bold">Welcome To FootStats</h1>
+          <h1 className="text-5xl font-serif font-bold">
+            Welcome To FootStats
+          </h1>
         </div>
       </div>
 
@@ -64,7 +70,11 @@ export default function Register() {
 
           <p className="text-center text-sm text-gray-600 mt-6">
             Already have an account?{" "}
-            <Link to="/login" className="font-medium" style={{ color: "#1d4ed8" }}>
+            <Link
+              to="/login"
+              className="font-medium"
+              style={{ color: "#1d4ed8" }}
+            >
               Sign in
             </Link>
           </p>

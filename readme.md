@@ -10,7 +10,58 @@ A full-stack application with React frontend and Express backend.
 
 ## Getting Started
 
-### Backend Setup
+### Quick Start (Recommended)
+
+The project uses `concurrently` to run both frontend and backend simultaneously from the root directory.
+
+1. Install all dependencies (root, backend, and frontend):
+   ```bash
+   npm install
+   ```
+
+2. Set up environment variables:
+   - Create a `.env` file in the Backend directory
+   - Add required environment variables:
+     ```
+     DATABASE_URL="your_database_connection_string"
+     JWT_SECRET="your_jwt_secret"
+     PORT=5555
+     ```
+
+3. Run Prisma migrations (from Backend directory):
+   ```bash
+   cd Backend
+   npx prisma migrate dev
+   npx prisma generate
+   cd ..
+   ```
+4. Seed the data
+   4.1 Migrations + seed + start server
+      ```bash
+      npm run dev:full
+    ```
+   4.2 Fresh sample data
+      ```bash
+      npm run seed
+      ```
+
+4. Start both frontend and backend in development mode:
+   ```bash
+   npm run dev
+   ```
+   
+   Or for production:
+   ```bash
+   npm run start
+   ```
+
+The backend will run on `http://localhost:5555` and the frontend on `http://localhost:5173`.
+
+### Manual Setup (Alternative)
+
+If you prefer to run the frontend and backend separately:
+
+#### Backend Setup
 
 1. Navigate to the Backend directory:
    ```bash
@@ -22,38 +73,20 @@ A full-stack application with React frontend and Express backend.
    npm install
    ```
 
-3. Set up environment variables:
-   - Create a `.env` file in the Backend directory
-   - Add required environment variables:
-     ```
-     DATABASE_URL="your_database_connection_string"
-     JWT_SECRET="your_jwt_secret"
-     PORT=5555
-     ```
+3. Set up environment variables (same as above)
 
 4. Run Prisma migrations:
    ```bash
    npx prisma migrate dev
-   ```
-
-5. Generate Prisma Client:
-   ```bash
    npx prisma generate
    ```
 
-6. Start the development server:
+5. Start the server:
    ```bash
    npm run dev
    ```
-   
-   Or for production:
-   ```bash
-   npm start
-   ```
 
-The backend will run on `http://localhost:5555` (or your configured PORT).
-
-### Frontend Setup
+#### Frontend Setup
 
 1. Navigate to the Frontend directory:
    ```bash
@@ -70,9 +103,12 @@ The backend will run on `http://localhost:5555` (or your configured PORT).
    npm run dev
    ```
 
-The frontend will run on `http://localhost:5173` (default Vite port).
-
 ## Available Scripts
+
+### Root Directory
+- `npm run dev` - Start both frontend and backend in development mode
+- `npm run start` - Start both frontend (preview) and backend in production mode
+- `npm install` - Install dependencies for all workspaces (root, backend, and frontend)
 
 ### Backend
 - `npm start` - Run the server in production mode

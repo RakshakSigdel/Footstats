@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 
-const EditTournament = ({ isOpen, onClose, onEditTournament, tournamentData }) => {
-  const [formData, setFormData] = useState(tournamentData || {
+const CreateTournament = ({ isOpen, onClose, onCreateTournament }) => {
+  const [formData, setFormData] = useState({
     tournamentName: '',
     description: '',
     location: '',
@@ -24,34 +24,47 @@ const EditTournament = ({ isOpen, onClose, onEditTournament, tournamentData }) =
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onEditTournament(formData);
+    onCreateTournament(formData);
+    setFormData({
+      tournamentName: '',
+      description: '',
+      location: '',
+      format: 'Knockout',
+      startDate: '',
+      endDate: '',
+      prizePool: '',
+      entryFee: '',
+      skillLevel: 'All Levels',
+      maxTeams: ''
+    });
   };
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 overflow-y-auto py-8">
-      <div className="bg-white rounded-xl w-full max-w-2xl shadow-2xl overflow-hidden my-auto">
+     <div className="fixed inset-0 flex justify-center items-center z-50 bg-black/30 backdrop-blur-md">
+     <div className="bg-white rounded-xl w-full max-w-md shadow-2xl overflow-hidden">
         {/* Modal Header */}
         <div className="p-6 sticky top-0 bg-white border-b border-gray-200">
-          <h2 className="text-2xl font-bold text-gray-900">Edit Tournament</h2>
-          <p className="text-sm text-gray-600 mt-1">Update your tournament details</p>
+          <h2 className="text-2xl font-bold text-gray-900">Host New Tournament</h2>
+          <p className="text-sm text-gray-600 mt-1">Set up a new tournament for teams to compete</p>
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-3xl leading-none"
+            className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-2xl font-bold leading-none w-6 h-6 flex items-center justify-center"
           >
-            
+            ×
           </button>
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="p-6 space-y-4 max-h-[calc(100vh-200px)] overflow-y-auto">
           {/* Tournament Name */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Tournament Name</label>
             <input
               type="text"
               name="tournamentName"
+              placeholder="e.g., Nepal Cup 2024"
               value={formData.tournamentName}
               onChange={handleInputChange}
               required
@@ -64,6 +77,7 @@ const EditTournament = ({ isOpen, onClose, onEditTournament, tournamentData }) =
             <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
             <textarea
               name="description"
+              placeholder="Describe your tournament..."
               value={formData.description}
               onChange={handleInputChange}
               rows="3"
@@ -78,6 +92,7 @@ const EditTournament = ({ isOpen, onClose, onEditTournament, tournamentData }) =
               <input
                 type="text"
                 name="location"
+                placeholder="e.g., Kathmandu"
                 value={formData.location}
                 onChange={handleInputChange}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -132,6 +147,7 @@ const EditTournament = ({ isOpen, onClose, onEditTournament, tournamentData }) =
               <input
                 type="text"
                 name="prizePool"
+                placeholder="e.g., NPR 50,000"
                 value={formData.prizePool}
                 onChange={handleInputChange}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -143,6 +159,7 @@ const EditTournament = ({ isOpen, onClose, onEditTournament, tournamentData }) =
               <input
                 type="text"
                 name="entryFee"
+                placeholder="e.g., NPR 5,000 or Free"
                 value={formData.entryFee}
                 onChange={handleInputChange}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -169,10 +186,11 @@ const EditTournament = ({ isOpen, onClose, onEditTournament, tournamentData }) =
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Max Participants</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Max Teams</label>
               <input
                 type="number"
                 name="maxTeams"
+                placeholder="e.g., 16"
                 value={formData.maxTeams}
                 onChange={handleInputChange}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -193,7 +211,7 @@ const EditTournament = ({ isOpen, onClose, onEditTournament, tournamentData }) =
               type="submit"
               className="px-6 py-2 bg-gray-900 text-white rounded-lg font-medium hover:bg-gray-800 transition-colors"
             >
-              Save Changes
+              Host Tournament
             </button>
           </div>
         </form>
@@ -202,4 +220,4 @@ const EditTournament = ({ isOpen, onClose, onEditTournament, tournamentData }) =
   );
 };
 
-export default EditTournament;
+export default CreateTournament;
