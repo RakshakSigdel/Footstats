@@ -1,7 +1,8 @@
 import { useState } from "react";
-import sidebg from "/images/sidebg.jpg";
+import sidebg from "/images/sidebg3.jpg";
 import { Link, useNavigate } from "react-router-dom";
 import { register } from "../../services/api.auth";
+import AuthenticationSideImage from "../../components/Design/authenticationsideimage";
 
 export default function Register() {
   const navigate = useNavigate();
@@ -23,57 +24,110 @@ export default function Register() {
   };
 
   return (
-    <div className=" flex flex-row min-h-screen">
-      <div
-        className="w-1/2 bg-cover bg-center flex items-center justify-center overflow-hidden"
-        style={{ backgroundImage: `url(${sidebg})` }}
-      >
-        <div className="text-white p-36 text-center space-y-2">
-          <h1 className="text-5xl font-serif font-bold">
-            Welcome To FootStats
-          </h1>
-        </div>
-      </div>
+    <div className="flex flex-row min-h-screen" style={{ backgroundColor: "#F0F4FF" }}>
+      <AuthenticationSideImage 
+        image={sidebg}
+        title="Join the FootStats squad"
+        subtitle="New season, new stats, new you let's get you on the pitch"
+      />
 
-      <div className="w-1/2 flex items-center justify-center p-12">
-        <div className="  bg-gray-100 rounded-2xl p-10 w-full max-w-md shadow-lg">
-          <h2 className="text-3xl font-bold font-serif mb-8 text-center">
-            Register Your Account
-          </h2>
+      <div className="flex-1 flex items-center justify-center p-6">
+        <div className="bg-white rounded-3xl p-8 w-full max-w-md shadow-xl border border-blue-100">
+          <div className="text-center mb-6">
+            <h2 className="text-2xl font-bold font-serif text-gray-800">
+              Register Your Account
+            </h2>
+            <p className="text-gray-500 text-xs mt-1">
+              Create a new account to get started
+            </p>
+          </div>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
-            {[
-              { name: "firstName", type: "text", placeholder: "First Name" },
-              { name: "lastName", type: "text", placeholder: "Last Name" },
-              { name: "email", type: "email", placeholder: "E-Mail" },
-              { name: "password", type: "password", placeholder: "Password" },
-            ].map((fld) => (
+          <form onSubmit={handleSubmit} className="space-y-3">
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">
+                First Name
+              </label>
               <input
-                key={fld.name}
-                name={fld.name}
-                type={fld.type}
-                placeholder={fld.placeholder}
+                type="text"
+                name="firstName"
+                placeholder="Enter your first name"
                 required
-                value={formData[fld.name]}
+                value={formData.firstName}
                 onChange={handleChange}
-                className="w-full h-12 px-4 rounded-lg border border-gray-200 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                className="w-full h-10 px-4 rounded-xl border-2 border-gray-200 bg-gray-50 placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
               />
-            ))}
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">
+                Last Name
+              </label>
+              <input
+                type="text"
+                name="lastName"
+                placeholder="Enter your last name"
+                required
+                value={formData.lastName}
+                onChange={handleChange}
+                className="w-full h-10 px-4 rounded-xl border-2 border-gray-200 bg-gray-50 placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">
+                Email Address
+              </label>
+              <input
+                type="email"
+                name="email"
+                placeholder="you@example.com"
+                required
+                value={formData.email}
+                onChange={handleChange}
+                className="w-full h-10 px-4 rounded-xl border-2 border-gray-200 bg-gray-50 placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">
+                Password
+              </label>
+              <input
+                type="password"
+                name="password"
+                placeholder="Create a strong password"
+                required
+                value={formData.password}
+                onChange={handleChange}
+                className="w-full h-10 px-4 rounded-xl border-2 border-gray-200 bg-gray-50 placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+              />
+            </div>
 
             <button
               type="submit"
-              className="w-full h-12 bg-black text-white rounded-xl font-semibold flex items-center justify-center gap-2 hover:bg-gray-800 transition"
+              className="w-full h-10 bg-gradient-to-r from-gray-900 to-gray-700 text-white rounded-xl font-semibold flex items-center justify-center gap-2 hover:from-gray-800 hover:to-gray-600 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 text-sm mt-4"
             >
-              Sign Up →
+              Sign Up
+              <span className="text-lg">→</span>
             </button>
           </form>
 
-          <p className="text-center text-sm text-gray-600 mt-6">
+          <div className="relative my-5">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-200"></div>
+            </div>
+            <div className="relative flex justify-center text-xs">
+              <span className="px-4 bg-white text-gray-500">
+                Already a member?
+              </span>
+            </div>
+          </div>
+
+          <p className="text-center text-xs text-gray-600">
             Already have an account?{" "}
             <Link
               to="/login"
-              className="font-medium"
-              style={{ color: "#1d4ed8" }}
+              className="font-semibold text-blue-600 hover:text-blue-700 transition-colors"
             >
               Sign in
             </Link>
