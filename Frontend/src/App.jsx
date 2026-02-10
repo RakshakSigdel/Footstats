@@ -29,10 +29,10 @@ function App() {
         <Route path="/reset-password" element={<ResetPassword />} />
         {/* Clubs Routes */}
         <Route path="/clubs" element={<MyClubs />} />
-        <Route path="/clubDetails" element={<ClubDetails />} />
+        <Route path="/club/:clubId" element={<ClubDetails />} />
         {/* Tournament Routes */}
         <Route path="/tournaments" element={<Tournaments />} />
-        <Route path="/tournamentdetails" element={<TournamentDetails />} />
+        <Route path="/tournament/:tournamentId" element={<TournamentDetails />} />
         {/* Other Pages */}
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/Discover" element={<Discover />} />

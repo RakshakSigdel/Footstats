@@ -25,15 +25,15 @@ const EditClub = ({ isOpen, onClose, onEditClub, clubData }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-      <div className="bg-white rounded-xl w-full max-w-md shadow-2xl overflow-hidden">
+     <div className="fixed inset-0 flex justify-center items-center z-50 bg-black/30 backdrop-blur-md">
+     <div className="bg-white rounded-xl w-full max-w-md shadow-2xl overflow-hidden">
         {/* Modal Header */}
         <div className="p-6 relative">
           <h2 className="text-2xl font-bold text-gray-900">Edit Club</h2>
           <p className="text-sm text-gray-600 mt-1">Update your club details</p>
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-3xl leading-none"
+            className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-2xl font-bold leading-none w-6 h-6 flex items-center justify-center"
           >
             
           </button>

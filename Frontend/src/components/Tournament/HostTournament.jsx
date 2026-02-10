@@ -42,22 +42,22 @@ const CreateTournament = ({ isOpen, onClose, onCreateTournament }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 overflow-y-auto py-8">
-      <div className="bg-white rounded-xl w-full max-w-2xl shadow-2xl overflow-hidden my-auto">
+     <div className="fixed inset-0 flex justify-center items-center z-50 bg-black/30 backdrop-blur-md">
+     <div className="bg-white rounded-xl w-full max-w-md shadow-2xl overflow-hidden">
         {/* Modal Header */}
         <div className="p-6 sticky top-0 bg-white border-b border-gray-200">
           <h2 className="text-2xl font-bold text-gray-900">Host New Tournament</h2>
           <p className="text-sm text-gray-600 mt-1">Set up a new tournament for teams to compete</p>
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-3xl leading-none"
+            className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-2xl font-bold leading-none w-6 h-6 flex items-center justify-center"
           >
-            
+            ×
           </button>
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="p-6 space-y-4 max-h-[calc(100vh-200px)] overflow-y-auto">
           {/* Tournament Name */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Tournament Name</label>

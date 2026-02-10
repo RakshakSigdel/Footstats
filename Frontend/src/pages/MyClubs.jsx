@@ -1,10 +1,12 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Sidebar from "../components/Global/Sidebar";
 import Topbar from "../components/Global/Topbar";
 import CreateClub from "../components/Club/CreateClub";
 import EditClub from "../components/Club/EditClub";
 
 export default function MyClubs() {
+  const navigate = useNavigate();
   const [isCreateClubOpen, setIsCreateClubOpen] = useState(false);
   const [isEditClubOpen, setIsEditClubOpen] = useState(false);
   const [selectedClubData, setSelectedClubData] = useState(null);
@@ -25,6 +27,11 @@ export default function MyClubs() {
     setSelectedClubData(clubData);
     setIsEditClubOpen(true);
   };
+
+  const handleViewDetails = (clubId) => {
+    navigate(`/club/${clubId}`);
+  };
+
   return (
     <div className="flex min-h-screen bg-gray-50">
       {/* Fixed Sidebar */}
@@ -104,7 +111,7 @@ export default function MyClubs() {
                 <div className="flex items-center gap-4 flex-1">
                   {/* Club Logo */}
                   <div className="w-12 h-12 bg-green-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
+                    <svg width="30" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
                       <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
                       <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
                       <path d="M4 22h16" />
@@ -170,7 +177,10 @@ export default function MyClubs() {
                   </div>
                 </div>
 
-                <button className="bg-blue-50 text-blue-700 rounded-lg px-5 py-2 text-sm font-medium hover:bg-blue-100 transition-colors whitespace-nowrap">
+                <button 
+                  onClick={() => handleViewDetails(1)}
+                  className="bg-blue-50 text-blue-700 rounded-lg px-5 py-2 text-sm font-medium hover:bg-blue-100 transition-colors whitespace-nowrap"
+                >
                   View Details
                 </button>
               </div>
@@ -248,7 +258,10 @@ export default function MyClubs() {
                   </div>
                 </div>
 
-                <button className="bg-blue-50 text-blue-700 rounded-lg px-5 py-2 text-sm font-medium hover:bg-blue-100 transition-colors whitespace-nowrap">
+                <button 
+                  onClick={() => handleViewDetails(2)}
+                  className="bg-blue-50 text-blue-700 rounded-lg px-5 py-2 text-sm font-medium hover:bg-blue-100 transition-colors whitespace-nowrap"
+                >
                   View Details
                 </button>
               </div>
