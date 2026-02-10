@@ -5,7 +5,7 @@ export default function Topbar() {
   // For now keeping it simple as per your current design
 
   return (
-    <div className="bg-white px-6 py-4 md:px-8 md:py-4 border-b border-gray-200">
+    <div className="bg-white px-6 py-4 md:px-8 md:py-4 border-b border-gray-200 sticky top-0 z-10">
       <div className="flex items-center justify-end gap-4">
         {/* Notification Bell */}
         <button 
@@ -34,8 +34,8 @@ export default function Topbar() {
           to="/profile" 
           className="flex items-center gap-3 hover:opacity-90 transition-opacity"
         >
-          <div className="w-9 h-9 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center border border-gray-300">
-            <span className="text-gray-700 font-semibold text-sm">R</span>
+          <div className="w-9 h-9 rounded-full overflow-hidden bg-slate-900 flex items-center justify-center border border-gray-300">
+            <span className="text-white font-semibold text-sm">RS</span>
             {/* Later replace with real avatar:
             <img 
               src={user.avatarUrl} 
@@ -45,7 +45,7 @@ export default function Topbar() {
           </div>
 
           {/* Optional: show name on larger screens */}
-          {/* <span className="hidden md:inline text-sm font-medium text-gray-800">Rajeshi</span> */}
+          {/* <span className="hidden md:inline text-sm font-medium text-gray-800">Rajesh</span> */}
         </Link>
       </div>
     </div>
