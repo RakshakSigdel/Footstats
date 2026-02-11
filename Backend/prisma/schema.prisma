@@ -62,22 +62,22 @@ enum preferredFoot {
 // CLUB MODEL
 // =========================
 model Club {
-  clubId       Int           @id @default(autoincrement())
-  name         String
-  description  String
-  logo         String?
-  location     String
-  foundedDate  DateTime
-  createdBy    Int
-  creator      User          @relation("ClubCreator", fields: [createdBy], references: [userId])
-  requests     Request[]
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  userClubs    UserClub[]
-  schedulesAsTeamOne Schedule[] @relation("TeamOne")
-  schedulesAsTeamTwo Schedule[] @relation("TeamTwo")
-  matchEvents  MatchEvent[]
-  matchLineups MatchLineup[]
+  clubId             Int           @id @default(autoincrement())
+  name               String
+  description        String
+  logo               String?
+  location           String
+  foundedDate        DateTime
+  createdBy          Int
+  creator            User          @relation("ClubCreator", fields: [createdBy], references: [userId])
+  requests           Request[]
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+  userClubs          UserClub[]
+  schedulesAsTeamOne Schedule[]    @relation("TeamOne")
+  schedulesAsTeamTwo Schedule[]    @relation("TeamTwo")
+  matchEvents        MatchEvent[]
+  matchLineups       MatchLineup[]
 }
 
 model Request {
@@ -164,6 +164,15 @@ model Schedule {
   teamOneId      Int
   teamTwo        Club           @relation("TeamTwo", fields: [teamTwoId], references: [clubId])
   teamTwoId      Int
+
+  createdFromClub  Int?
+  creatorFromClub Club @relation("Created From Club", fields: [createdFromClub], references: [clubId])
+
+  createdFromTournament Int?
+  creatorFromTournament Tournament @relation("TournamentCreator", fields: [createdFromTournament], references: [tournamentId])
+
+  createdFromUser Int
+  creationFromUser User @relation("CreatedByUser",fields:[createdFromUser],references: [userId])
 
   match Match?
 }

@@ -1,20 +1,21 @@
 import { Router } from "express";
+import { createSchedule,getAllSchedules,getScheduleById,getMySchedules,getClubSchedules,UpdateSchedule,deleteSchedule } from "../controllers/scheduleController";
 
 const router = Router();
 
 //Get All Schedule
-router.get("/")
+router.get("/",getAllSchedules);
 //Get Schedule By ID
-router.get("/:id")
+router.get("/:id",getScheduleById);
 //Get Players Schedules
-router.get("/me")
+router.get("/me",getMySchedules);
 //Get Club Schedules
-router.get("/club/:id")
+router.get("/club/:id",getClubSchedules);
 //Create Schedule
-router.post("/")
+router.post("/",createSchedule);
 //Update Schedule
-router.put("/")
+router.put("/",UpdateSchedule);
 //Delete Schedule
-router.delete("/")
+router.delete("/",deleteSchedule);
 
 export default router;
