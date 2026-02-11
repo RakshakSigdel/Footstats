@@ -1,6 +1,6 @@
-const { TournamentService } = require("../services/tournamentService");
+import  TournamentService  from "../services/tournamentService.js";
 
-const createTournament = async (req, res) => {
+export const createTournament = async (req, res) => {
   try {
     const userId = req.user.userId;
     const {
@@ -37,7 +37,7 @@ const createTournament = async (req, res) => {
   }
 };
 
-const getMyTournaments = async (req, res) => {
+export const getMyTournaments = async (req, res) => {
   try {
     const userId = req.user.userId;
     const tournaments = await TournamentService.getTournamentsByUserId(userId);
@@ -54,7 +54,7 @@ const getMyTournaments = async (req, res) => {
   }
 };
 
-const getAllTournaments = async (req, res) => {
+export const getAllTournaments = async (req, res) => {
   try {
     const tournaments = await TournamentService.getAllTournaments();
     res.status(200).json({ tournaments });
@@ -65,7 +65,7 @@ const getAllTournaments = async (req, res) => {
   }
 };
 
-const getTournamentById = async (req, res) => {
+export const getTournamentById = async (req, res) => {
   try {
     const tournamentId = req.params.id;
     const tournament = await TournamentService.getTournamentById(tournamentId);
@@ -80,7 +80,7 @@ const getTournamentById = async (req, res) => {
   }
 };
 
-const updateTournament = async (req, res) => {
+export const updateTournament = async (req, res) => {
   try {
     const tournamentId = req.params.id;
     const updatedTournament = await TournamentService.updateTournament(
@@ -96,7 +96,7 @@ const updateTournament = async (req, res) => {
   }
 };
 
-const deleteTournament = async (req, res) => {
+export const deleteTournament = async (req, res) => {
   try {
     const tournamentId = req.params.id;
     await TournamentService.deleteTournament(tournamentId);
@@ -106,12 +106,4 @@ const deleteTournament = async (req, res) => {
       .status(500)
       .json({ message: "Error deleting tournament", error: error.message });
   }
-};
-module.exports = {
-  createTournament,
-  getMyTournaments,
-  getAllTournaments,
-  getTournamentById,
-  updateTournament,
-  deleteTournament,
 };

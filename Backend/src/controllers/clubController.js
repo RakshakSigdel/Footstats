@@ -1,6 +1,6 @@
-const { ClubService } = require("../services/clubService");
+import ClubService from "../services/clubService.js";
 
-const createClub = async (req, res) => {
+export const createClub = async (req, res) => {
   try {
     const userId = req.user.userId;
     const { name, description, location, foundedDate } = req.body;
@@ -16,7 +16,7 @@ const createClub = async (req, res) => {
   }
 };
 
-const getMyClubs = async (req, res) => {
+export const getMyClubs = async (req, res) => {
   try {
     const userId = req.user.userId;
     const clubs = await ClubService.getClubsByUserId(userId);
@@ -31,7 +31,7 @@ const getMyClubs = async (req, res) => {
   }
 };
 
-const getAllClubs = async (req, res) => {
+export const getAllClubs = async (req, res) => {
   try {
     const clubs = await ClubService.getAllClubs();
     res.status(200).json({ clubs });
@@ -42,7 +42,7 @@ const getAllClubs = async (req, res) => {
   }
 };
 
-const getClubById = async (req, res) => {
+export const getClubById = async (req, res) => {
   try {
     const clubId = req.params.id;
     const club = await ClubService.getClubById(clubId);
@@ -57,7 +57,7 @@ const getClubById = async (req, res) => {
   }
 };
 
-const updateClub = async (req, res) => {
+export const updateClub = async (req, res) => {
   try {
     const clubId = req.params.id;
     const updatedClub = await ClubService.updateClub(
@@ -73,7 +73,7 @@ const updateClub = async (req, res) => {
   }
 };
 
-const deleteClub = async (req, res) => {
+export const deleteClub = async (req, res) => {
   try {
     const clubId = req.params.id;
     await ClubService.deleteClub(clubId);
@@ -83,12 +83,4 @@ const deleteClub = async (req, res) => {
       .status(500)
       .json({ message: "Error deleting club", error: error.message });
   }
-};
-module.exports = {
-  createClub,
-  getMyClubs,
-  getAllClubs,
-  getClubById,
-  updateClub,
-  deleteClub,
 };

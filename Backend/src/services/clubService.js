@@ -1,7 +1,6 @@
-
-const { PrismaClient } = require('@prisma/client');
-
+import {PrismaClient} from "@prisma/client";
 const prisma = new PrismaClient();
+
 class ClubService {
     static async createClub (data, userId){
         const newClub = await prisma.club.create({
@@ -75,4 +74,4 @@ class ClubService {
       }
     
     }
-    module.exports = { ClubService };
+export default ClubService;

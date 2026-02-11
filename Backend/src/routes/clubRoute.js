@@ -1,8 +1,15 @@
 import { Router } from "express";
 const router = Router();
-import { verifyToken } from "../middleware/verifyToken";
-import { authorizeClubOwnership } from "../middleware/authorize";
-import { createClub, getMyClubs, getAllClubs, getClubById, updateClub, deleteClub } from "../controllers/clubController";
+import { verifyToken } from "../middleware/verifyToken.js";
+import { authorizeClubOwnership } from "../middleware/authorize.js";
+import {
+  createClub,
+  getMyClubs,
+  getAllClubs,
+  getClubById,
+  updateClub,
+  deleteClub,
+} from "../controllers/clubController.js";
 
 router.post("/", verifyToken, createClub);
 router.get("/me", verifyToken, getMyClubs);

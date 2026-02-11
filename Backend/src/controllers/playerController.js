@@ -1,4 +1,4 @@
-const { PlayerService } = require("../services/playerService");
+import  PlayerService  from "../services/playerService.js";
 
 // const addPlayer = (req, res) => {
 //     try{
@@ -11,7 +11,7 @@ const { PlayerService } = require("../services/playerService");
 //     }
 // };
 
-const getAllPlayers = async (req, res) => {
+export const getAllPlayers = async (req, res) => {
   try {
     const players = await PlayerService.getAllPlayers();
     res.status(200).json({ players });
@@ -22,7 +22,7 @@ const getAllPlayers = async (req, res) => {
   }
 };
 
-const getMyProfile = async (req, res) => {
+export const getMyProfile = async (req, res) => {
   try {
     const userId = req.user.userId;
     console.log("Logged in user ID:", userId);
@@ -35,7 +35,7 @@ const getMyProfile = async (req, res) => {
   }
 };
 
-const getPlayerById = async (req, res) => {
+export const getPlayerById = async (req, res) => {
   try {
     const playerId = req.params.id;
     const player = await PlayerService.getPlayerById(playerId);
@@ -47,7 +47,7 @@ const getPlayerById = async (req, res) => {
   }
 };
 
-const updatePlayerById = async (req, res) => {
+export const updatePlayerById = async (req, res) => {
   try {
     const { id } = req.params;
     const {
@@ -81,7 +81,7 @@ const updatePlayerById = async (req, res) => {
   }
 };
 
-const deletePlayerById = async (req, res) => {
+export const deletePlayerById = async (req, res) => {
   try {
     const { id } = req.params;
     const deletedPlayer = await PlayerService.deletePlayer(id);
@@ -91,12 +91,4 @@ const deletePlayerById = async (req, res) => {
       .status(500)
       .json({ message: "Error deleting player", error: error.message });
   }
-};
-
-module.exports = {
-  getAllPlayers,
-  getMyProfile,
-  getPlayerById,
-  updatePlayerById,
-  deletePlayerById,
 };

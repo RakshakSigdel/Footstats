@@ -1,5 +1,7 @@
-const { PrismaClient } = require("@prisma/client");
-const { hashPassword } = require("../src/utils/hashPassword");
+// const { PrismaClient } = require("@prisma/client");
+import {PrismaClient} from "@prisma/client";
+// const { hashPassword } = require("../src/utils/hashPassword");
+import { hashPassword } from "../src/utils/hashPassword.js";
 
 const prisma = new PrismaClient();
 

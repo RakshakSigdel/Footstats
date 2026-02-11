@@ -1,8 +1,7 @@
-const { PrismaClient } = require("@prisma/client");
-
+import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
-const authorizeOwnership = (req, res, next) => {
+export const authorizeOwnership = (req, res, next) => {
   const loggedInUserId = req.user.userId; // decoded token: { userId, email, role }
   const loggedInRole = req.user.role;
   const resourceOwnerId = parseInt(req.params.id);
@@ -19,7 +18,7 @@ const authorizeOwnership = (req, res, next) => {
   });
 };
 
-const authorizeTournamentOwnership = async (req, res, next) => {
+export const authorizeTournamentOwnership = async (req, res, next) => {
   const loggedInUserId = req.user.userId;
   const tournamentId = parseInt(req.params.id);
 
@@ -53,7 +52,7 @@ const authorizeTournamentOwnership = async (req, res, next) => {
   }
 };
 
-const authorizeClubOwnership = async (req, res, next) => {
+export const authorizeClubOwnership = async (req, res, next) => {
   const loggedInUserId = req.user.userId;
   const clubId = parseInt(req.params.id);
 
@@ -88,4 +87,3 @@ const authorizeClubOwnership = async (req, res, next) => {
 };
 
 
-module.exports = { authorizeOwnership, authorizeTournamentOwnership, authorizeClubOwnership };

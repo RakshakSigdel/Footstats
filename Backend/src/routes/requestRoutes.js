@@ -1,7 +1,12 @@
 import { Router } from "express";
 const router = Router();
 import { verifyToken } from "../middleware/verifyToken";
-import { createJoinRequest, getClubRequests, approveJoinRequest, rejectJoinRequest } from "../controllers/requestController";
+const {
+  createJoinRequest,
+  getClubRequests,
+  approveJoinRequest,
+  rejectJoinRequest,
+} = require("../controllers/requestController");
 
 router.post("/join", verifyToken, createJoinRequest);
 router.get("/club/:clubId", verifyToken, getClubRequests);

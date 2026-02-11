@@ -1,6 +1,6 @@
-import { Router } from 'express';
-const router= Router();
-import { register, login } from '../controllers/authController';
+import express from "express";
+const router= express.Router();
+import {register,login} from "../controllers/authController.js";
 
 //POST api/auth/register
 router.post('/register',register);

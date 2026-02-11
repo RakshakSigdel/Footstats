@@ -1,5 +1,5 @@
-const { AuthService } = require("../services/authService");
-const register = async (req, res, next) => {
+import AuthService from "../services/authService.js"
+export const register = async (req, res, next) => {
   try {
     const { firstName, lastName, email, password } = req.body;
     if (!firstName || !lastName || !email || !password) {
@@ -24,7 +24,7 @@ const register = async (req, res, next) => {
   }
 };
 
-const login = async (req, res, next) => {
+export const login = async (req, res, next) => {
   try {
     const{email, password} = req.body;
     if(!email || !password){
@@ -46,4 +46,4 @@ const login = async (req, res, next) => {
   }
 };
 
-module.exports= {register,login};
+// export default {register,login};

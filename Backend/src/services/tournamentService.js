@@ -1,4 +1,4 @@
-const { PrismaClient } = require("@prisma/client");
+import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 class TournamentService {
@@ -81,4 +81,4 @@ static async deleteTournament(tournamentId) {
   }
 
 }
-module.exports = { TournamentService };
+export default TournamentService;

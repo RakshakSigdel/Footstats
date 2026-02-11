@@ -1,5 +1,5 @@
-const { PrismaClient } = require("@prisma/client");
-const { hashPassword } = require("../utils/hashPassword");
+import {PrismaClient} from "@prisma/client";
+import { hashPassword } from "../utils/hashPassword.js";
 
 const prisma = new PrismaClient();
 
@@ -94,5 +94,4 @@ class PlayerService {
     return { deletedId: deleted.userId };
   }
 }
-
-module.exports = { PlayerService };
+export default PlayerService;
