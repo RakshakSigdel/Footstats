@@ -8,7 +8,7 @@ export default function Sidebar() {
   };
 
   return (
-    <div className="w-64 bg-slate-900 text-white p-6 flex flex-col min-h-screen">
+    <div className="w-64 bg-slate-900 text-white p-6 flex flex-col min-h-screen sticky top-0 h-screen overflow-y-auto">
       {/* Logo Section */}
       <div className="flex items-center gap-3 mb-8">
         <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
