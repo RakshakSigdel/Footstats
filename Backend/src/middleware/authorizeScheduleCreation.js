@@ -1,75 +1,89 @@
-import { Prisma } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
 
-//User Must be either club admin or tournament admin to create the schedule
+const prisma = new PrismaClient();  
+
 export const authorizeScheduleCreation = async (req, res, next) => {
-    const loggedInUderID = req.user.userId;
-    const {createdFromClub,createdFromTournament} = req.body;
+    const loggedInUserId = req.user.userId;
+    const { createdFromClub, createdFromTournament } = req.body;
 
-    try{
-        if(req.user.role == "SUPERADMIN"){
+    try {
+        if (req.user.role === "SUPERADMIN") {
             return next();
         }
 
-        if(!createdFromClub && !createdFromTournament){
+        if (!createdFromClub && !createdFromTournament) {
             return res.status(400).json({
-                message:"Schedule must be vreted from either club or tournament",
-            })
+                message: "Schedule must be created from either club or tournament",
+            });
         }
 
-        //Check if user is club admin
-        if(createdFromClub){
-            const club = await Prisma.club.findUnique({
-                where:{clubId:parseInt(createdFromClub)},
+        // CLUB CHECK
+        if (createdFromClub) {
+            const clubId = parseInt(createdFromClub);
+
+            const club = await prisma.club.findUnique({
+                where: { clubId },
             });
-            if(!club){
-                return res.status(404).json({message:"Club Not Found"})
+
+            if (!club) {
+                return res.status(404).json({ message: "Club Not Found" });
             }
 
-            if(club.createdBy === loggedInUderID){
+            if (club.createdBy === loggedInUserId) {
                 return next();
             }
 
-            const isClubAdmin = await Prisma.UserClubScalarFieldEnum.findFirst({
-                where:{
-                    clubId:parseInt(createdFromClub),
-                    userId:loggedInUserId,
-                    role:"ADMIN"
+            const isClubAdmin = await prisma.userClub.findFirst({
+                where: {
+                    clubId,
+                    userId: loggedInUserId,
+                    role: "ADMIN",
                 },
             });
-            if(!isClubAdmin){
+
+            if (!isClubAdmin) {
                 return res.status(403).json({
-                    message:"Forbidden: Only Club admins can create club schedules",
+                    message: "Forbidden: Only club admins can create club schedules",
                 });
             }
+
             return next();
         }
-        //Check if schedule is coming from tournament host
-        if(createdFromTournament){
-            const tournament = await Prisma.tournament.findUnique({
-                where:{tournamentId:parseInt(createdFromTournament)},
+
+        // TOURNAMENT CHECK
+        if (createdFromTournament) {
+            const tournamentId = parseInt(createdFromTournament);
+
+            const tournament = await prisma.tournament.findUnique({
+                where: { tournamentId },
             });
-            if(!tournament){
-                return res.status(404).json({message:"Tournament not found"});
+
+            if (!tournament) {
+                return res.status(404).json({ message: "Tournament not found" });
             }
-            if(tournament.createdBy === loggedInUserId){
+
+            if (tournament.createdBy === loggedInUserId) {
                 return next();
             }
-            const isTournamentAdmin = await Prisma.tournamentAdmin.findFirst({
-                where:{
-                    tournamentid:parseInt(createdFromTournament),
-                    userId:loggedInUserId,
-                }
+
+            const isTournamentAdmin = await prisma.tournamentAdmin.findFirst({
+                where: {
+                    tournamentId,
+                    userId: loggedInUserId,
+                },
             });
-            if(!isTournamentAdmin){
+
+            if (!isTournamentAdmin) {
                 return res.status(403).json({
-                    message:"Forbidden: Only tournament admins can create tournament schedules",
-                })
+                    message: "Forbidden: Only tournament admins can create tournament schedules",
+                });
             }
+
             return next();
         }
-    }
-    catch(error){
-        console.error("Authorization error:",error);
-        return res.status(500).json({message:"Internal server error"});
+
+    } catch (error) {
+        console.error("Authorization error:", error);
+        return res.status(500).json({ message: "Internal server error" });
     }
 };

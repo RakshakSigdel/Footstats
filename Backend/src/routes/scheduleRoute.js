@@ -11,12 +11,12 @@ import {
   deleteSchedule,
 } from "../controllers/scheduleController.js";
 import { verifyToken } from "../middleware/verifyToken.js";
-// import { 
+// import {
 //   authorizeScheduleModification,
-//   authorizeScheduleCreation 
+//   authorizeScheduleCreation
 // } from "../middleware/authorize.js";
 import { authorizeScheduleCreation } from "../middleware/authorizeScheduleCreation.js";
-// import {authorizeScheduleModification} from "../middleware/authorizeScheduleModification.js"
+import { authorizeScheduleModification } from "../middleware/authorizeScheduleModification.js";
 
 const router = Router();
 
@@ -28,8 +28,8 @@ router.get("/", verifyToken, getAllSchedules);
 router.get("/:id", verifyToken, getScheduleById);
 
 // Protected routes (require authorization)
-router.post("/", verifyToken, createSchedule);
-router.put("/:id", verifyToken, updateSchedule);
-router.delete("/:id", verifyToken, deleteSchedule);
+router.post("/", verifyToken, authorizeScheduleCreation, createSchedule);
+router.put("/:id", verifyToken, authorizeScheduleModification, updateSchedule);
+router.delete("/:id", verifyToken, authorizeScheduleModification, deleteSchedule);
 
 export default router;

@@ -1,9 +1,10 @@
 import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
-export const authorizeScheduleModification = async (req, res, next) => {
+
+export const authorizeMatchModification = async (req, res, next) => {
   const loggedInUserId = req.user.userId;
-  const scheduleId = parseInt(req.params.id);
+  const matchId = parseInt(req.params.id);
 
   try {
     // Super Admin can do anything
@@ -11,20 +12,25 @@ export const authorizeScheduleModification = async (req, res, next) => {
       return next();
     }
 
-    const schedule = await prisma.schedule.findUnique({
-      where: { scheduleId: scheduleId },
+    const match = await prisma.match.findUnique({
+      where: { matchId: matchId },
+      include: {
+        schedule: true,
+      },
     });
 
-    if (!schedule) {
-      return res.status(404).json({ message: "Schedule not found" });
+    if (!match) {
+      return res.status(404).json({ message: "Match not found" });
     }
 
-    // Check if user is the creator
+    const schedule = match.schedule;
+
+    // Check if user is the schedule creator
     if (schedule.createdFromUser === loggedInUserId) {
       return next();
     }
 
-    // Check if user is club admin (if schedule is from a club)
+    // Check if user is club admin
     if (schedule.createdFromClub) {
       const club = await prisma.club.findUnique({
         where: { clubId: schedule.createdFromClub },
@@ -47,7 +53,7 @@ export const authorizeScheduleModification = async (req, res, next) => {
       }
     }
 
-    // Check if user is tournament admin (if schedule is from a tournament)
+    // Check if user is tournament admin
     if (schedule.createdFromTournament) {
       const tournament = await prisma.tournament.findUnique({
         where: { tournamentId: schedule.createdFromTournament },
@@ -70,7 +76,7 @@ export const authorizeScheduleModification = async (req, res, next) => {
     }
 
     return res.status(403).json({
-      message: "Forbidden: You do not have permission to modify this schedule",
+      message: "Forbidden: You do not have permission to modify this match",
     });
   } catch (error) {
     console.error("Authorization error:", error);
