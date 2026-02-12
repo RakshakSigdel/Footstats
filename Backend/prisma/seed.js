@@ -16,6 +16,7 @@ async function main() {
 
   await prisma.$transaction([
     prisma.tournament.deleteMany({}),
+    prisma.club.deleteMany({}),
     prisma.user.deleteMany({}),
   ]);
 
@@ -33,22 +34,15 @@ async function main() {
         email: "admin@gmail.com",
         password: adminPassword,
         role: "SUPERADMIN",
-        matchesPlayed: 0,
-        goalsScored: 0,
-        assist: 0,
       },
       {
         userId: 5555,
         firstName: "rakshak",
         lastName: "sigdel",
         email: "rakshaksigdel@gmail.com",
-        gender:"Male",
-        position:"Striker",
-        location:"Sundarharaicha-04, Morang",
+        gender: "Male",
+        location: "Sundarharaicha-04, Morang",
         preferredFoot: "RIGHT",
-        matchesPlayed : 100,
-        goalsScored:71,
-        assist:34,
         password: rakshakPassword,
       },
       // ── 20 test player accounts ───────────────────────────────────────
@@ -57,9 +51,6 @@ async function main() {
         lastName: "player",
         email: `footstatplayer${i + 1}@gmail.com`,
         password: playerPassword,
-        matchesPlayed: Math.floor(Math.random() * 50),
-        goalsScored: Math.floor(Math.random() * 20),
-        assist: Math.floor(Math.random() * 15),
       })),
     ],
   });
@@ -93,28 +84,70 @@ async function main() {
       },
     ],
   });
-
+  //Create Another Club
   await prisma.club.createMany({
     data: [
       {
         name: "RUG FC",
         description: "Rock Up Gang Football Club",
         location: "Baliya Chowk",
-        foundedDate: "2026-06-15T09:00:00.000Z",
+        foundedDate: new Date("2026-06-15T09:00:00.000Z"),
         createdBy: 5555,
       },
       {
         name: "Itahari under 18 football club",
         description:
-          "THis is only for childrens who are age eighteen and below",
+          "This is only for childrens who are age eighteen and below",
         location: "Itahari, Sunsari",
-        foundedDate: "2026-06-15T09:00:00.000Z",
+        foundedDate: new Date("2026-06-15T09:00:00.000Z"),
         createdBy: 5555,
       },
     ],
   });
+  //10 player join rug FC and 10 Player Join Itahari under 18 football club
+
+  // Fetch the created players and clubs
+  const players = await prisma.user.findMany({
+    where: {
+      email: {
+        startsWith: "footstatplayer",
+      },
+    },
+    orderBy: {
+      email: "asc",
+    },
+  });
+
+  const rugFC = await prisma.club.findFirst({
+    where: { name: "RUG FC" },
+  });
+
+  const itahariU18 = await prisma.club.findFirst({
+    where: { name: "Itahari under 18 football club" },
+  });
+
+  if (rugFC && itahariU18 && players.length >= 20) {
+    // First 10 players join RUG FC
+    const rugFCMembers = players.slice(0, 10).map((player) => ({
+      userId: player.userId,
+      clubId: rugFC.clubId,
+      role: "MEMBER",
+    }));
+
+    // Next 10 players join Itahari under 18 football club
+    const itahariMembers = players.slice(10, 20).map((player) => ({
+      userId: player.userId,
+      clubId: itahariU18.clubId,
+      role: "MEMBER",
+    }));
+
+    await prisma.userClub.createMany({
+      data: [...rugFCMembers, ...itahariMembers],
+    });
+  }
+  
   console.log(
-    "Seeding Finished → 1 SUPERADMIN + 1 user (rakshaksigdel) + 20 players + 1 tournament created",
+    "Seeding Finished → 1 SUPERADMIN + 1 user (rakshaksigdel) + 20 players + 2 tournaments + 2 clubs + 20 club memberships created",
   );
 }
 

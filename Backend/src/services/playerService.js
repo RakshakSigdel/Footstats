@@ -18,7 +18,7 @@ class PlayerService {
         Phone: true,
         location: true,
         profilePhoto: true,
-        position: true,
+        // position: true,
         createdAt: true,
       },
     });
@@ -38,10 +38,10 @@ class PlayerService {
         Phone: true,
         location: true,
         profilePhoto: true,
-        position: true,
-        matchesPlayed: true,
-        goalsScored: true,
-        assist: true,
+        // position: true,
+        // matchesPlayed: true,
+        // goalsScored: true,
+        // assist: true,
         createdAt: true,
       },
     });
@@ -62,7 +62,7 @@ class PlayerService {
         Phone: true,
         location: true,
         profilePhoto: true,
-        position: true,
+        // position: true,
         createdAt: true,
       },
     });
@@ -81,7 +81,7 @@ class PlayerService {
         Phone: data.Phone,
         location: data.location,
         profilePhoto: data.profilePhoto,
-        position: data.position,
+        // position: data.position,
       },
     });
     return updatedPlayer;

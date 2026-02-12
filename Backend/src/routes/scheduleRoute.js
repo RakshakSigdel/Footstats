@@ -1,21 +1,35 @@
+// scheduleRoutes.js
 import { Router } from "express";
-import { createSchedule,getAllSchedules,getScheduleById,getMySchedules,getClubSchedules,UpdateSchedule,deleteSchedule } from "../controllers/scheduleController";
+import {
+  createSchedule,
+  getAllSchedules,
+  getScheduleById,
+  getMySchedules,
+  getClubSchedules,
+  getTournamentSchedules,
+  updateSchedule,
+  deleteSchedule,
+} from "../controllers/scheduleController.js";
+import { verifyToken } from "../middleware/verifyToken.js";
+// import {
+//   authorizeScheduleModification,
+//   authorizeScheduleCreation
+// } from "../middleware/authorize.js";
+import { authorizeScheduleCreation } from "../middleware/authorizeScheduleCreation.js";
+import { authorizeScheduleModification } from "../middleware/authorizeScheduleModification.js";
 
 const router = Router();
 
-//Get All Schedule
-router.get("/",getAllSchedules);
-//Get Schedule By ID
-router.get("/:id",getScheduleById);
-//Get Players Schedules
-router.get("/me",getMySchedules);
-//Get Club Schedules
-router.get("/club/:id",getClubSchedules);
-//Create Schedule
-router.post("/",createSchedule);
-//Update Schedule
-router.put("/",UpdateSchedule);
-//Delete Schedule
-router.delete("/",deleteSchedule);
+// Public/Member routes (no special authorization needed)
+router.get("/me", verifyToken, getMySchedules);
+router.get("/club/:id", verifyToken, getClubSchedules);
+router.get("/tournament/:id", verifyToken, getTournamentSchedules);
+router.get("/", verifyToken, getAllSchedules);
+router.get("/:id", verifyToken, getScheduleById);
+
+// Protected routes (require authorization)
+router.post("/", verifyToken, authorizeScheduleCreation, createSchedule);
+router.put("/:id", verifyToken, authorizeScheduleModification, updateSchedule);
+router.delete("/:id", verifyToken, authorizeScheduleModification, deleteSchedule);
 
 export default router;
