@@ -16,6 +16,7 @@ async function main() {
 
   await prisma.$transaction([
     prisma.tournament.deleteMany({}),
+    prisma.club.deleteMany({}),
     prisma.user.deleteMany({}),
   ]);
 
@@ -33,22 +34,15 @@ async function main() {
         email: "admin@gmail.com",
         password: adminPassword,
         role: "SUPERADMIN",
-        matchesPlayed: 0,
-        goalsScored: 0,
-        assist: 0,
       },
       {
         userId: 5555,
         firstName: "rakshak",
         lastName: "sigdel",
         email: "rakshaksigdel@gmail.com",
-        gender:"Male",
-        position:"Striker",
-        location:"Sundarharaicha-04, Morang",
+        gender: "Male",
+        location: "Sundarharaicha-04, Morang",
         preferredFoot: "RIGHT",
-        matchesPlayed : 100,
-        goalsScored:71,
-        assist:34,
         password: rakshakPassword,
       },
       // ── 20 test player accounts ───────────────────────────────────────
@@ -57,9 +51,6 @@ async function main() {
         lastName: "player",
         email: `footstatplayer${i + 1}@gmail.com`,
         password: playerPassword,
-        matchesPlayed: Math.floor(Math.random() * 50),
-        goalsScored: Math.floor(Math.random() * 20),
-        assist: Math.floor(Math.random() * 15),
       })),
     ],
   });
@@ -100,21 +91,22 @@ async function main() {
         name: "RUG FC",
         description: "Rock Up Gang Football Club",
         location: "Baliya Chowk",
-        foundedDate: "2026-06-15T09:00:00.000Z",
+        foundedDate: new Date("2026-06-15T09:00:00.000Z"),
         createdBy: 5555,
       },
       {
         name: "Itahari under 18 football club",
         description:
-          "THis is only for childrens who are age eighteen and below",
+          "This is only for childrens who are age eighteen and below",
         location: "Itahari, Sunsari",
-        foundedDate: "2026-06-15T09:00:00.000Z",
+        foundedDate: new Date("2026-06-15T09:00:00.000Z"),
         createdBy: 5555,
       },
     ],
   });
+  
   console.log(
-    "Seeding Finished → 1 SUPERADMIN + 1 user (rakshaksigdel) + 20 players + 1 tournament created",
+    "Seeding Finished → 1 SUPERADMIN + 1 user (rakshaksigdel) + 20 players + 2 tournaments + 2 clubs created",
   );
 }
 
