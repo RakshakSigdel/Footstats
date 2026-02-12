@@ -277,7 +277,7 @@ model Match {
 
   // Relations
   schedule Schedule      @relation(fields: [scheduleId], references: [scheduleId], onDelete: Cascade)
-  events   MatchEvent[]
+  matchEvents   MatchEvent[]
   lineups  MatchLineup[]
 
   createdAt DateTime @default(now())

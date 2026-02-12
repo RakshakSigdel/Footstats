@@ -45,10 +45,11 @@ export const createSchedule = async (req, res) => {
 export const getAllSchedules = async (req, res) => {
   try {
     const schedules = await ScheduleService.getAllSchedules();
+    console.log("Check Point 1");
     res.status(200).json({ schedules });
   } catch (error) {
     res.status(500).json({ 
-      message: "Error fetching schedules", 
+      message: "Error Fetching Schedules", 
       error: error.message 
     });
   }

@@ -29,7 +29,7 @@ router.get("/:id", verifyToken, getScheduleById);
 
 // Protected routes (require authorization)
 router.post("/", verifyToken, createSchedule);
-router.put("/:id", verifyToken, authorizeScheduleCreation, updateSchedule);
-router.delete("/:id", verifyToken, authorizeScheduleCreation, deleteSchedule);
+router.put("/:id", verifyToken, updateSchedule);
+router.delete("/:id", verifyToken, deleteSchedule);
 
 export default router;

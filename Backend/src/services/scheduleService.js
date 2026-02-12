@@ -52,7 +52,7 @@ class ScheduleService {
         },
         creationFromUser: {
           select: {
-            UserId: true,
+            userId: true,
             firstName: true,
             lastName: true,
           },
@@ -85,12 +85,9 @@ class ScheduleService {
             },
           },
         },
-
-        location: true,
-        date: true,
-        orderBy: {
-          date: "asc",
-        },
+      },
+      orderBy: {
+        date: "asc",
       },
     });
     return schedules;
@@ -166,7 +163,7 @@ class ScheduleService {
         creatorFromTournament: true,
         match: {
           include: {
-            events: true,
+            matchEvents: true,
             lineups: {
               where: {
                 userId: userId,
@@ -207,7 +204,7 @@ class ScheduleService {
         creatorFromTournament: true,
         match: {
           include: {
-            events: true,
+            matchEvents: true,
             lineups: {
               include: {
                 user: {
