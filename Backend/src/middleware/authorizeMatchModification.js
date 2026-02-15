@@ -4,7 +4,7 @@ const prisma = new PrismaClient();
 
 export const authorizeMatchModification = async (req, res, next) => {
   const loggedInUserId = req.user.userId;
-  const matchId = parseInt(req.params.id);
+  const matchId = parseInt(req.params.id || req.params.matchId);
 
   try {
     // Super Admin can do anything
