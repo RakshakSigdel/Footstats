@@ -12,6 +12,7 @@ import playerRoutes from "./routes/playerRoute.js";
 import tournamentRoutes from "./routes/tournamentRoutes.js";
 import clubRoutes from "./routes/clubRoute.js";
 import scheduleRoutes from "./routes/scheduleRoute.js";
+import matchRoutes from "./routes/matchRoute.js";
 
 dotenv.config();
 
@@ -25,6 +26,7 @@ app.use("/api/players", playerRoutes);
 app.use("/api/tournaments", tournamentRoutes);
 app.use("/api/clubs", clubRoutes);
 app.use("/api/schedules",scheduleRoutes);
+app.use("/api/matches", matchRoutes);
 app.get("/", (req, res) => {
   res.send("Welcome to Footstat API");
 });
