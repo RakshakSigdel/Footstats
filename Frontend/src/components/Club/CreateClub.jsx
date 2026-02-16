@@ -107,7 +107,7 @@ const CreateClub = ({ isOpen, onClose, onCreateClub }) => {
           </div>
 
           {/* Joining Fee */}
-          <div>
+          {/* <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Joining Fee</label>
             <input
               type="text"
@@ -117,7 +117,7 @@ const CreateClub = ({ isOpen, onClose, onCreateClub }) => {
               onChange={handleInputChange}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
-          </div>
+          </div> */}
 
           {/* Action Buttons */}
           <div className="flex gap-3 justify-end pt-4 border-t border-gray-200">
