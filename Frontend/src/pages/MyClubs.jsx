@@ -33,7 +33,7 @@ export default function MyClubs() {
   };
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-screen bg-gray-50 exclude-link-pointer">
       {/* Fixed Sidebar */}
       <Sidebar />
 

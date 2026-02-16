@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import Sidebar from "../components/Global/Sidebar";
 import Topbar from "../components/Global/Topbar";
 import { getMyProfile } from "../services/api.player";
 
 export default function Dashboard() {
   const [profile, setProfile] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     let isCurrent = true;
@@ -37,6 +39,26 @@ export default function Dashboard() {
     { rank: 5, name: "Kiran Limbu", club: "Dharan Heroes", goals: 18 }
   ];
 
+  const appearanceCount = profile?.matchesPlayed ?? 0;
+  const goalsCount = profile?.goalsScored ?? 0;
+  const clubsCount = profile?.activeClubs ?? 0;
+  const tournamentsCount = profile?.activeTournamentEntries ?? 0;
+
+  const handleViewAllSchedules = () => {
+    navigate("/schedules");
+  };
+
+  const openDashboardScheduleDetails = (matchId, match) => {
+    navigate(`/schedule/upcoming-${matchId}`, {
+      state: {
+        match: {
+          ...match,
+          status: "upcoming",
+        },
+      },
+    });
+  };
+
   return (
     <div className="flex min-h-screen bg-gray-50">
       <Sidebar />
@@ -58,7 +80,24 @@ export default function Dashboard() {
 
           {/* Stats Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            {/* Total Goals Card */}
+            {/* Appearance Card */}
+            <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 hover:shadow-lg hover:scale-105 transition-all cursor-pointer">
+              <div className="flex justify-between items-start mb-3">
+                <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                    <line x1="16" y1="2" x2="16" y2="6" />
+                    <line x1="8" y1="2" x2="8" y2="6" />
+                    <line x1="3" y1="10" x2="21" y2="10" />
+                  </svg>
+                </div>
+              </div>
+              <p className="text-sm text-gray-600 mb-1">Appearance</p>
+              <h3 className="text-3xl font-bold text-gray-900 mb-1">{appearanceCount}</h3>
+              <p className="text-xs text-gray-500">Matches played</p>
+            </div>
+
+            {/* Goals Card */}
             <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 hover:shadow-lg hover:scale-105 transition-all cursor-pointer">
               <div className="flex justify-between items-start mb-3">
                 <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
@@ -68,16 +107,13 @@ export default function Dashboard() {
                     <circle cx="12" cy="12" r="2" />
                   </svg>
                 </div>
-                <span className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded-full font-medium">
-                  +12%
-                </span>
               </div>
-              <p className="text-sm text-gray-600 mb-1">Total Goals</p>
-              <h3 className="text-3xl font-bold text-gray-900 mb-1">{profile?.goalsScored || 24}</h3>
-              <p className="text-xs text-gray-500">This season</p>
+              <p className="text-sm text-gray-600 mb-1">Goals</p>
+              <h3 className="text-3xl font-bold text-gray-900 mb-1">{goalsCount}</h3>
+              <p className="text-xs text-gray-500">Total goals</p>
             </div>
 
-            {/* Assists Card */}
+            {/* Clubs Card */}
             <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 hover:shadow-lg hover:scale-105 transition-all cursor-pointer">
               <div className="flex justify-between items-start mb-3">
                 <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
@@ -88,30 +124,16 @@ export default function Dashboard() {
                     <path d="M16 3.13a4 4 0 0 1 0 7.75" />
                   </svg>
                 </div>
-                <span className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded-full font-medium">
-                  +8%
-                </span>
               </div>
-              <p className="text-sm text-gray-600 mb-1">Assists</p>
-              <h3 className="text-3xl font-bold text-gray-900 mb-1">{profile?.assist || 18}</h3>
-              <p className="text-xs text-gray-500">This season</p>
-            </div>
-
-            {/* Win Rate Card */}
-            <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 hover:shadow-lg hover:scale-105 transition-all cursor-pointer">
-              <div className="flex justify-between items-start mb-3">
-                <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
-                  </svg>
-                </div>
-                <span className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded-full font-medium">
-                  +5%
-                </span>
-              </div>
-              <p className="text-sm text-gray-600 mb-1">Win Rate</p>
-              <h3 className="text-3xl font-bold text-gray-900 mb-1">76%</h3>
-              <p className="text-xs text-gray-500">Last 10 matches</p>
+              <p className="text-sm text-gray-600 mb-1">Clubs</p>
+              <h3 className="text-3xl font-bold text-gray-900 mb-1">{clubsCount}</h3>
+              {clubsCount === 0 ? (
+                <Link to="/clubs" className="text-xs text-blue-600 hover:text-blue-700 font-medium">
+                  Join Club Now
+                </Link>
+              ) : (
+                <p className="text-xs text-gray-500">Active Clubs</p>
+              )}
             </div>
 
             {/* Tournaments Card */}
@@ -129,8 +151,14 @@ export default function Dashboard() {
                 </div>
               </div>
               <p className="text-sm text-gray-600 mb-1">Tournaments</p>
-              <h3 className="text-3xl font-bold text-gray-900 mb-1">3</h3>
-              <p className="text-xs text-gray-500">Active entries</p>
+              <h3 className="text-3xl font-bold text-gray-900 mb-1">{tournamentsCount}</h3>
+              {tournamentsCount === 0 ? (
+                <Link to="/tournaments" className="text-xs text-blue-600 hover:text-blue-700 font-medium">
+                  Register Tournament
+                </Link>
+              ) : (
+                <p className="text-xs text-gray-500">Active Entries</p>
+              )}
             </div>
           </div>
 
@@ -138,7 +166,11 @@ export default function Dashboard() {
           <div className="mb-8">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-xl font-bold text-gray-900">Upcoming Matches</h3>
-              <button className="text-sm text-blue-600 hover:text-blue-700 font-medium">
+              <button
+                type="button"
+                onClick={handleViewAllSchedules}
+                className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+              >
                 View All
               </button>
             </div>
@@ -198,7 +230,20 @@ export default function Dashboard() {
                   </div>
                 </div>
 
-                <button className="w-full border border-gray-300 rounded-lg py-2 text-sm font-medium text-gray-700 hover:bg-green-600 hover:text-white hover:border-green-600 transition-all">
+                <button
+                  type="button"
+                  onClick={() =>
+                    openDashboardScheduleDetails(1, {
+                      type: "League",
+                      typeColor: "bg-blue-100 text-blue-700",
+                      opponent: "Pokhara United",
+                      date: "Dec 25, 2025",
+                      time: "15:00",
+                      stadium: "ANFA Complex",
+                    })
+                  }
+                  className="w-full border border-gray-300 rounded-lg py-2 text-sm font-medium text-gray-700 hover:bg-green-600 hover:text-white hover:border-green-600 transition-all"
+                >
                   View Details
                 </button>
               </div>
@@ -257,7 +302,20 @@ export default function Dashboard() {
                   </div>
                 </div>
 
-                <button className="w-full border border-gray-300 rounded-lg py-2 text-sm font-medium text-gray-700 hover:bg-green-600 hover:text-white hover:border-green-600 transition-all">
+                <button
+                  type="button"
+                  onClick={() =>
+                    openDashboardScheduleDetails(2, {
+                      type: "Friendly",
+                      typeColor: "bg-green-100 text-green-700",
+                      opponent: "Biratnagar Kings",
+                      date: "Dec 28, 2025",
+                      time: "16:30",
+                      stadium: "Dasharath Stadium",
+                    })
+                  }
+                  className="w-full border border-gray-300 rounded-lg py-2 text-sm font-medium text-gray-700 hover:bg-green-600 hover:text-white hover:border-green-600 transition-all"
+                >
                   View Details
                 </button>
               </div>
@@ -316,7 +374,20 @@ export default function Dashboard() {
                   </div>
                 </div>
 
-                <button className="w-full border border-gray-300 rounded-lg py-2 text-sm font-medium text-gray-700 hover:bg-green-600 hover:text-white hover:border-green-600 transition-all">
+                <button
+                  type="button"
+                  onClick={() =>
+                    openDashboardScheduleDetails(3, {
+                      type: "Cup",
+                      typeColor: "bg-red-100 text-red-700",
+                      opponent: "Hetauda Strikers",
+                      date: "Jan 2, 2026",
+                      time: "14:00",
+                      stadium: "Local Ground",
+                    })
+                  }
+                  className="w-full border border-gray-300 rounded-lg py-2 text-sm font-medium text-gray-700 hover:bg-green-600 hover:text-white hover:border-green-600 transition-all"
+                >
                   View Details
                 </button>
               </div>
