@@ -1,8 +1,10 @@
 import React, { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import Sidebar from "../components/Global/Sidebar";
 import Topbar from "../components/Global/Topbar";
 
 export default function Schedule() {
+  const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState('upcoming')
 
   const upcomingMatches = [
@@ -78,6 +80,18 @@ export default function Schedule() {
   ]
 
   const matches = activeTab === 'upcoming' ? upcomingMatches : pastMatches
+
+  const openScheduleDetails = (match, status) => {
+    const routeId = `${status}-${match.id}`
+    navigate(`/schedule/${routeId}`, {
+      state: {
+        match: {
+          ...match,
+          status
+        }
+      }
+    })
+  }
 
   return (
     <div className="flex min-h-screen bg-gray-50">
@@ -170,7 +184,7 @@ export default function Schedule() {
 
                     {/* Action Buttons */}
                     <div className="flex items-center gap-3 flex-shrink-0">
-                      <button className="bg-blue-50 text-blue-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-100 transition-colors">
+                      <button onClick={() => openScheduleDetails(match, 'upcoming')} className="bg-blue-50 text-blue-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-100 transition-colors">
                         Details
                       </button>
                       <button className="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors">
@@ -214,7 +228,7 @@ export default function Schedule() {
                     </div>
 
                     {/* Right: View Full Stats Button */}
-                    <button className="bg-blue-50 text-blue-700 px-5 py-2 rounded-lg text-sm font-medium hover:bg-blue-100 transition-colors whitespace-nowrap">
+                    <button onClick={() => openScheduleDetails(match, 'past')} className="bg-blue-50 text-blue-700 px-5 py-2 rounded-lg text-sm font-medium hover:bg-blue-100 transition-colors whitespace-nowrap">
                       View Full Stats
                     </button>
                   </div>

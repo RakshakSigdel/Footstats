@@ -14,6 +14,7 @@ import TournamentDetails from "./pages/TournamentDetails";
 import Dashboard from "./pages/Dashboard";
 import Discover from "./pages/Discover";
 import Schedule from "./pages/Schedule";
+import ScheduleDetails from "./pages/ScheduleDetails";
 import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
 
@@ -37,6 +38,8 @@ function App() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/Discover" element={<Discover />} />
         <Route path="/schedules" element={<Schedule />} />
+        <Route path="/schedule" element={<Schedule />} />
+        <Route path="/schedule/:scheduleId" element={<ScheduleDetails />} />
         <Route path="Profile" element={<Profile />} />
         <Route path="Settings" element={<Settings />} />
       </Routes>

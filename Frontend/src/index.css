@@ -1,1 +1,11 @@
 @import "tailwindcss";
+
+/* Global link hover pointer */
+a:hover {
+  cursor: pointer;
+}
+
+/* Exclude MyClubs and ClubDetails pages */
+.exclude-link-pointer a:hover {
+  cursor: auto;
+}
