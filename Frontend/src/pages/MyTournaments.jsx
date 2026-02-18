@@ -32,7 +32,7 @@ export default function Tournaments() {
       id: 0,
       tournamentName: "Nepal Cup 2024",
       status: "Active",
-      statusColor: "bg-gray-900 text-white",
+      statusColor: "bg-slate-900 text-white",
       teams: 16,
       nextDate: "Next: Mar 15",
       prizePool: "NPR 50,000",
@@ -49,7 +49,7 @@ export default function Tournaments() {
       id: 1,
       tournamentName: "Valley Championship",
       status: "Upcoming",
-      statusColor: "bg-gray-600 text-white",
+      statusColor: "bg-slate-600 text-white",
       teams: 8,
       nextDate: "Starts: Apr 1",
       prizePool: "NPR 30,000",
@@ -116,7 +116,7 @@ export default function Tournaments() {
             </div>
             <button
               onClick={() => setIsCreateTournamentOpen(true)}
-              className="bg-gray-900 text-white px-6 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors flex items-center gap-2"
+              className="bg-slate-900 text-white px-6 py-2 rounded-lg text-sm font-medium hover:bg-slate-800 transition-colors flex items-center gap-2"
             >
               <svg
                 width="18"
@@ -245,10 +245,10 @@ export default function Tournaments() {
                     </div>
 
                     {/* Right: View Details Button */}
-                    <button
-                      onClick={() => navigate(`/tournament/${tournament.id}`)}
-                      className="bg-gray-900 text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-800 transition-colors whitespace-nowrap ml-6"
-                    >
+                  <button
+                    onClick={() => navigate(`/tournament/${tournament.id}`)}
+                    className="bg-slate-900 text-white px-6 py-2 rounded-lg font-medium hover:bg-slate-800 transition-colors whitespace-nowrap ml-6"
+                  >
                       View Details
                     </button>
                   </div>
@@ -270,7 +270,7 @@ export default function Tournaments() {
 
                   {/* Skill Level Badge */}
                   <div className="mb-4">
-                    <span className="bg-gray-900 text-white px-3 py-1 rounded-full text-xs font-bold">
+                    <span className="bg-slate-900 text-white px-3 py-1 rounded-full text-xs font-bold">
                       {tournament.skillLevel}
                     </span>
                   </div>
@@ -349,7 +349,7 @@ export default function Tournaments() {
                   </div>
 
                   {/* Register Button */}
-                  <button className="mt-6 w-full bg-gray-900 text-white py-2 rounded-lg font-medium hover:bg-gray-800 transition-colors">
+                  <button className="mt-6 w-full bg-slate-900 text-white py-2 rounded-lg font-medium hover:bg-slate-800 transition-colors">
                     Register Team
                   </button>
                 </div>

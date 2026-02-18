@@ -50,22 +50,22 @@ export default function Schedule() {
     {
       id: 1,
       type: 'League',
-      typeColor: 'bg-blue-900 text-white',
+      typeColor: 'bg-slate-900 text-white',
       opponent: 'Valley FC',
       date: 'Mar 10',
       score: '3 - 2',
       result: 'Win',
-      resultColor: 'bg-gray-900 text-white'
+      resultColor: 'bg-slate-900 text-white'
     },
     {
       id: 2,
       type: 'Friendly',
-      typeColor: 'bg-gray-800 text-white',
+      typeColor: 'bg-slate-800 text-white',
       opponent: 'Nepal United',
       date: 'Mar 8',
       score: '1 - 1',
       result: 'Draw',
-      resultColor: 'bg-gray-700 text-white'
+      resultColor: 'bg-slate-700 text-white'
     },
     {
       id: 3,
@@ -75,7 +75,7 @@ export default function Schedule() {
       date: 'Mar 5',
       score: '0 - 2',
       result: 'Loss',
-      resultColor: 'bg-gray-700 text-white'
+      resultColor: 'bg-slate-700 text-white'
     }
   ]
 
@@ -187,7 +187,7 @@ export default function Schedule() {
                       <button onClick={() => openScheduleDetails(match, 'upcoming')} className="bg-blue-50 text-blue-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-100 transition-colors">
                         Details
                       </button>
-                      <button className="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors">
+                      <button className="bg-slate-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-800 transition-colors">
                         Confirm Attendance
                       </button>
                     </div>
@@ -247,7 +247,7 @@ export default function Schedule() {
             </svg>
             <h3 className="text-lg font-bold text-gray-900 mb-2">Schedule a New Match</h3>
             <p className="text-sm text-gray-500 mb-6">Organize a match with another club</p>
-            <button className="bg-gray-900 text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-800 transition-colors">
+            <button className="bg-slate-900 text-white px-6 py-2 rounded-lg font-medium hover:bg-slate-800 transition-colors">
               Create Match Request
             </button>
           </div>

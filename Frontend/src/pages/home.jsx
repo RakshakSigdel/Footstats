@@ -25,7 +25,7 @@ export default function Home({ onOpenCreateClub, onOpenEditClub }) {
           <h1 className="text-4xl font-bold text-gray-900">My Clubs</h1>
           <button
             onClick={onOpenCreateClub}
-            className="bg-gray-900 hover:bg-gray-800 text-white font-semibold py-3 px-8 rounded-lg transition-colors shadow-md"
+            className="bg-slate-900 hover:bg-slate-800 text-white font-semibold py-3 px-8 rounded-lg transition-colors shadow-md"
           >
             + Create Club
           </button>

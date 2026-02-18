@@ -24,7 +24,7 @@ export default function Register() {
   };
 
   return (
-    <div className="flex flex-row min-h-screen" style={{ backgroundColor: "#F0F4FF" }}>
+    <div className="flex flex-row min-h-screen bg-[#eef1f6]">
       <AuthenticationSideImage 
         image={sidebg}
         title="Join the FootStats squad"
@@ -105,7 +105,7 @@ export default function Register() {
 
             <button
               type="submit"
-              className="w-full h-10 bg-gradient-to-r from-gray-900 to-gray-700 text-white rounded-xl font-semibold flex items-center justify-center gap-2 hover:from-gray-800 hover:to-gray-600 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 text-sm mt-4"
+              className="w-full h-10 bg-gradient-to-r from-slate-900 to-slate-700 text-white rounded-xl font-semibold flex items-center justify-center gap-2 hover:from-slate-800 hover:to-slate-600 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 text-sm mt-4"
             >
               Sign Up
               <span className="text-lg">→</span>

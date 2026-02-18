@@ -60,7 +60,7 @@ export default function TournamentDetails() {
               <div>
                 <div className="flex items-center gap-3 mb-2">
                   <h1 className="text-3xl font-bold text-gray-900">{tournament.name}</h1>
-                  <span className="bg-gray-900 text-white px-3 py-1 rounded-full text-xs font-bold">
+                  <span className="bg-slate-900 text-white px-3 py-1 rounded-full text-xs font-bold">
                     {tournament.status}
                   </span>
                 </div>

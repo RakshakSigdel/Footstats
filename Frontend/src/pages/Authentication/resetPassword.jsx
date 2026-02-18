@@ -22,7 +22,7 @@ export default function ResetPassword() {
   };
 
   return (
-    <div className="flex flex-row min-h-screen" style={{ backgroundColor: "#F0F4FF" }}>
+    <div className="flex flex-row min-h-screen bg-[#eef1f6]">
       <AuthenticationSideImage 
         image={sidebg}
         title="New password loading..."
@@ -61,7 +61,7 @@ export default function ResetPassword() {
 
                 <button
                   type="submit"
-                  className="w-full h-12 bg-gradient-to-r from-gray-900 to-gray-700 text-white rounded-xl font-semibold flex items-center justify-center gap-2 hover:from-gray-800 hover:to-gray-600 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                  className="w-full h-12 bg-gradient-to-r from-slate-900 to-slate-700 text-white rounded-xl font-semibold flex items-center justify-center gap-2 hover:from-slate-800 hover:to-slate-600 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
                 >
                   Confirm Password
                   <span className="text-lg">→</span>
@@ -102,7 +102,7 @@ export default function ResetPassword() {
               </p>
               <Link
                 to="/login"
-                className="inline-block w-full h-12 bg-gradient-to-r from-gray-900 to-gray-700 text-white rounded-xl font-semibold flex items-center justify-center gap-2 hover:from-gray-800 hover:to-gray-600 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                className="inline-block w-full h-12 bg-gradient-to-r from-slate-900 to-slate-700 text-white rounded-xl font-semibold flex items-center justify-center gap-2 hover:from-slate-800 hover:to-slate-600 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
               >
                 Back to Login
                 <span className="text-lg">→</span>
