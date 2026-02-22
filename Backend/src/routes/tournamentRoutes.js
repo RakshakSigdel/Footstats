@@ -13,7 +13,7 @@ import {
 
 router.get("/me", verifyToken, getMyTournaments);
 router.get("/", getAllTournaments);
-router.get("/:id", verifyToken, getTournamentById);
+router.get("/:id", getTournamentById);
 router.post("/", verifyToken, createTournament);
 router.put("/:id", verifyToken, authorizeTournamentOwnership, updateTournament);
 router.delete(

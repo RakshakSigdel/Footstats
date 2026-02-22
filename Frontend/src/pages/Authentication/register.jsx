@@ -28,7 +28,6 @@ export default function Register() {
     } catch (err) {
       const message = err?.message || err?.error || "Registration failed. Please try again.";
       setError(message);
-      throw err;
     }
   };
 

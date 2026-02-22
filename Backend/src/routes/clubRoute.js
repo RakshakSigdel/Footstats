@@ -14,7 +14,7 @@ import {
 router.post("/", verifyToken, createClub);
 router.get("/me", verifyToken, getMyClubs);
 router.get("/", getAllClubs);
-router.get("/:id", verifyToken, getClubById);
+router.get("/:id", getClubById);
 router.put("/:id", verifyToken, authorizeClubOwnership, updateClub);
 router.delete("/:id", verifyToken, authorizeClubOwnership, deleteClub);
 

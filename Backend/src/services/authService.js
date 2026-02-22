@@ -1,9 +1,8 @@
+import '../config/env.js';
 import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 import jwt from "jsonwebtoken";
 import { hashPassword, comparePassword } from "../utils/hashPassword.js";
-
-const JWT_SECRET = process.env.JWT_SECRET;
 
 class AuthService {
   static async register({ firstName, lastName, email, password }) {
@@ -33,6 +32,8 @@ class AuthService {
     return user;
   }
   static async login({ email, password }) {
+    const JWT_SECRET = process.env.JWT_SECRET;
+    
     //search for user
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user) {

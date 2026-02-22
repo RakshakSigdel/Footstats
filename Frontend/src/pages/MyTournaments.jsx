@@ -85,7 +85,7 @@ export default function Tournaments() {
 
   const openEditTournament = (tournament) => {
     setSelectedTournamentData({
-      id: tournament.id,
+      id: tournament.tournamentId,
       tournamentName: tournament.name,
       description: tournament.description,
       location: tournament.location,
@@ -176,7 +176,7 @@ export default function Tournaments() {
                 </div>
               )}
               {myTournaments.map((tournament) => (
-                <div key={tournament.id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow">
+                <div key={tournament.tournamentId} className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow">
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-4">
@@ -218,7 +218,7 @@ export default function Tournaments() {
                       </div>
                     </div>
                     <button
-                      onClick={() => navigate(`/tournament/${tournament.id}`)}
+                      onClick={() => navigate(`/tournament/${tournament.tournamentId}`)}
                       className="bg-slate-900 text-white px-6 py-2 rounded-lg font-medium hover:bg-slate-800 transition-colors whitespace-nowrap ml-6"
                     >
                       View Details
@@ -233,7 +233,7 @@ export default function Tournaments() {
                 <div className="col-span-full text-center py-8 text-gray-500">No tournaments to browse.</div>
               )}
               {browseTournaments.map((tournament) => (
-                <div key={tournament.id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow flex flex-col">
+                <div key={tournament.tournamentId} className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow flex flex-col">
                   <h2 className="text-xl font-bold text-gray-900 mb-3">{tournament.name}</h2>
                   <div className="mb-4">
                     <span className="bg-slate-900 text-white px-3 py-1 rounded-full text-xs font-bold">{tournament.format ?? "—"}</span>
@@ -268,7 +268,7 @@ export default function Tournaments() {
                     </div>
                   </div>
                   <button
-                    onClick={() => navigate(`/tournament/${tournament.id}`)}
+                    onClick={() => navigate(`/tournament/${tournament.tournamentId}`)}
                     className="mt-6 w-full bg-slate-900 text-white py-2 rounded-lg font-medium hover:bg-slate-800 transition-colors"
                   >
                     View Details

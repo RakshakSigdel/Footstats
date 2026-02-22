@@ -31,7 +31,7 @@ export default function TournamentDetails() {
         setTournament(t)
         setSchedules(Array.isArray(scheds) ? scheds : [])
         const map = {}
-        ;(Array.isArray(clubs) ? clubs : []).forEach((c) => { if (c?.id) map[c.id] = c.name })
+        ;(Array.isArray(clubs) ? clubs : []).forEach((c) => { if (c?.clubId) map[c.clubId] = c.name })
         setClubsMap(map)
       } catch (err) {
         setError(err?.message || 'Failed to load tournament')
@@ -183,7 +183,7 @@ export default function TournamentDetails() {
         onClose={() => setIsEditTournamentOpen(false)}
         onEditTournament={handleEditTournament}
         tournamentData={{
-          id: tournament.id,
+          id: tournament.tournamentId,
           tournamentName: tournament.name,
           description: tournament.description,
           location: tournament.location,

@@ -29,7 +29,7 @@ export default function ScheduleDetails() {
         setSchedule(s)
         setScheduleMatches(Array.isArray(m) ? m : [])
         const map = {}
-        ;(Array.isArray(clubs) ? clubs : []).forEach((c) => { if (c?.id) map[c.id] = c.name })
+        ;(Array.isArray(clubs) ? clubs : []).forEach((c) => { if (c?.clubId) map[c.clubId] = c.name })
         setClubsMap(map)
       } catch (err) {
         setError(err?.message || 'Failed to load schedule')

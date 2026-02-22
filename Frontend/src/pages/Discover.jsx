@@ -115,7 +115,7 @@ export default function Discover() {
                 <div className="col-span-2 text-center py-8 text-gray-500">No clubs to show.</div>
               )}
               {filteredClubs.map((club) => (
-                <div key={club.id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-lg hover:-translate-y-1 transition-all duration-200 cursor-pointer">
+                <div key={club.clubId} className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-lg hover:-translate-y-1 transition-all duration-200 cursor-pointer">
                   <div className="flex items-start justify-between mb-4">
                     <h3 className="text-xl font-bold text-gray-900">{club.name}</h3>
                   </div>
@@ -128,7 +128,7 @@ export default function Discover() {
                   </div>
                   <div className="flex items-center justify-between">
                     {club.description && <span className="text-sm text-gray-600 line-clamp-1 flex-1 mr-2">{club.description}</span>}
-                    <button onClick={() => navigate(`/club/${club.id}`)} className="bg-slate-900 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-slate-800 whitespace-nowrap">
+                    <button onClick={() => navigate(`/club/${club.clubId}`)} className="bg-slate-900 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-slate-800 whitespace-nowrap">
                       View Details
                     </button>
                   </div>
@@ -156,7 +156,7 @@ export default function Discover() {
                 <div className="col-span-3 text-center py-8 text-gray-500">No tournaments to show.</div>
               )}
               {filteredTournaments.map((tournament) => (
-                <div key={tournament.id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-lg hover:-translate-y-1 transition-all duration-200 cursor-pointer">
+                <div key={tournament.tournamentId} className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-lg hover:-translate-y-1 transition-all duration-200 cursor-pointer">
                   <h3 className="text-xl font-bold text-gray-900 mb-4">{tournament.name}</h3>
                   <div className="space-y-2 mb-6">
                     <div className="flex items-center gap-2 text-sm text-gray-600">
@@ -173,7 +173,7 @@ export default function Discover() {
                       {tournament.entryFee != null && tournament.entryFee > 0 ? `NPR ${tournament.entryFee}` : "Free"}
                     </div>
                   </div>
-                  <button onClick={() => navigate(`/tournament/${tournament.id}`)} className="w-full bg-slate-900 text-white py-3 rounded-lg text-sm font-medium hover:bg-slate-800">
+                  <button onClick={() => navigate(`/tournament/${tournament.tournamentId}`)} className="w-full bg-slate-900 text-white py-3 rounded-lg text-sm font-medium hover:bg-slate-800">
                     View Details
                   </button>
                 </div>

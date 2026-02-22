@@ -128,8 +128,8 @@ export default function MyClubs() {
               )}
               {myClubs.map((club) => (
                 <div
-                  key={club.id}
-                  onClick={() => handleViewDetails(club.id)}
+                  key={club.clubId}
+                  onClick={() => handleViewDetails(club.clubId)}
                   className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 cursor-pointer hover:shadow-md hover:-translate-y-1 transition-all duration-200"
                 >
                   <div className="flex items-center justify-between gap-6">
@@ -151,7 +151,7 @@ export default function MyClubs() {
                         </div>
                         <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-gray-600">
                           {club.location && (
-                            <div className="flex items-center gap-1.5">
+                            <div key="location" className="flex items-center gap-1.5">
                               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                 <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
                                 <circle cx="12" cy="10" r="3" />
@@ -160,7 +160,7 @@ export default function MyClubs() {
                             </div>
                           )}
                           {club.foundedDate && (
-                            <div className="flex items-center gap-1.5">
+                            <div key="founded" className="flex items-center gap-1.5">
                               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                 <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
                                 <line x1="16" y1="2" x2="16" y2="6" />
@@ -174,7 +174,7 @@ export default function MyClubs() {
                       </div>
                     </div>
                     <button
-                      onClick={(e) => { e.stopPropagation(); handleViewDetails(club.id); }}
+                      onClick={(e) => { e.stopPropagation(); handleViewDetails(club.clubId); }}
                       className="bg-blue-50 text-blue-700 rounded-lg px-5 py-2 text-sm font-medium hover:bg-blue-100 transition-colors whitespace-nowrap"
                     >
                       View Details
@@ -192,7 +192,7 @@ export default function MyClubs() {
                 <div className="col-span-2 text-center py-8 text-gray-500">No clubs to browse yet.</div>
               )}
               {browseClubs.map((club) => (
-                <div key={club.id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                <div key={club.clubId} className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
                   <div className="flex items-start gap-4 mb-6">
                     <div className="w-14 h-14 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
                       <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -218,7 +218,7 @@ export default function MyClubs() {
                   {club.description && <p className="text-sm text-gray-600 mb-4 line-clamp-2">{club.description}</p>}
                   <div className="flex justify-end">
                     <button
-                      onClick={() => handleJoinClub(club.id)}
+                      onClick={() => handleJoinClub(club.clubId)}
                       className="bg-slate-900 text-white px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-slate-800 transition-colors"
                     >
                       View Details

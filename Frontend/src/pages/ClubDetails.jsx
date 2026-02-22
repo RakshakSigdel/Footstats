@@ -156,7 +156,7 @@ export default function ClubDetails() {
         setClubData(club);
         setClubSchedules(Array.isArray(schedules) ? schedules : []);
         const map = {};
-        (Array.isArray(allClubs) ? allClubs : []).forEach((c) => { if (c?.id) map[c.id] = c.name; });
+        (Array.isArray(allClubs) ? allClubs : []).forEach((c) => { if (c?.clubId) map[c.clubId] = c.name; });
         setClubsMap(map);
       } catch (err) {
         setError(err?.message || "Failed to load club");

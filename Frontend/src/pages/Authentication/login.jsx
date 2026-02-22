@@ -28,7 +28,6 @@ export default function Login() {
     } catch (err) {
       const message = err?.message || err?.error || "Login failed. Please try again.";
       setError(message);
-      throw err;
     }
   };
 

@@ -1,10 +1,8 @@
-import express from "express";
-// const dotenv = require("dotenv");
-import dotenv from "dotenv";
-dotenv.config();
+// Load environment variables FIRST
+import './config/env.js';
 
+import express from "express";
 import cors from "cors";
-// const cors = require("cors");
 
 //Routes Import
 import authRoutes from "./routes/authRoutes.js";
@@ -13,8 +11,6 @@ import tournamentRoutes from "./routes/tournamentRoutes.js";
 import clubRoutes from "./routes/clubRoute.js";
 import scheduleRoutes from "./routes/scheduleRoute.js";
 import matchRoutes from "./routes/matchRoute.js";
-
-dotenv.config();
 
 const app = express();
 app.use(cors());
