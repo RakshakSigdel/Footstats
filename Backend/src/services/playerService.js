@@ -93,5 +93,60 @@ class PlayerService {
     });
     return { deletedId: deleted.userId };
   }
+
+  static async getPlayersByClubId(clubId) {
+    const clubMembers = await prisma.userClub.findMany({
+      where: { clubId: Number(clubId) },
+      include: {
+        user: {
+          select: {
+            userId: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            dateOfBirth: true,
+            gender: true,
+            Phone: true,
+            location: true,
+            profilePhoto: true,
+            preferredFoot: true,
+          },
+        },
+      },
+    });
+    
+    // Get stats for each player in this club
+    const playersWithStats = await Promise.all(
+      clubMembers.map(async (member) => {
+        // Count appearances (match lineups for this club)
+        const appearances = await prisma.matchLineup.count({
+          where: {
+            userId: member.userId,
+            clubId: Number(clubId),
+          },
+        });
+
+        // Count goals (match events where eventType is GOAL for this club)
+        const goals = await prisma.matchEvent.count({
+          where: {
+            userId: member.userId,
+            clubId: Number(clubId),
+            eventType: 'GOAL',
+          },
+        });
+
+        return {
+          ...member.user,
+          role: member.role,
+          position: member.position,
+          joinedAt: member.joinedAt,
+          appearances,
+          goals,
+        };
+      })
+    );
+    
+    return playersWithStats;
+  }
 }
 export default PlayerService;

@@ -44,3 +44,12 @@ export const deletePlayer = async (id) => {
     throw error.response?.data || { message: "Failed to delete player" };
   }
 };
+
+export const getPlayersByClubId = async (clubId) => {
+  try {
+    const response = await api.get(`/players/club/${clubId}`);
+    return response.data.players;
+  } catch (error) {
+    throw error.response?.data || { message: "Failed to fetch club players" };
+  }
+};

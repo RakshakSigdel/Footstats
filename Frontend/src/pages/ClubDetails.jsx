@@ -5,6 +5,7 @@ import Topbar from "../components/Global/Topbar";
 import { getClubById, updateClub } from "../services/api.clubs";
 import { getClubSchedules } from "../services/api.schedules";
 import { getAllClubs } from "../services/api.clubs";
+import { getPlayersByClubId } from "../services/api.player";
 
 // EditClub Modal Component
 const EditClub = ({ isOpen, onClose, onEditClub, clubData }) => {
@@ -137,6 +138,7 @@ export default function ClubDetails() {
   const [clubData, setClubData] = useState(null);
   const [clubSchedules, setClubSchedules] = useState([]);
   const [clubsMap, setClubsMap] = useState({});
+  const [clubPlayers, setClubPlayers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -148,13 +150,15 @@ export default function ClubDetails() {
       setLoading(true);
       setError(null);
       try {
-        const [club, schedules, allClubs] = await Promise.all([
+        const [club, schedules, allClubs, players] = await Promise.all([
           getClubById(clubId),
           getClubSchedules(clubId).catch(() => []),
           getAllClubs().catch(() => []),
+          getPlayersByClubId(clubId).catch(() => []),
         ]);
         setClubData(club);
         setClubSchedules(Array.isArray(schedules) ? schedules : []);
+        setClubPlayers(Array.isArray(players) ? players : []);
         const map = {};
         (Array.isArray(allClubs) ? allClubs : []).forEach((c) => { if (c?.clubId) map[c.clubId] = c.name; });
         setClubsMap(map);
@@ -358,7 +362,46 @@ export default function ClubDetails() {
           {activeTab === "members" && (
             <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
               <h2 className="text-xl font-bold text-gray-900 mb-6">Team Members</h2>
-              <p className="text-gray-500">Member list is not provided by the backend API.</p>
+              {clubPlayers.length === 0 ? (
+                <p className="text-gray-500">No members in this club yet.</p>
+              ) : (
+                <div className="space-y-3">
+                  {clubPlayers.map((player) => (
+                    <div key={player.userId} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                      <div className="flex items-center gap-4 flex-1">
+                        <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
+                          {player.profilePhoto ? (
+                            <img src={player.profilePhoto} alt={player.firstName} className="w-full h-full rounded-full object-cover" />
+                          ) : (
+                            <span className="text-white font-bold text-lg">
+                              {player.firstName?.[0]}{player.lastName?.[0]}
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <h3 className="font-semibold text-gray-900">{player.firstName} {player.lastName}</h3>
+                            {player.role === "ADMIN" && (
+                              <span className="bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full text-xs font-medium">Admin</span>
+                            )}
+                          </div>
+                          <p className="text-sm text-gray-600">{player.position || 'No position assigned'}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-6 text-center">
+                        <div>
+                          <div className="text-2xl font-bold text-gray-900">{player.appearances || 0}</div>
+                          <div className="text-xs text-gray-500">Appearances</div>
+                        </div>
+                        <div>
+                          <div className="text-2xl font-bold text-blue-600">{player.goals || 0}</div>
+                          <div className="text-xs text-gray-500">Goals</div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 

@@ -9,11 +9,13 @@ import {
   updatePlayerById,
   deletePlayerById,
   getMyProfile,
+  getPlayersByClubId,
 } from "../controllers/playerController.js";
 
 //GET api/players/
 router.get("/", getAllPlayers);
 router.get("/me", verifyToken, getMyProfile);
+router.get("/club/:clubId", getPlayersByClubId);
 router.get("/:id", verifyToken, getPlayerById);
 router.put("/:id", verifyToken, authorizeOwnership, updatePlayerById);
 router.delete("/:id", verifyToken, authorizeOwnership, deletePlayerById);

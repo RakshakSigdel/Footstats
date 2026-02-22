@@ -92,3 +92,15 @@ export const deletePlayerById = async (req, res) => {
       .json({ message: "Error deleting player", error: error.message });
   }
 };
+
+export const getPlayersByClubId = async (req, res) => {
+  try {
+    const { clubId } = req.params;
+    const players = await PlayerService.getPlayersByClubId(clubId);
+    res.status(200).json({ players });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Error retrieving club players", error: error.message });
+  }
+};
