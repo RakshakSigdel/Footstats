@@ -1,10 +1,10 @@
-const {PrismaClient} = require('@prisma/client');
+import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
 class RequestService {
     static async createJoinRequest(data) {
-        const newRequest = await prisma.request.create({
+        const newRequest = await prisma.clubRequest.create({
             data: {
                 userId: data.userId,
                 clubId: data.clubId,
@@ -15,20 +15,22 @@ class RequestService {
     }
 
     static async getClubRequests(clubId) {
-        const requests = await prisma.request.findMany({
+        const requests = await prisma.clubRequest.findMany({
             where: {
                 clubId: clubId,
+                status: 'PENDING', // Only show pending requests
             },
             include: {
                 user: true,
                 club: true,
             },
         });
+        console.log(`Found ${requests.length} pending requests for club ${clubId}`);
         return requests;
     }
 
     static async approveJoinRequest(requestId) {
-        const request = await prisma.request.findUnique({
+        const request = await prisma.clubRequest.findUnique({
             where: { requestId: Number(requestId) },
             include: { user: true, club: true },
         });
@@ -37,21 +39,48 @@ class RequestService {
             throw new Error("Request not found");
         }
 
-        const updatedRequest = await prisma.request.update({
-            where: { requestId: Number(requestId) },
-            data: {
-                status: "APPROVED",
-            },
-    });
-        return updatedRequest;
+        // Add user to club and update request status in a transaction
+        const result = await prisma.$transaction(async (tx) => {
+            // Check if user is already a member
+            const existingMembership = await tx.userClub.findUnique({
+                where: {
+                    userId_clubId: {
+                        userId: request.userId,
+                        clubId: request.clubId,
+                    },
+                },
+            });
+
+            // Create UserClub entry only if not already a member
+            if (!existingMembership) {
+                await tx.userClub.create({
+                    data: {
+                        userId: request.userId,
+                        clubId: request.clubId,
+                    },
+                });
+            }
+
+            // Update request status
+            const updatedRequest = await tx.clubRequest.update({
+                where: { requestId: Number(requestId) },
+                data: {
+                    status: "APPROVED",
+                },
+            });
+
+            return updatedRequest;
+        });
+
+        return result;
     }
 
     static async rejectJoinRequest(requestId) {
-        const deletedrequest = await prisma.request.delete({
+        const deletedrequest = await prisma.clubRequest.delete({
             where: { requestId: Number(requestId) },
         });
         return deletedrequest;
     }
 }
 
-module.exports = {RequestService};
+export { RequestService };

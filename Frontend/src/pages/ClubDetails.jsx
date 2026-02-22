@@ -6,6 +6,8 @@ import { getClubById, updateClub } from "../services/api.clubs";
 import { getClubSchedules } from "../services/api.schedules";
 import { getAllClubs } from "../services/api.clubs";
 import { getPlayersByClubId } from "../services/api.player";
+import { getMyProfile } from "../services/api.player";
+import { getClubRequests, approveJoinRequest, rejectJoinRequest, createJoinRequest } from "../services/api.requests";
 
 // EditClub Modal Component
 const EditClub = ({ isOpen, onClose, onEditClub, clubData }) => {
@@ -139,10 +141,13 @@ export default function ClubDetails() {
   const [clubSchedules, setClubSchedules] = useState([]);
   const [clubsMap, setClubsMap] = useState({});
   const [clubPlayers, setClubPlayers] = useState([]);
+  const [clubRequests, setClubRequests] = useState([]);
+  const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
+  const [joinRequestSent, setJoinRequestSent] = useState(false);
 
   useEffect(() => {
     if (!clubId) return;
@@ -150,18 +155,38 @@ export default function ClubDetails() {
       setLoading(true);
       setError(null);
       try {
-        const [club, schedules, allClubs, players] = await Promise.all([
+        const [club, schedules, allClubs, players, user] = await Promise.all([
           getClubById(clubId),
           getClubSchedules(clubId).catch(() => []),
           getAllClubs().catch(() => []),
           getPlayersByClubId(clubId).catch(() => []),
+          getMyProfile().catch(() => null),
         ]);
         setClubData(club);
         setClubSchedules(Array.isArray(schedules) ? schedules : []);
         setClubPlayers(Array.isArray(players) ? players : []);
+        setCurrentUser(user);
         const map = {};
         (Array.isArray(allClubs) ? allClubs : []).forEach((c) => { if (c?.clubId) map[c.clubId] = c.name; });
         setClubsMap(map);
+
+        // Load requests and check user's request status
+        if (user && club) {
+          // Try to fetch requests - will only succeed if user is admin
+          const requests = await getClubRequests(clubId).catch(() => []);
+          const allRequests = Array.isArray(requests) ? requests : [];
+          
+          // If admin, show all requests
+          if (user.userId === club.createdBy) {
+            setClubRequests(allRequests);
+          }
+          
+          // Check if current user has a pending request
+          if (allRequests.length > 0) {
+            const userHasRequest = allRequests.some(req => req.userId === user.userId && req.status === 'PENDING');
+            setJoinRequestSent(userHasRequest);
+          }
+        }
       } catch (err) {
         setError(err?.message || "Failed to load club");
         throw err;
@@ -172,13 +197,20 @@ export default function ClubDetails() {
     load();
   }, [clubId]);
 
-  const tabs = [
+  // Check if current user is a member of the club
+  const isClubMember = currentUser && clubPlayers.some(player => player.userId === currentUser.userId);
+  const isClubAdmin = currentUser && clubData && currentUser.userId === clubData.createdBy;
+
+  // Filter tabs based on user role
+  const allTabs = [
     { id: "overview", label: "Overview", icon: "📊" },
     { id: "members", label: "Members", icon: "👥" },
     { id: "matches", label: "Matches", icon: "⚽" },
-    { id: "requests", label: "Requests", icon: "📬" },
+    { id: "requests", label: "Requests", icon: "📬", adminOnly: true },
     { id: "chat", label: "Chat", icon: "💬" },
   ];
+  
+  const tabs = allTabs.filter(tab => !tab.adminOnly || isClubAdmin);
 
   const getResultColor = (result) => {
     switch (result) {
@@ -199,6 +231,48 @@ export default function ClubDetails() {
     } catch (err) {
       setError(err?.message || "Failed to update club");
       throw err;
+    }
+  };
+
+  const handleApproveRequest = async (requestId) => {
+    try {
+      console.log('Approving request:', requestId);
+      await approveJoinRequest(requestId);
+      // Reload requests and players
+      const [requests, players] = await Promise.all([
+        getClubRequests(clubId),
+        getPlayersByClubId(clubId),
+      ]);
+      setClubRequests(Array.isArray(requests) ? requests : []);
+      setClubPlayers(Array.isArray(players) ? players : []);
+      setError(null); // Clear any previous errors
+    } catch (err) {
+      console.error('Error approving request:', err);
+      setError(err?.message || "Failed to approve request");
+    }
+  };
+
+  const handleRejectRequest = async (requestId) => {
+    try {
+      console.log('Rejecting request:', requestId);
+      await rejectJoinRequest(requestId);
+      // Reload requests
+      const requests = await getClubRequests(clubId);
+      setClubRequests(Array.isArray(requests) ? requests : []);
+      setError(null); // Clear any previous errors
+    } catch (err) {
+      console.error('Error rejecting request:', err);
+      setError(err?.message || "Failed to reject request");
+    }
+  };
+
+  const handleRequestToJoin = async () => {
+    if (!clubId || !currentUser) return;
+    try {
+      await createJoinRequest(Number(clubId));
+      setJoinRequestSent(true);
+    } catch (err) {
+      setError(err?.message || "Failed to send join request");
     }
   };
 
@@ -256,42 +330,75 @@ export default function ClubDetails() {
                   {clubData.foundedDate ? `Founded ${new Date(clubData.foundedDate).getFullYear()} • ` : ""}{clubData.location ?? ""}
                 </p>
 
-                {/* Buttons - placed below the description line, left side */}
+                {/* Buttons - visible based on user role */}
                 <div className="flex flex-wrap gap-3">
-                  <button className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 md:px-6 md:py-3 rounded-lg font-medium flex items-center gap-2 transition-colors">
-                    <svg
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
+                  {/* Request to Join button for non-members */}
+                  {!isClubAdmin && !isClubMember && (
+                    <button 
+                      onClick={handleRequestToJoin}
+                      disabled={joinRequestSent}
+                      className={`px-5 py-2.5 md:px-6 md:py-3 rounded-lg font-medium flex items-center gap-2 transition-colors ${
+                        joinRequestSent 
+                          ? 'bg-gray-400 text-white cursor-not-allowed' 
+                          : 'bg-green-600 hover:bg-green-700 text-white'
+                      }`}
                     >
-                      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                      <circle cx="9" cy="7" r="4" />
-                      <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-                      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-                    </svg>
-                    Invite Members
-                  </button>
+                      <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                      >
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                        <circle cx="8.5" cy="7" r="4" />
+                        <line x1="20" y1="8" x2="20" y2="14" />
+                        <line x1="23" y1="11" x2="17" y2="11" />
+                      </svg>
+                      {joinRequestSent ? 'Request Sent' : 'Request to Join Club'}
+                    </button>
+                  )}
 
-                  <button
-                    onClick={() => setIsEditModalOpen(true)}
-                    className="bg-slate-800 hover:bg-slate-900 text-white px-5 py-2.5 md:px-6 md:py-3 rounded-lg font-medium flex items-center gap-2 transition-colors"
-                  >
-                    <svg
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                    >
-                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                    </svg>
-                    Edit Club
-                  </button>
+                  {/* Admin-only buttons */}
+                  {isClubAdmin && (
+                    <>
+                      <button className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 md:px-6 md:py-3 rounded-lg font-medium flex items-center gap-2 transition-colors">
+                        <svg
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                        >
+                          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                          <circle cx="9" cy="7" r="4" />
+                          <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                          <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                        </svg>
+                        Invite Members
+                      </button>
+
+                      <button
+                        onClick={() => setIsEditModalOpen(true)}
+                        className="bg-slate-800 hover:bg-slate-900 text-white px-5 py-2.5 md:px-6 md:py-3 rounded-lg font-medium flex items-center gap-2 transition-colors"
+                      >
+                        <svg
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                        >
+                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                        </svg>
+                        Edit Club
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
@@ -476,7 +583,57 @@ export default function ClubDetails() {
           {activeTab === "requests" && (
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
               <h2 className="text-xl font-bold text-gray-900 mb-6">Join Requests</h2>
-              <p className="text-gray-500">Requests API is not active in the backend yet.</p>
+              {!isClubAdmin ? (
+                <p className="text-gray-500">Only club admins can view join requests.</p>
+              ) : clubRequests.length === 0 ? (
+                <p className="text-gray-500">No pending join requests.</p>
+              ) : (
+                <div className="space-y-3">
+                  {clubRequests.map((request) => (
+                    <div 
+                      key={request.requestId} 
+                      className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                          <span className="text-blue-700 font-bold text-lg">
+                            {request.user?.firstName?.charAt(0) || '?'}
+                          </span>
+                        </div>
+                        <div>
+                          <div className="font-semibold text-gray-900">
+                            {request.user?.firstName} {request.user?.lastName}
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            {request.user?.position || 'Player'} • {request.user?.location || 'Location not set'}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => handleApproveRequest(request.requestId)}
+                          className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-1"
+                        >
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <polyline points="20 6 9 17 4 12" />
+                          </svg>
+                          Accept
+                        </button>
+                        <button
+                          onClick={() => handleRejectRequest(request.requestId)}
+                          className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-1"
+                        >
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <line x1="18" y1="6" x2="6" y2="18" />
+                            <line x1="6" y1="6" x2="18" y2="18" />
+                          </svg>
+                          Deny
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 

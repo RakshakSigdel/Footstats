@@ -1,9 +1,9 @@
-const { PrismaClient } = require("@prisma/client");
-const { RequestService } = require("../services/requestService");
+import { PrismaClient } from "@prisma/client";
+import { RequestService } from "../services/requestService.js";
 
 const prisma = new PrismaClient();
 
-const createJoinRequest = async (req, res) => {
+export const createJoinRequest = async (req, res) => {
   const userId = req.user.userId;
   const { clubId } = req.body;
 
@@ -23,7 +23,23 @@ const createJoinRequest = async (req, res) => {
         .json({ message: "Club creator cannot request to join this club" });
     }
 
-    const existingRequest = await prisma.request.findUnique({
+    // Check if user is already a member
+    const existingMembership = await prisma.userClub.findUnique({
+      where: {
+        userId_clubId: {
+          userId,
+          clubId,
+        },
+      },
+    });
+
+    if (existingMembership) {
+      return res
+        .status(409)
+        .json({ message: "You are already a member of this club" });
+    }
+
+    const existingRequest = await prisma.clubRequest.findUnique({
       where: {
         userId_clubId: {
           userId,
@@ -55,7 +71,7 @@ const createJoinRequest = async (req, res) => {
   }
 };
 
-const getClubRequests = async (req, res) => {
+export const getClubRequests = async (req, res) => {
   const clubId = Number(req.params.clubId);
   try {
     const requests = await RequestService.getClubRequests(clubId);
@@ -67,10 +83,12 @@ const getClubRequests = async (req, res) => {
   }
 };
 
-const approveJoinRequest = async (req, res) => {
+export const approveJoinRequest = async (req, res) => {
   const { requestId } = req.params;
+  console.log('Approving request:', requestId, 'by user:', req.user.userId);
   try {
     const approveRequest = await RequestService.approveJoinRequest(requestId);
+    console.log('Request approved successfully:', approveRequest);
     res
       .status(200)
       .json({
@@ -78,16 +96,19 @@ const approveJoinRequest = async (req, res) => {
         request: approveRequest,
       });
   } catch (error) {
+    console.error('Error approving request:', error);
     res
       .status(500)
       .json({ message: "Error approving join request", error: error.message });
   }
 };
 
-const rejectJoinRequest = async (req, res) => {
+export const rejectJoinRequest = async (req, res) => {
   const { requestId } = req.params;
+  console.log('Rejecting request:', requestId, 'by user:', req.user.userId);
   try {
     const rejectRequest = await RequestService.rejectJoinRequest(requestId);
+    console.log('Request rejected successfully:', rejectRequest);
     res
       .status(200)
       .json({
@@ -95,15 +116,11 @@ const rejectJoinRequest = async (req, res) => {
         request: rejectRequest,
       });
   } catch (error) {
+    console.error('Error rejecting request:', error);
     res
       .status(500)
       .json({ message: "Error rejecting join request", error: error.message });
   }
 };
 
-module.exports = {
-  createJoinRequest,
-  getClubRequests,
-  approveJoinRequest,
-  rejectJoinRequest,
-};
+
