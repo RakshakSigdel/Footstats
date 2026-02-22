@@ -1,19 +1,28 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Sidebar from "../components/Global/Sidebar";
 import Topbar from "../components/Global/Topbar";
-
+import { getClubById, updateClub } from "../services/api.clubs";
+import { getClubSchedules } from "../services/api.schedules";
+import { getAllClubs } from "../services/api.clubs";
 
 // EditClub Modal Component
-
 const EditClub = ({ isOpen, onClose, onEditClub, clubData }) => {
-  const [formData, setFormData] = useState(
-    clubData || {
-      clubName: "",
-      description: "",
-      location: "",
-    },
-  );
+  const [formData, setFormData] = useState({
+    clubName: "",
+    description: "",
+    location: "",
+  });
+
+  useEffect(() => {
+    if (clubData) {
+      setFormData({
+        clubName: clubData.name ?? "",
+        description: clubData.description ?? "",
+        location: clubData.location ?? "",
+      });
+    }
+  }, [clubData]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -22,7 +31,11 @@ const EditClub = ({ isOpen, onClose, onEditClub, clubData }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onEditClub(formData);
+    onEditClub({
+      name: formData.clubName,
+      description: formData.description,
+      location: formData.location,
+    });
     onClose();
   };
 
@@ -118,129 +131,71 @@ const EditClub = ({ isOpen, onClose, onEditClub, clubData }) => {
 
 
 // Main ClubDetails Component
-
 export default function ClubDetails() {
   const { clubId } = useParams();
   const navigate = useNavigate();
-
+  const [clubData, setClubData] = useState(null);
+  const [clubSchedules, setClubSchedules] = useState([]);
+  const [clubsMap, setClubsMap] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState("overview"); // NEW: Tab state
+  const [activeTab, setActiveTab] = useState("overview");
 
-  // Mock data - replace with real API data
-  const clubData = {
-    id: 1,
-    name: "Kathmandu FC",
-    members: 32,
-    founded: 2018,
-    location: "Kathmandu, Nepal",
-    totalMatches: 156,
-    winRate: "68%",
-    tournamentsWon: 8,
-    activePlayers: 32,
-    teamMembers: [
-      {
-        id: 1,
-        name: "Rajesh Shrestha",
-        position: "Forward",
-        number: 10,
-        matches: 28,
-        goals: 24,
-        initials: "R",
-      },
-      {
-        id: 2,
-        name: "Anil Maharjan",
-        position: "Midfielder",
-        number: 8,
-        matches: 30,
-        goals: 12,
-        initials: "A",
-      },
-      {
-        id: 3,
-        name: "Sunil Tamang",
-        position: "Defender",
-        number: 5,
-        matches: 29,
-        goals: 3,
-        initials: "S",
-      },
-      {
-        id: 4,
-        name: "Bikash Rai",
-        position: "Goalkeeper",
-        number: 1,
-        matches: 32,
-        goals: 0,
-        initials: "B",
-      },
-      {
-        id: 5,
-        name: "Kiran Limbu",
-        position: "Forward",
-        number: 11,
-        matches: 25,
-        goals: 18,
-        initials: "K",
-      },
-    ],
-    recentResults: [
-      {
-        id: 1,
-        opponent: "Pokhara United",
-        result: "Win",
-        score: "3-1",
-        date: "Dec 15",
-      },
-      {
-        id: 2,
-        opponent: "Lalitpur City",
-        result: "Win",
-        score: "2-0",
-        date: "Dec 12",
-      },
-      {
-        id: 3,
-        opponent: "Biratnagar Kings",
-        result: "Draw",
-        score: "1-1",
-        date: "Dec 8",
-      },
-      {
-        id: 4,
-        opponent: "Dharan Heroes",
-        result: "Win",
-        score: "4-2",
-        date: "Dec 5",
-      },
-    ],
-  };
+  useEffect(() => {
+    if (!clubId) return;
+    const load = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const [club, schedules, allClubs] = await Promise.all([
+          getClubById(clubId),
+          getClubSchedules(clubId).catch(() => []),
+          getAllClubs().catch(() => []),
+        ]);
+        setClubData(club);
+        setClubSchedules(Array.isArray(schedules) ? schedules : []);
+        const map = {};
+        (Array.isArray(allClubs) ? allClubs : []).forEach((c) => { if (c?.id) map[c.id] = c.name; });
+        setClubsMap(map);
+      } catch (err) {
+        setError(err?.message || "Failed to load club");
+        throw err;
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, [clubId]);
 
-  // NEW: Navigation tabs configuration
   const tabs = [
     { id: "overview", label: "Overview", icon: "📊" },
     { id: "members", label: "Members", icon: "👥" },
     { id: "matches", label: "Matches", icon: "⚽" },
-    { id: "requests", label: "Requests", icon: "📬", badge: 3 },
-    { id: "chat", label: "Chat", icon: "💬", badge: 5 }
+    { id: "requests", label: "Requests", icon: "📬" },
+    { id: "chat", label: "Chat", icon: "💬" },
   ];
 
   const getResultColor = (result) => {
     switch (result) {
-      case "Win":
-        return "bg-green-100 text-green-700";
-      case "Draw":
-        return "bg-yellow-100 text-yellow-700";
-      case "Loss":
-        return "bg-red-100 text-red-700";
-      default:
-        return "bg-gray-100 text-gray-700";
+      case "Win": return "bg-green-100 text-green-700";
+      case "Draw": return "bg-yellow-100 text-yellow-700";
+      case "Loss": return "bg-red-100 text-red-700";
+      default: return "bg-gray-100 text-gray-700";
     }
   };
 
-  const handleEditClub = (updatedData) => {
-    console.log("Club updated with:", updatedData);
-    // → Here you would call your API to save changes
+  const handleEditClub = async (updatedData) => {
+    if (!clubId) return;
+    try {
+      await updateClub(clubId, updatedData);
+      const updated = await getClubById(clubId);
+      setClubData(updated);
+      setIsEditModalOpen(false);
+    } catch (err) {
+      setError(err?.message || "Failed to update club");
+      throw err;
+    }
   };
 
   return (
@@ -251,45 +206,35 @@ export default function ClubDetails() {
         <Topbar />
 
         <main className="flex-1 p-6 md:p-8 overflow-auto bg-[#eef1f6]">
-          {/* Back button */}
           <button
             onClick={() => navigate(-1)}
             className="flex items-center gap-2 text-blue-600 hover:text-blue-700 mb-6 font-medium"
           >
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M19 12H5M12 19l-7-7 7-7" />
             </svg>
             Back
           </button>
 
-          {/* ─── Header Section ─── */}
+          {error && (
+            <div className="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 text-red-700">{error}</div>
+          )}
+          {loading && <div className="mb-6 text-gray-500">Loading club...</div>}
+          {!clubData && !loading && (
+            <div className="mb-6 text-gray-500">Club not found.</div>
+          )}
+
+          {clubData && (
+          <>
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 md:p-8 mb-6 relative">
-            {/* Member count - top right */}
             <div className="absolute top-6 right-6 md:top-8 md:right-8 text-right">
-              <div className="text-4xl md:text-5xl font-bold text-gray-900">
-                {clubData.members}
-              </div>
-              <div className="text-sm md:text-base text-gray-500">Members</div>
+              <div className="text-4xl md:text-5xl font-bold text-gray-900">{clubSchedules.length}</div>
+              <div className="text-sm md:text-base text-gray-500">Schedules</div>
             </div>
 
             <div className="flex items-start gap-5 md:gap-6 pr-32 md:pr-48">
-              {/* Club Logo */}
               <div className="w-16 h-16 md:w-20 md:h-20 bg-green-600 rounded-xl flex items-center justify-center flex-shrink-0">
-                <svg
-                  width="40"
-                  height="32"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="white"
-                  strokeWidth="2"
-                >
+                <svg width="40" height="32" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
                   <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
                   <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
                   <path d="M4 22h16" />
@@ -298,17 +243,13 @@ export default function ClubDetails() {
                   <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
                 </svg>
               </div>
-
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-2">
-                  <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
-                    {clubData.name}
-                  </h1>
+                  <h1 className="text-2xl md:text-3xl font-bold text-gray-900">{clubData.name}</h1>
                   <span className="text-yellow-500 text-2xl">●</span>
                 </div>
-
                 <p className="text-sm md:text-base text-gray-600 mb-4">
-                  Founded {clubData.founded} • {clubData.location}
+                  {clubData.foundedDate ? `Founded ${new Date(clubData.foundedDate).getFullYear()} • ` : ""}{clubData.location ?? ""}
                 </p>
 
                 {/* Buttons - placed below the description line, left side */}
@@ -352,7 +293,6 @@ export default function ClubDetails() {
             </div>
           </div>
 
-          {/* ─── NEW: Navigation Tabs ─── */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 mb-6 overflow-hidden">
             <div className="flex items-center border-b border-gray-200">
               {tabs.map((tab) => (
@@ -360,305 +300,108 @@ export default function ClubDetails() {
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   className={`flex-1 px-6 py-4 text-sm font-semibold transition-all relative flex items-center justify-center gap-2 ${
-                    activeTab === tab.id
-                      ? "text-blue-600 bg-blue-50"
-                      : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                    activeTab === tab.id ? "text-blue-600 bg-blue-50" : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
                   }`}
                 >
                   <span className="text-lg">{tab.icon}</span>
                   <span>{tab.label}</span>
-                  {tab.badge && (
-                    <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full font-bold">
-                      {tab.badge}
-                    </span>
-                  )}
-                  {activeTab === tab.id && (
-                    <div className="absolute bottom-0 left-0 right-0 h-1 bg-blue-600"></div>
-                  )}
+                  {activeTab === tab.id && <div className="absolute bottom-0 left-0 right-0 h-1 bg-blue-600"></div>}
                 </button>
               ))}
             </div>
           </div>
 
-          {/* ─── Tab Content: OVERVIEW ─── */}
           {activeTab === "overview" && (
             <>
-              {/* Stats Cards with hover effect */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
                 {[
-                  {
-                    icon: (
-                      <svg
-                        width="28"
-                        height="28"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="#6B7280"
-                        strokeWidth="2"
-                      >
-                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-                        <line x1="16" y1="2" x2="16" y2="6" />
-                        <line x1="8" y1="2" x2="8" y2="6" />
-                        <line x1="3" y1="10" x2="21" y2="10" />
-                      </svg>
-                    ),
-                    label: "Total Matches",
-                    value: clubData.totalMatches,
-                    sub: "This season",
-                  },
-                  {
-                    icon: (
-                      <svg
-                        width="28"
-                        height="28"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="#6B7280"
-                        strokeWidth="2"
-                      >
-                        <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" />
-                        <polyline points="16 7 22 7 22 13" />
-                      </svg>
-                    ),
-                    label: "Win Rate",
-                    value: clubData.winRate,
-                    sub: "Last 50 games",
-                  },
-                  {
-                    icon: (
-                      <svg
-                        width="28"
-                        height="28"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="#6B7280"
-                        strokeWidth="2"
-                      >
-                        <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
-                        <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
-                        <path d="M4 22h16" />
-                        <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
-                        <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
-                        <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
-                      </svg>
-                    ),
-                    label: "Tournaments Won",
-                    value: clubData.tournamentsWon,
-                    sub: "All time",
-                  },
-                  {
-                    icon: (
-                      <svg
-                        width="28"
-                        height="28"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="#6B7280"
-                        strokeWidth="2"
-                      >
-                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                        <circle cx="9" cy="7" r="4" />
-                        <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-                        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-                      </svg>
-                    ),
-                    label: "Active Players",
-                    value: clubData.activePlayers,
-                    sub: "Registered",
-                  },
+                  { label: "Schedules", value: clubSchedules.length, sub: "Total" },
+                  { label: "Location", value: clubData.location ?? "—", sub: "Club" },
+                  { label: "Founded", value: clubData.foundedDate ? new Date(clubData.foundedDate).getFullYear() : "—", sub: "Year" },
+                  { label: "Description", value: clubData.description ? "Set" : "—", sub: "" },
                 ].map((stat, index) => (
-                  <div
-                    key={index}
-                    className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 text-center transition-all duration-200 hover:shadow-lg hover:scale-[1.03] hover:border-blue-200 cursor-pointer group"
-                  >
-                    {/* Icon + Label on top */}
-                    <div className="flex flex-col items-center mb-3">
-                      <div className="text-gray-600 group-hover:text-blue-600 transition-colors mb-2">
-                        {stat.icon}
-                      </div>
-                      <div className="text-base font-medium text-gray-700">
-                        {stat.label}
-                      </div>
-                    </div>
-
-                    {/* Big value */}
-                    <div className="text-4xl md:text-5xl font-bold text-gray-900 mb-1">
-                      {stat.value}
-                    </div>
-
-                    {/* Small subtext at bottom */}
-                    <div className="text-xs text-gray-500">{stat.sub}</div>
+                  <div key={index} className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 text-center">
+                    <div className="text-base font-medium text-gray-700 mb-2">{stat.label}</div>
+                    <div className="text-2xl md:text-3xl font-bold text-gray-900 truncate" title={stat.value}>{stat.value}</div>
+                    {stat.sub && <div className="text-xs text-gray-500">{stat.sub}</div>}
                   </div>
                 ))}
               </div>
-
-              {/* Recent Results Section */}
-              <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-                <h2 className="text-xl font-bold text-gray-900 mb-6">
-                  Recent Results
-                </h2>
-
-                <div className="space-y-4">
-                  {clubData.recentResults.map((result) => (
-                    <div
-                      key={result.id}
-                      className="flex items-center justify-between p-4 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors"
-                    >
-                      <div className="flex items-center gap-4">
-                        <span
-                          className={`px-4 py-1.5 rounded-full text-sm font-semibold ${getResultColor(result.result)}`}
-                        >
-                          {result.result}
-                        </span>
-                        <span className="font-medium text-gray-900">
-                          {result.opponent}
-                        </span>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-xl font-bold text-gray-900">
-                          {result.score}
-                        </div>
-                        <div className="text-sm text-gray-500">{result.date}</div>
-                      </div>
-                    </div>
-                  ))}
+              {clubData.description && (
+                <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 mb-8">
+                  <h2 className="text-xl font-bold text-gray-900 mb-4">About</h2>
+                  <p className="text-gray-700">{clubData.description}</p>
                 </div>
+              )}
+              <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                <h2 className="text-xl font-bold text-gray-900 mb-6">Club Schedules</h2>
+                {clubSchedules.length === 0 ? (
+                  <p className="text-gray-500">No schedules yet.</p>
+                ) : (
+                  <div className="space-y-3">
+                    {clubSchedules.slice(0, 10).map((s) => (
+                      <div key={s.id} className="flex items-center justify-between p-4 border border-gray-100 rounded-lg">
+                        <span className="font-medium text-gray-900">
+                          {clubsMap[s.teamOneId] ?? s.teamOneId} vs {clubsMap[s.teamTwoId] ?? s.teamTwoId}
+                        </span>
+                        <span className="text-sm text-gray-600">
+                          {s.date ? new Date(s.date).toLocaleString() : "—"} • {s.location ?? ""}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </>
           )}
 
-          {/* ─── Tab Content: MEMBERS ─── */}
           {activeTab === "members" && (
             <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-bold text-gray-900">Team Members</h2>
-                <button className="text-blue-600 hover:text-blue-700 font-medium">
-                  View All
-                </button>
-              </div>
-
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm min-w-[600px]">
-                  <thead>
-                    <tr className="border-b border-gray-200">
-                      <th className="text-left py-4 px-4 font-semibold text-gray-700">
-                        Player
-                      </th>
-                      <th className="text-left py-4 px-4 font-semibold text-gray-700">
-                        Position
-                      </th>
-                      <th className="text-center py-4 px-4 font-semibold text-gray-700">
-                        Number
-                      </th>
-                      <th className="text-center py-4 px-4 font-semibold text-gray-700">
-                        Matches
-                      </th>
-                      <th className="text-center py-4 px-4 font-semibold text-gray-700">
-                        Goals
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {clubData.teamMembers.map((player) => (
-                      <tr
-                        key={player.id}
-                        className="border-b border-gray-100 hover:bg-gray-50"
-                      >
-                        <td className="py-4 px-4">
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-700 rounded-full flex items-center justify-center text-white font-bold text-lg">
-                              {player.initials}
-                            </div>
-                            <span className="font-medium text-gray-900">
-                              {player.name}
-                            </span>
-                          </div>
-                        </td>
-                        <td className="py-4 px-4 text-gray-700">
-                          {player.position}
-                        </td>
-                        <td className="py-4 px-4 text-center">
-                          <span className="bg-blue-100 text-blue-700 px-3 py-1 rounded font-semibold">
-                            {player.number}
-                          </span>
-                        </td>
-                        <td className="py-4 px-4 text-center text-gray-800 font-medium">
-                          {player.matches}
-                        </td>
-                        <td className="py-4 px-4 text-center text-gray-900 font-bold">
-                          {player.goals}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <h2 className="text-xl font-bold text-gray-900 mb-6">Team Members</h2>
+              <p className="text-gray-500">Member list is not provided by the backend API.</p>
             </div>
           )}
 
-          {/* ─── Tab Content: MATCHES ─── */}
           {activeTab === "matches" && (
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-6">Upcoming & Recent Matches</h2>
-              <div className="text-center py-12">
-                <div className="text-6xl mb-4">⚽</div>
-                <p className="text-gray-600">No matches scheduled yet</p>
-              </div>
+              <h2 className="text-xl font-bold text-gray-900 mb-6">Club Schedules</h2>
+              {clubSchedules.length === 0 ? (
+                <p className="text-gray-500">No matches scheduled yet.</p>
+              ) : (
+                <div className="space-y-3">
+                  {clubSchedules.map((s) => (
+                    <div key={s.id} className="flex items-center justify-between p-4 border border-gray-100 rounded-lg">
+                      <span className="font-medium">{clubsMap[s.teamOneId] ?? s.teamOneId} vs {clubsMap[s.teamTwoId] ?? s.teamTwoId}</span>
+                      <span className="text-sm text-gray-600">{s.date ? new Date(s.date).toLocaleString() : ""} • {s.location ?? ""}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
-          {/* ─── Tab Content: REQUESTS ─── */}
           {activeTab === "requests" && (
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
               <h2 className="text-xl font-bold text-gray-900 mb-6">Join Requests</h2>
-              <div className="space-y-4">
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
-                        <span className="text-lg font-bold text-purple-700">P{i}</span>
-                      </div>
-                      <div>
-                        <h3 className="font-semibold text-gray-900">Player Name {i}</h3>
-                        <p className="text-sm text-gray-600">Forward • 2 days ago</p>
-                      </div>
-                    </div>
-                    <div className="flex gap-2">
-                      <button className="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-700 transition-colors">
-                        Accept
-                      </button>
-                      <button className="bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-700 transition-colors">
-                        Decline
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
+              <p className="text-gray-500">Requests API is not active in the backend yet.</p>
             </div>
           )}
 
-          {/* ─── Tab Content: CHAT ─── */}
           {activeTab === "chat" && (
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
               <h2 className="text-xl font-bold text-gray-900 mb-6">Club Chat</h2>
-              <div className="text-center py-12">
-                <div className="text-6xl mb-4">💬</div>
-                <p className="text-gray-600">Chat feature coming soon!</p>
-              </div>
+              <p className="text-gray-600">Chat feature coming soon!</p>
             </div>
           )}
 
-          {/* Edit Club Modal */}
           <EditClub
             isOpen={isEditModalOpen}
             onClose={() => setIsEditModalOpen(false)}
             onEditClub={handleEditClub}
-            clubData={{
-              clubName: clubData.name,
-              description: "Official football club based in Kathmandu",
-              location: clubData.location,
-            }}
+            clubData={{ name: clubData.name, description: clubData.description, location: clubData.location }}
           />
+          </>
+          )}
         </main>
       </div>
     </div>

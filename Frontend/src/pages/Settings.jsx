@@ -1,13 +1,19 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Sidebar from "../components/Global/Sidebar";
 import Topbar from "../components/Global/Topbar";
+import { getMyProfile, updatePlayerById } from "../services/api.player";
 
 export default function Settings() {
+  const [profile, setProfile] = useState(null);
   const [formData, setFormData] = useState({
-    fullName: "Rajesh Kumar",
-    email: "rajesh.kumar@email.com",
-    phone: "+977 9841234567"
+    firstName: "",
+    lastName: "",
+    phone: "",
+    location: ""
   });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [saveSuccess, setSaveSuccess] = useState(false);
 
   const [notifications, setNotifications] = useState({
     matchReminders: true,
@@ -19,23 +25,54 @@ export default function Settings() {
   const [language, setLanguage] = useState("English");
   const [timezone, setTimezone] = useState("Asia/Kathmandu (NPT)");
 
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const data = await getMyProfile();
+        setProfile(data);
+        setFormData({
+          firstName: data?.firstName ?? "",
+          lastName: data?.lastName ?? "",
+          phone: data?.Phone ?? "",
+          location: data?.location ?? ""
+        });
+      } catch (err) {
+        setError(err?.message || "Failed to load profile");
+        throw err;
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, []);
+
   const handleInputChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+    setSaveSuccess(false);
   };
 
   const handleToggle = (key) => {
-    setNotifications({
-      ...notifications,
-      [key]: !notifications[key]
-    });
+    setNotifications((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
-  const handleSaveChanges = () => {
-    console.log("Saving changes:", formData);
-    // Add save logic here
+  const handleSaveChanges = async () => {
+    if (!profile?.id) return;
+    setError(null);
+    setSaveSuccess(false);
+    try {
+      await updatePlayerById(profile.id, {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        Phone: formData.phone,
+        location: formData.location
+      });
+      setSaveSuccess(true);
+    } catch (err) {
+      setError(err?.message || "Failed to save changes");
+      throw err;
+    }
   };
 
   return (
@@ -47,56 +84,47 @@ export default function Settings() {
         <div className="border-t border-gray-200"></div>
 
         <main className="flex-1 p-6 md:p-8 overflow-auto bg-[#eef1f6]">
-          {/* Header */}
           <div className="mb-8">
             <h1 className="text-4xl font-bold text-gray-900 mb-2">Settings</h1>
             <p className="text-gray-600">Manage your account preferences</p>
           </div>
 
-          {/* Account Settings Section */}
+          {error && <div className="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 text-red-700">{error}</div>}
+          {saveSuccess && <div className="mb-6 p-4 rounded-xl bg-green-50 border border-green-200 text-green-700">Profile updated successfully.</div>}
+          {loading && <div className="mb-6 text-gray-500">Loading...</div>}
+
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 mb-6">
             <div className="flex items-center gap-3 mb-6">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
                 <circle cx="12" cy="7" r="4" />
               </svg>
-              <h2 className="text-2xl font-bold text-gray-900">Account Settings</h2>
+              <h2 className="text-2xl font-bold text-gray-900">Profile (from backend)</h2>
             </div>
 
             <div className="space-y-5">
-              {/* Full Name */}
               <div>
-                <label className="block text-sm font-medium text-gray-900 mb-2">
-                  Full Name
-                </label>
+                <label className="block text-sm font-medium text-gray-900 mb-2">First Name</label>
                 <input
                   type="text"
-                  name="fullName"
-                  value={formData.fullName}
+                  name="firstName"
+                  value={formData.firstName}
                   onChange={handleInputChange}
                   className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
-
-              {/* Email */}
               <div>
-                <label className="block text-sm font-medium text-gray-900 mb-2">
-                  Email
-                </label>
+                <label className="block text-sm font-medium text-gray-900 mb-2">Last Name</label>
                 <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
+                  type="text"
+                  name="lastName"
+                  value={formData.lastName}
                   onChange={handleInputChange}
                   className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
-
-              {/* Phone Number */}
               <div>
-                <label className="block text-sm font-medium text-gray-900 mb-2">
-                  Phone Number
-                </label>
+                <label className="block text-sm font-medium text-gray-900 mb-2">Phone Number</label>
                 <input
                   type="tel"
                   name="phone"
@@ -105,11 +133,20 @@ export default function Settings() {
                   className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
-
-              {/* Save Changes Button */}
+              <div>
+                <label className="block text-sm font-medium text-gray-900 mb-2">Location</label>
+                <input
+                  type="text"
+                  name="location"
+                  value={formData.location}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
               <button
                 onClick={handleSaveChanges}
-                className="bg-slate-900 text-white px-6 py-3 rounded-lg text-sm font-medium hover:bg-slate-800"
+                disabled={loading || !profile?.id}
+                className="bg-slate-900 text-white px-6 py-3 rounded-lg text-sm font-medium hover:bg-slate-800 disabled:opacity-50"
               >
                 Save Changes
               </button>

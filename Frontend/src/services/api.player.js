@@ -1,22 +1,46 @@
 import api from "./api";
 
 export const getAllPlayers = async (params = {}) => {
-  const response = await api.get("/players", { params });
+  try {
+    const response = await api.get("/players", { params });
+    return response.data.players;
+  } catch (error) {
+    throw error.response?.data || { message: "Failed to fetch players" };
+  }
 };
 
 export const getMyProfile = async () => {
-  const response = await api.get(`/players/me`);
-  return response.data.profile;
+  try {
+    const response = await api.get("/players/me");
+    return response.data.profile;
+  } catch (error) {
+    throw error.response?.data || { message: "Failed to fetch profile" };
+  }
 };
 
 export const getPlayerById = async (id) => {
-  const response = await api.get(`/players/${id}`);
-  return response.data;
+  try {
+    const response = await api.get(`/players/${id}`);
+    return response.data.player;
+  } catch (error) {
+    throw error.response?.data || { message: "Failed to fetch player" };
+  }
 };
-export const updatePlayerById = async (id) => {
-  return api.put(`/players/${id}`);
+
+export const updatePlayerById = async (id, body) => {
+  try {
+    const response = await api.put(`/players/${id}`, body);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { message: "Failed to update player" };
+  }
 };
 
 export const deletePlayer = async (id) => {
-  return api.delete(`/players/${id}`);
+  try {
+    const response = await api.delete(`/players/${id}`);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { message: "Failed to delete player" };
+  }
 };

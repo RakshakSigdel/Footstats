@@ -12,15 +12,24 @@ export default function Register() {
     email: "",
     password: "",
   });
+  const [error, setError] = useState(null);
 
-  const handleChange = (e) =>
+  const handleChange = (e) => {
+    setError(null);
     setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    await register(formData.firstName, formData.lastName, formData.email, formData.password);
-    navigate("/login");
-    console.log("Form submitted:", formData);
+    setError(null);
+    try {
+      await register(formData.firstName, formData.lastName, formData.email, formData.password);
+      navigate("/login");
+    } catch (err) {
+      const message = err?.message || err?.error || "Registration failed. Please try again.";
+      setError(message);
+      throw err;
+    }
   };
 
   return (
@@ -42,6 +51,11 @@ export default function Register() {
             </p>
           </div>
 
+          {error && (
+            <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm">
+              {error}
+            </div>
+          )}
           <form onSubmit={handleSubmit} className="space-y-3">
             <div>
               <label className="block text-xs font-medium text-gray-700 mb-1">

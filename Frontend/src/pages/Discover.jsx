@@ -1,66 +1,43 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import Sidebar from "../components/Global/Sidebar";
 import Topbar from "../components/Global/Topbar";
+import { getAllClubs } from "../services/api.clubs";
+import { getAllTournaments } from "../services/api.tournaments";
 
 export default function Discover() {
+  const navigate = useNavigate();
   const [activeFilter, setActiveFilter] = useState("All");
+  const [clubs, setClubs] = useState([]);
+  const [tournaments, setTournaments] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const filters = ["All", "Clubs", "Tournaments", "Within 5km", "This Month"];
 
-  const clubs = [
-    {
-      name: "Kathmandu FC",
-      level: "Intermediate",
-      location: "Kathmandu",
-      distance: "2.5 km",
-      members: 45
-    },
-    {
-      name: "Pokhara United",
-      level: "Advanced",
-      location: "Pokhara",
-      distance: "5.8 km",
-      members: 38
-    },
-    {
-      name: "Lalitpur Strikers",
-      level: "Beginner",
-      location: "Lalitpur",
-      distance: "3.2 km",
-      members: 52
-    },
-    {
-      name: "Bhaktapur Warriors",
-      level: "Intermediate",
-      location: "Bhaktapur",
-      distance: "7.1 km",
-      members: 41
-    }
-  ];
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const [clubsData, tournamentsData] = await Promise.all([
+          getAllClubs().catch(() => []),
+          getAllTournaments().catch(() => []),
+        ]);
+        setClubs(Array.isArray(clubsData) ? clubsData : []);
+        setTournaments(Array.isArray(tournamentsData) ? tournamentsData : []);
+      } catch (err) {
+        setError(err?.message || "Failed to load discover data");
+        throw err;
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, []);
 
-  const tournaments = [
-    {
-      name: "Nepal Cup 2024",
-      location: "Kathmandu",
-      teams: 16,
-      startDate: "Starts Mar 15",
-      prize: "NPR 5000"
-    },
-    {
-      name: "Valley Championship",
-      location: "Lalitpur",
-      teams: 8,
-      startDate: "Starts Apr 1",
-      prize: "NPR 3000"
-    },
-    {
-      name: "Amateur League",
-      location: "Pokhara",
-      teams: 24,
-      startDate: "Starts Mar 20",
-      prize: "Free"
-    }
-  ];
+  const filteredClubs = activeFilter === "Tournaments" ? [] : clubs;
+  const filteredTournaments = activeFilter === "Clubs" ? [] : tournaments;
 
   return (
     <div className="flex min-h-screen">
@@ -71,7 +48,8 @@ export default function Discover() {
         <div className="border-t border-gray-200"></div>
 
         <main className="flex-1 p-6 md:p-8 overflow-auto bg-[#eef1f6]">
-          {/* Header */}
+          {error && <div className="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 text-red-700">{error}</div>}
+          {loading && <div className="mb-6 text-gray-500">Loading...</div>}
           <div className="mb-8">
             <h1 className="text-4xl font-bold text-gray-900 mb-2">Discover</h1>
             <p className="text-gray-600">Find clubs and tournaments near you</p>
@@ -133,28 +111,24 @@ export default function Discover() {
             </div>
 
             <div className="grid grid-cols-2 gap-6">
-              {clubs.map((club) => (
-                <div key={club.name} className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-lg hover:-translate-y-1 transition-all duration-200 cursor-pointer">
+              {filteredClubs.length === 0 && !loading && (
+                <div className="col-span-2 text-center py-8 text-gray-500">No clubs to show.</div>
+              )}
+              {filteredClubs.map((club) => (
+                <div key={club.id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-lg hover:-translate-y-1 transition-all duration-200 cursor-pointer">
                   <div className="flex items-start justify-between mb-4">
                     <h3 className="text-xl font-bold text-gray-900">{club.name}</h3>
-                    <span className="bg-slate-900 text-white text-xs px-3 py-1 rounded-full font-medium">
-                      {club.level}
-                    </span>
                   </div>
-
                   <div className="flex items-center gap-1.5 text-sm text-gray-600 mb-4">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
                       <circle cx="12" cy="10" r="3" />
                     </svg>
-                    <span>{club.location}</span>
-                    <span>•</span>
-                    <span>{club.distance}</span>
+                    <span>{club.location ?? "—"}</span>
                   </div>
-
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">{club.members} members</span>
-                    <button className="bg-slate-900 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-slate-800">
+                    {club.description && <span className="text-sm text-gray-600 line-clamp-1 flex-1 mr-2">{club.description}</span>}
+                    <button onClick={() => navigate(`/club/${club.id}`)} className="bg-slate-900 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-slate-800 whitespace-nowrap">
                       View Details
                     </button>
                   </div>
@@ -178,40 +152,29 @@ export default function Discover() {
             </div>
 
             <div className="grid grid-cols-3 gap-6">
-              {tournaments.map((tournament) => (
-                <div key={tournament.name} className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-lg hover:-translate-y-1 transition-all duration-200 cursor-pointer">
+              {filteredTournaments.length === 0 && !loading && (
+                <div className="col-span-3 text-center py-8 text-gray-500">No tournaments to show.</div>
+              )}
+              {filteredTournaments.map((tournament) => (
+                <div key={tournament.id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-lg hover:-translate-y-1 transition-all duration-200 cursor-pointer">
                   <h3 className="text-xl font-bold text-gray-900 mb-4">{tournament.name}</h3>
-
                   <div className="space-y-2 mb-6">
                     <div className="flex items-center gap-2 text-sm text-gray-600">
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                         <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
                         <circle cx="12" cy="10" r="3" />
                       </svg>
-                      <span>{tournament.location}</span>
+                      <span>{tournament.location ?? "—"}</span>
                     </div>
-
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                        <circle cx="9" cy="7" r="4" />
-                        <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-                        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-                      </svg>
-                      <span>{tournament.teams} teams</span>
-                    </div>
-
                     <div className="text-sm text-gray-900 font-medium">
-                      {tournament.startDate}
+                      {tournament.startDate ? `Starts ${new Date(tournament.startDate).toLocaleDateString()}` : "—"}
                     </div>
-
                     <div className="text-sm text-gray-900 font-bold">
-                      {tournament.prize}
+                      {tournament.entryFee != null && tournament.entryFee > 0 ? `NPR ${tournament.entryFee}` : "Free"}
                     </div>
                   </div>
-
-                  <button className="w-full bg-slate-900 text-white py-3 rounded-lg text-sm font-medium hover:bg-slate-800">
-                    Register Now
+                  <button onClick={() => navigate(`/tournament/${tournament.id}`)} className="w-full bg-slate-900 text-white py-3 rounded-lg text-sm font-medium hover:bg-slate-800">
+                    View Details
                   </button>
                 </div>
               ))}

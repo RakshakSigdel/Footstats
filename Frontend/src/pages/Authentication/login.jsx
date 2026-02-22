@@ -9,20 +9,26 @@ export default function Login() {
     email: "",
     password: "",
   });
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
 
-  const handleChange = (e) =>
+  const handleChange = (e) => {
+    setError(null);
     setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Sign In Button Pressed");
+    setError(null);
     try {
       const data = await login(formData.email, formData.password);
+      if (!data?.token) throw new Error("Invalid response from server");
       localStorage.setItem("token", data.token);
       navigate("/dashboard");
     } catch (err) {
-      console.log(err.message);
+      const message = err?.message || err?.error || "Login failed. Please try again.";
+      setError(message);
+      throw err;
     }
   };
 
@@ -47,6 +53,11 @@ export default function Login() {
             </p>
           </div>
 
+          {error && (
+            <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm">
+              {error}
+            </div>
+          )}
           <form onSubmit={handleSubmit} className="space-y-3">
             <div>
               <label className="block text-xs font-medium text-gray-700 mb-1">

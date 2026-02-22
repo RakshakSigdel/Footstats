@@ -19,7 +19,12 @@ const CreateClub = ({ isOpen, onClose, onCreateClub }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onCreateClub(formData);
+    onCreateClub({
+      name: formData.clubName,
+      description: formData.description,
+      location: formData.location,
+      foundedDate: new Date().toISOString(),
+    });
     setFormData({
       clubName: '',
       description: '',

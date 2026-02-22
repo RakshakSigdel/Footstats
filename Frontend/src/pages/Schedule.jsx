@@ -1,97 +1,64 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Sidebar from "../components/Global/Sidebar";
 import Topbar from "../components/Global/Topbar";
+import { getMySchedules } from "../services/api.schedules";
+import { getAllMatches } from "../services/api.matches";
+import { getAllClubs } from "../services/api.clubs";
 
 export default function Schedule() {
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState('upcoming')
+  const [schedules, setSchedules] = useState([])
+  const [matches, setMatches] = useState([])
+  const [clubsMap, setClubsMap] = useState({})
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
 
-  const upcomingMatches = [
-    {
-      id: 1,
-      type: 'League',
-      typeColor: 'bg-blue-100 text-blue-700',
-      opponent: 'Kathmandu FC',
-      date: 'Mar 15',
-      time: '16:00',
-      stadium: 'Dasharath Stadium'
-    },
-    {
-      id: 2,
-      type: 'Friendly',
-      typeColor: 'bg-green-100 text-green-700',
-      opponent: 'Pokhara United',
-      date: 'Mar 18',
-      time: '14:30',
-      stadium: 'Pokhara Stadium'
-    },
-    {
-      id: 3,
-      type: 'Cup',
-      typeColor: 'bg-red-100 text-red-700',
-      opponent: 'Lalitpur Strikers',
-      date: 'Mar 22',
-      time: '15:00',
-      stadium: 'ANFA Complex'
-    },
-    {
-      id: 4,
-      type: 'League',
-      typeColor: 'bg-blue-100 text-blue-700',
-      opponent: 'Bhaktapur Warriors',
-      date: 'Mar 25',
-      time: '17:00',
-      stadium: 'Tudhkhel Ground'
-    }
-  ]
-
-  const pastMatches = [
-    {
-      id: 1,
-      type: 'League',
-      typeColor: 'bg-slate-900 text-white',
-      opponent: 'Valley FC',
-      date: 'Mar 10',
-      score: '3 - 2',
-      result: 'Win',
-      resultColor: 'bg-slate-900 text-white'
-    },
-    {
-      id: 2,
-      type: 'Friendly',
-      typeColor: 'bg-slate-800 text-white',
-      opponent: 'Nepal United',
-      date: 'Mar 8',
-      score: '1 - 1',
-      result: 'Draw',
-      resultColor: 'bg-slate-700 text-white'
-    },
-    {
-      id: 3,
-      type: 'Cup',
-      typeColor: 'bg-red-600 text-white',
-      opponent: 'Capital Stars',
-      date: 'Mar 5',
-      score: '0 - 2',
-      result: 'Loss',
-      resultColor: 'bg-slate-700 text-white'
-    }
-  ]
-
-  const matches = activeTab === 'upcoming' ? upcomingMatches : pastMatches
-
-  const openScheduleDetails = (match, status) => {
-    const routeId = `${status}-${match.id}`
-    navigate(`/schedule/${routeId}`, {
-      state: {
-        match: {
-          ...match,
-          status
-        }
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true)
+      setError(null)
+      try {
+        const [scheds, allMatches, clubs] = await Promise.all([
+          getMySchedules().catch(() => []),
+          getAllMatches().catch(() => []),
+          getAllClubs().catch(() => []),
+        ])
+        setSchedules(Array.isArray(scheds) ? scheds : [])
+        setMatches(Array.isArray(allMatches) ? allMatches : [])
+        const map = {}
+        ;(Array.isArray(clubs) ? clubs : []).forEach((c) => { if (c?.id) map[c.id] = c.name })
+        setClubsMap(map)
+      } catch (err) {
+        setError(err?.message || 'Failed to load schedules')
+        throw err
+      } finally {
+        setLoading(false)
       }
-    })
+    }
+    load()
+  }, [])
+
+  const now = new Date()
+  const upcomingSchedules = useMemo(() =>
+    schedules.filter((s) => s?.date && new Date(s.date) >= now).sort((a, b) => new Date(a.date) - new Date(b.date)),
+    [schedules]
+  )
+  const pastSchedules = useMemo(() =>
+    schedules.filter((s) => s?.date && new Date(s.date) < now).sort((a, b) => new Date(b.date) - new Date(a.date)),
+    [schedules]
+  )
+
+  const getMatchForSchedule = (scheduleId) => matches.find((m) => m.scheduleId === scheduleId)
+
+  const typeColor = (type) => {
+    if (type === 'Knockout') return 'bg-red-100 text-red-700'
+    if (type === 'League') return 'bg-blue-100 text-blue-700'
+    return 'bg-green-100 text-green-700'
   }
+
+  const openScheduleDetails = (schedule) => navigate(`/schedule/${schedule.id}`, { state: { schedule } })
 
   return (
     <div className="flex min-h-screen bg-gray-50">
@@ -133,26 +100,28 @@ export default function Schedule() {
             </div>
           </div>
 
-          {/* Match Cards */}
-          <div className="space-y-4">
-            {matches.map((match) => (
-              activeTab === 'upcoming' ? (
-                // Upcoming Matches Layout
-                <div key={match.id} className="bg-white rounded-lg shadow-sm border border-gray-100 p-5">
-                  <div className="flex items-center justify-between gap-6">
-                    {/* Match Type and Details */}
-                    <div className="flex items-center gap-4 flex-1">
-                      <span className={`px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap ${match.typeColor}`}>
-                        {match.type}
-                      </span>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="text-base font-bold text-gray-900">vs {match.opponent}</h3>
-                      </div>
-                    </div>
+          {error && <div className="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 text-red-700">{error}</div>}
+          {loading && <div className="mb-6 text-gray-500">Loading schedules...</div>}
 
-                    {/* Match Info */}
+          <div className="space-y-4">
+            {activeTab === 'upcoming' && upcomingSchedules.length === 0 && !loading && (
+              <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-8 text-center text-gray-500">No upcoming matches.</div>
+            )}
+            {activeTab === 'upcoming' && upcomingSchedules.map((schedule) => {
+              const teamOne = clubsMap[schedule.teamOneId] ?? 'Team 1'
+              const teamTwo = clubsMap[schedule.teamTwoId] ?? 'Team 2'
+              const dateStr = schedule.date ? new Date(schedule.date).toLocaleDateString() : 'TBD'
+              const timeStr = schedule.date ? new Date(schedule.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''
+              return (
+                <div key={schedule.id} className="bg-white rounded-lg shadow-sm border border-gray-100 p-5">
+                  <div className="flex items-center justify-between gap-6">
+                    <div className="flex items-center gap-4 flex-1">
+                      <span className={`px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap ${typeColor(schedule.scheduleType)}`}>
+                        {schedule.scheduleType ?? 'Match'}
+                      </span>
+                      <h3 className="text-base font-bold text-gray-900">{teamOne} vs {teamTwo}</h3>
+                    </div>
                     <div className="flex items-center gap-8 flex-1">
-                      {/* Date */}
                       <div className="flex items-center gap-2 text-gray-600">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                           <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
@@ -160,57 +129,60 @@ export default function Schedule() {
                           <line x1="8" y1="2" x2="8" y2="6" />
                           <line x1="3" y1="10" x2="21" y2="10" />
                         </svg>
-                        <span className="text-sm">{match.date}</span>
+                        <span className="text-sm">{dateStr}</span>
                       </div>
-
-                      {/* Time */}
                       <div className="flex items-center gap-2 text-gray-600">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                           <circle cx="12" cy="12" r="10" />
                           <polyline points="12 6 12 12 16 14" />
                         </svg>
-                        <span className="text-sm">{match.time}</span>
+                        <span className="text-sm">{timeStr}</span>
                       </div>
-
-                      {/* Stadium */}
                       <div className="flex items-center gap-2 text-gray-600">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                           <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
                           <circle cx="12" cy="10" r="3" />
                         </svg>
-                        <span className="text-sm">{match.stadium}</span>
+                        <span className="text-sm">{schedule.location ?? 'TBD'}</span>
                       </div>
                     </div>
-
-                    {/* Action Buttons */}
                     <div className="flex items-center gap-3 flex-shrink-0">
-                      <button onClick={() => openScheduleDetails(match, 'upcoming')} className="bg-blue-50 text-blue-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-100 transition-colors">
+                      <button onClick={() => openScheduleDetails(schedule)} className="bg-blue-50 text-blue-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-100 transition-colors">
                         Details
-                      </button>
-                      <button className="bg-slate-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-800 transition-colors">
-                        Confirm Attendance
                       </button>
                     </div>
                   </div>
                 </div>
-              ) : (
-                // Past Matches Layout
-                <div key={match.id} className="bg-white rounded-lg shadow-sm border border-gray-100 p-5">
-                  <div className="flex items-center justify-between gap-6">
-                    {/* Left: Type, Opponent, Result */}
-                    <div className="flex items-center gap-4 flex-1">
-                      <span className={`px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap ${match.typeColor}`}>
-                        {match.type}
-                      </span>
-                      <h3 className="text-lg font-bold text-gray-900">vs {match.opponent}</h3>
-                      <span className={`px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap ${match.resultColor}`}>
-                        {match.result}
-                      </span>
-                    </div>
+              )
+            })}
 
-                    {/* Middle: Date and Score */}
+            {activeTab === 'past' && pastSchedules.length === 0 && !loading && (
+              <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-8 text-center text-gray-500">No past matches.</div>
+            )}
+            {activeTab === 'past' && pastSchedules.map((schedule) => {
+              const matchResult = getMatchForSchedule(schedule.id)
+              const teamOne = clubsMap[schedule.teamOneId] ?? 'Team 1'
+              const teamTwo = clubsMap[schedule.teamTwoId] ?? 'Team 2'
+              const score = matchResult ? `${matchResult.teamOneGoals ?? 0} - ${matchResult.teamTwoGoals ?? 0}` : '—'
+              const result = matchResult
+                ? matchResult.teamOneGoals > matchResult.teamTwoGoals
+                  ? 'Win'
+                  : matchResult.teamOneGoals < matchResult.teamTwoGoals
+                    ? 'Loss'
+                    : 'Draw'
+                : '—'
+              const resultColor = result === 'Win' ? 'bg-slate-900 text-white' : result === 'Loss' ? 'bg-red-600 text-white' : 'bg-slate-700 text-white'
+              return (
+                <div key={schedule.id} className="bg-white rounded-lg shadow-sm border border-gray-100 p-5">
+                  <div className="flex items-center justify-between gap-6">
+                    <div className="flex items-center gap-4 flex-1">
+                      <span className={`px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap ${typeColor(schedule.scheduleType)}`}>
+                        {schedule.scheduleType ?? 'Match'}
+                      </span>
+                      <h3 className="text-lg font-bold text-gray-900">{teamOne} vs {teamTwo}</h3>
+                      <span className={`px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap ${resultColor}`}>{result}</span>
+                    </div>
                     <div className="flex items-center gap-8">
-                      {/* Date */}
                       <div className="flex items-center gap-2 text-gray-600">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                           <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
@@ -218,23 +190,17 @@ export default function Schedule() {
                           <line x1="8" y1="2" x2="8" y2="6" />
                           <line x1="3" y1="10" x2="21" y2="10" />
                         </svg>
-                        <span className="text-sm">{match.date}</span>
+                        <span className="text-sm">{schedule.date ? new Date(schedule.date).toLocaleDateString() : '—'}</span>
                       </div>
-
-                      {/* Score */}
-                      <div className="text-2xl font-bold text-gray-900 min-w-[60px]">
-                        {match.score}
-                      </div>
+                      <div className="text-2xl font-bold text-gray-900 min-w-[60px]">{score}</div>
                     </div>
-
-                    {/* Right: View Full Stats Button */}
-                    <button onClick={() => openScheduleDetails(match, 'past')} className="bg-blue-50 text-blue-700 px-5 py-2 rounded-lg text-sm font-medium hover:bg-blue-100 transition-colors whitespace-nowrap">
+                    <button onClick={() => openScheduleDetails(schedule)} className="bg-blue-50 text-blue-700 px-5 py-2 rounded-lg text-sm font-medium hover:bg-blue-100 transition-colors whitespace-nowrap">
                       View Full Stats
                     </button>
                   </div>
                 </div>
               )
-            ))}
+            })}
           </div>
 
           {/* Schedule a New Match Section */}

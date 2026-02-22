@@ -1,62 +1,85 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Sidebar from "../components/Global/Sidebar";
 import Topbar from "../components/Global/Topbar";
 import { getMyProfile } from "../services/api.player";
+import { getMySchedules } from "../services/api.schedules";
+import { getMyClubs } from "../services/api.clubs";
+import { getMyTournaments } from "../services/api.tournaments";
+import { getAllClubs } from "../services/api.clubs";
 
 export default function Dashboard() {
   const [profile, setProfile] = useState(null);
+  const [schedules, setSchedules] = useState([]);
+  const [clubsMap, setClubsMap] = useState({});
+  const [myClubsCount, setMyClubsCount] = useState(0);
+  const [myTournamentsCount, setMyTournamentsCount] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
     let isCurrent = true;
-    
-    const loadProfile = async () => {
+
+    const load = async () => {
+      setLoading(true);
+      setError(null);
       try {
-        const data = await getMyProfile();
-        if (isCurrent) {
-          setProfile(data);
-        }
+        const [profileData, schedulesData, myClubsData, myTournamentsData, allClubsData] = await Promise.all([
+          getMyProfile().catch(() => null),
+          getMySchedules().catch(() => []),
+          getMyClubs().catch(() => []),
+          getMyTournaments().catch(() => []),
+          getAllClubs().catch(() => []),
+        ]);
+        if (!isCurrent) return;
+        setProfile(profileData);
+        setSchedules(Array.isArray(schedulesData) ? schedulesData : []);
+        setMyClubsCount(Array.isArray(myClubsData) ? myClubsData.length : 0);
+        setMyTournamentsCount(Array.isArray(myTournamentsData) ? myTournamentsData.length : 0);
+        const map = {};
+        (Array.isArray(allClubsData) ? allClubsData : []).forEach((c) => {
+          if (c?.id) map[c.id] = c.name || "Unknown";
+        });
+        setClubsMap(map);
       } catch (err) {
-        if (isCurrent) {
-          console.log("Couldnot load profile", err);
-        }
+        if (isCurrent) setError(err?.message || "Failed to load dashboard");
+        throw err;
+      } finally {
+        if (isCurrent) setLoading(false);
       }
     };
-    
-    loadProfile();
-    
-    return () => {
-      isCurrent = false;
-    };
+
+    load();
+    return () => { isCurrent = false; };
   }, []);
 
-  const topScorers = [
-    { rank: 1, name: "Anil Maharjan", club: "Kathmandu FC", goals: 28 },
-    { rank: 2, name: "Rajesh Shrestha", club: "Lalitpur City", goals: 24 },
-    { rank: 3, name: "Sunil Tamang", club: "Pokhara United", goals: 22 },
-    { rank: 4, name: "Bikash Rai", club: "Biratnagar Kings", goals: 20 },
-    { rank: 5, name: "Kiran Limbu", club: "Dharan Heroes", goals: 18 }
-  ];
+  const now = new Date();
+  const upcomingSchedules = useMemo(() => {
+    return schedules
+      .filter((s) => s?.date && new Date(s.date) >= now)
+      .sort((a, b) => new Date(a.date) - new Date(b.date))
+      .slice(0, 3);
+  }, [schedules]);
+
+  const formatScheduleDate = (dateStr) => {
+    if (!dateStr) return "TBD";
+    const d = new Date(dateStr);
+    return d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+  };
+  const formatScheduleTime = (dateStr) => {
+    if (!dateStr) return "";
+    return new Date(dateStr).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+  };
 
   const appearanceCount = profile?.matchesPlayed ?? 0;
   const goalsCount = profile?.goalsScored ?? 0;
-  const clubsCount = profile?.activeClubs ?? 0;
-  const tournamentsCount = profile?.activeTournamentEntries ?? 0;
+  const clubsCount = myClubsCount;
+  const tournamentsCount = myTournamentsCount;
 
-  const handleViewAllSchedules = () => {
-    navigate("/schedules");
-  };
-
-  const openDashboardScheduleDetails = (matchId, match) => {
-    navigate(`/schedule/upcoming-${matchId}`, {
-      state: {
-        match: {
-          ...match,
-          status: "upcoming",
-        },
-      },
-    });
+  const handleViewAllSchedules = () => navigate("/schedules");
+  const openDashboardScheduleDetails = (schedule) => {
+    navigate(`/schedule/${schedule.id}`, { state: { schedule } });
   };
 
   return (
@@ -68,10 +91,18 @@ export default function Dashboard() {
         <div className="border-t border-gray-200"></div>
 
         <main className="flex-1 p-6 md:p-8 overflow-auto bg-[#eef1f6]">
+          {error && (
+            <div className="mb-4 p-4 rounded-xl bg-red-50 border border-red-200 text-red-700">
+              {error}
+            </div>
+          )}
+          {loading && (
+            <div className="mb-4 text-gray-500">Loading...</div>
+          )}
           {/* Welcome Header */}
           <div className="mb-6">
             <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-1">
-              Welcome back, {profile?.firstName || "Rajesh"}!
+              Welcome back, {profile?.firstName ?? "Player"}!
             </h2>
             <p className="text-sm md:text-base text-gray-500">
               Here's what's happening with your football journey
@@ -176,280 +207,108 @@ export default function Dashboard() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {/* Match Card 1 */}
-              <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 hover:shadow-lg hover:scale-105 transition-all">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-2 text-sm text-gray-500">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-                      <line x1="16" y1="2" x2="16" y2="6" />
-                      <line x1="8" y1="2" x2="8" y2="6" />
-                      <line x1="3" y1="10" x2="21" y2="10" />
-                    </svg>
-                    <span>Dec 25, 2025</span>
-                  </div>
-                  <span className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded-full font-semibold">
-                    UPCOMING
-                  </span>
+              {upcomingSchedules.length === 0 && !loading && (
+                <div className="col-span-full text-center py-8 text-gray-500">
+                  No upcoming matches. <Link to="/schedules" className="text-blue-600 hover:underline">View schedules</Link>
                 </div>
-
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex flex-col items-center gap-2 flex-1">
-                    <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-bold text-lg">
-                      K
+              )}
+              {upcomingSchedules.map((schedule) => {
+                const teamOne = clubsMap[schedule.teamOneId] || "Team 1";
+                const teamTwo = clubsMap[schedule.teamTwoId] || "Team 2";
+                const typeColor = schedule.scheduleType === "Knockout" ? "bg-red-100 text-red-700" : schedule.scheduleType === "League" ? "bg-blue-100 text-blue-700" : "bg-green-100 text-green-700";
+                return (
+                  <div key={schedule.id} className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 hover:shadow-lg hover:scale-105 transition-all">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-2 text-sm text-gray-500">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                          <line x1="16" y1="2" x2="16" y2="6" />
+                          <line x1="8" y1="2" x2="8" y2="6" />
+                          <line x1="3" y1="10" x2="21" y2="10" />
+                        </svg>
+                        <span>{formatScheduleDate(schedule.date)}</span>
+                      </div>
+                      <span className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded-full font-semibold">
+                        UPCOMING
+                      </span>
                     </div>
-                    <span className="text-sm font-semibold text-gray-900 text-center">Kathmandu FC</span>
-                  </div>
-
-                  <div className="px-4">
-                    <span className="text-gray-400 font-bold text-sm">VS</span>
-                  </div>
-
-                  <div className="flex flex-col items-center gap-2 flex-1">
-                    <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center text-green-700 font-bold text-lg">
-                      P
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex flex-col items-center gap-2 flex-1">
+                        <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-bold text-lg">
+                          {teamOne.charAt(0)}
+                        </div>
+                        <span className="text-sm font-semibold text-gray-900 text-center truncate w-full">{teamOne}</span>
+                      </div>
+                      <div className="px-4">
+                        <span className="text-gray-400 font-bold text-sm">VS</span>
+                      </div>
+                      <div className="flex flex-col items-center gap-2 flex-1">
+                        <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center text-green-700 font-bold text-lg">
+                          {teamTwo.charAt(0)}
+                        </div>
+                        <span className="text-sm font-semibold text-gray-900 text-center truncate w-full">{teamTwo}</span>
+                      </div>
                     </div>
-                    <span className="text-sm font-semibold text-gray-900 text-center">Pokhara United</span>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between text-sm text-gray-500 mb-4 pb-4 border-t pt-4">
-                  <div className="flex items-center gap-1.5">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <circle cx="12" cy="12" r="10" />
-                      <polyline points="12 6 12 12 16 14" />
-                    </svg>
-                    <span>15:00</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-                      <circle cx="12" cy="10" r="3" />
-                    </svg>
-                    <span>ANFA Complex</span>
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    openDashboardScheduleDetails(1, {
-                      type: "League",
-                      typeColor: "bg-blue-100 text-blue-700",
-                      opponent: "Pokhara United",
-                      date: "Dec 25, 2025",
-                      time: "15:00",
-                      stadium: "ANFA Complex",
-                    })
-                  }
-                  className="w-full border border-gray-300 rounded-lg py-2 text-sm font-medium text-gray-700 hover:bg-green-600 hover:text-white hover:border-green-600 transition-all"
-                >
-                  View Details
-                </button>
-              </div>
-
-              {/* Match Card 2 */}
-              <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 hover:shadow-lg hover:scale-105 transition-all">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-2 text-sm text-gray-500">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-                      <line x1="16" y1="2" x2="16" y2="6" />
-                      <line x1="8" y1="2" x2="8" y2="6" />
-                      <line x1="3" y1="10" x2="21" y2="10" />
-                    </svg>
-                    <span>Dec 28, 2025</span>
-                  </div>
-                  <span className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded-full font-semibold">
-                    UPCOMING
-                  </span>
-                </div>
-
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex flex-col items-center gap-2 flex-1">
-                    <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-bold text-lg">
-                      L
+                    <div className="flex items-center justify-between text-sm text-gray-500 mb-4 pb-4 border-t pt-4">
+                      <div className="flex items-center gap-1.5">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <circle cx="12" cy="12" r="10" />
+                          <polyline points="12 6 12 12 16 14" />
+                        </svg>
+                        <span>{formatScheduleTime(schedule.date)}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                          <circle cx="12" cy="10" r="3" />
+                        </svg>
+                        <span>{schedule.location || "TBD"}</span>
+                      </div>
                     </div>
-                    <span className="text-sm font-semibold text-gray-900 text-center">Lalitpur City</span>
+                    <button
+                      type="button"
+                      onClick={() => openDashboardScheduleDetails(schedule)}
+                      className="w-full border border-gray-300 rounded-lg py-2 text-sm font-medium text-gray-700 hover:bg-green-600 hover:text-white hover:border-green-600 transition-all"
+                    >
+                      View Details
+                    </button>
                   </div>
-
-                  <div className="px-4">
-                    <span className="text-gray-400 font-bold text-sm">VS</span>
-                  </div>
-
-                  <div className="flex flex-col items-center gap-2 flex-1">
-                    <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center text-green-700 font-bold text-lg">
-                      B
-                    </div>
-                    <span className="text-sm font-semibold text-gray-900 text-center">Biratnagar Kings</span>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between text-sm text-gray-500 mb-4 pb-4 border-t pt-4">
-                  <div className="flex items-center gap-1.5">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <circle cx="12" cy="12" r="10" />
-                      <polyline points="12 6 12 12 16 14" />
-                    </svg>
-                    <span>16:30</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-                      <circle cx="12" cy="10" r="3" />
-                    </svg>
-                    <span>Dasharath Stadium</span>
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    openDashboardScheduleDetails(2, {
-                      type: "Friendly",
-                      typeColor: "bg-green-100 text-green-700",
-                      opponent: "Biratnagar Kings",
-                      date: "Dec 28, 2025",
-                      time: "16:30",
-                      stadium: "Dasharath Stadium",
-                    })
-                  }
-                  className="w-full border border-gray-300 rounded-lg py-2 text-sm font-medium text-gray-700 hover:bg-green-600 hover:text-white hover:border-green-600 transition-all"
-                >
-                  View Details
-                </button>
-              </div>
-
-              {/* Match Card 3 */}
-              <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 hover:shadow-lg hover:scale-105 transition-all">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-2 text-sm text-gray-500">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-                      <line x1="16" y1="2" x2="16" y2="6" />
-                      <line x1="8" y1="2" x2="8" y2="6" />
-                      <line x1="3" y1="10" x2="21" y2="10" />
-                    </svg>
-                    <span>Jan 2, 2026</span>
-                  </div>
-                  <span className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded-full font-semibold">
-                    UPCOMING
-                  </span>
-                </div>
-
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex flex-col items-center gap-2 flex-1">
-                    <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-bold text-lg">
-                      D
-                    </div>
-                    <span className="text-sm font-semibold text-gray-900 text-center">Dharan Heroes</span>
-                  </div>
-
-                  <div className="px-4">
-                    <span className="text-gray-400 font-bold text-sm">VS</span>
-                  </div>
-
-                  <div className="flex flex-col items-center gap-2 flex-1">
-                    <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center text-green-700 font-bold text-lg">
-                      H
-                    </div>
-                    <span className="text-sm font-semibold text-gray-900 text-center">Hetauda Strikers</span>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between text-sm text-gray-500 mb-4 pb-4 border-t pt-4">
-                  <div className="flex items-center gap-1.5">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <circle cx="12" cy="12" r="10" />
-                      <polyline points="12 6 12 12 16 14" />
-                    </svg>
-                    <span>14:00</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-                      <circle cx="12" cy="10" r="3" />
-                    </svg>
-                    <span>Local Ground</span>
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    openDashboardScheduleDetails(3, {
-                      type: "Cup",
-                      typeColor: "bg-red-100 text-red-700",
-                      opponent: "Hetauda Strikers",
-                      date: "Jan 2, 2026",
-                      time: "14:00",
-                      stadium: "Local Ground",
-                    })
-                  }
-                  className="w-full border border-gray-300 rounded-lg py-2 text-sm font-medium text-gray-700 hover:bg-green-600 hover:text-white hover:border-green-600 transition-all"
-                >
-                  View Details
-                </button>
-              </div>
+                );
+              })}
             </div>
           </div>
 
-          {/* Bottom Section - Personal Performance & Top Scorers */}
+          {/* Bottom Section - Profile summary (backend does not provide top scorers / full stats) */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Personal Performance Card */}
             <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-              <h3 className="text-xl font-bold text-gray-900 mb-6">Personal Performance</h3>
-              
+              <h3 className="text-xl font-bold text-gray-900 mb-6">Your Profile</h3>
               <div className="space-y-4">
                 <div className="flex items-center justify-between py-3 border-b border-gray-100">
-                  <span className="text-gray-600">Matches Played</span>
-                  <span className="text-2xl font-bold text-gray-900">32</span>
+                  <span className="text-gray-600">Position</span>
+                  <span className="text-lg font-bold text-gray-900">{profile?.position ?? "—"}</span>
                 </div>
-                
                 <div className="flex items-center justify-between py-3 border-b border-gray-100">
-                  <span className="text-gray-600">Average Rating</span>
-                  <span className="text-2xl font-bold text-gray-900">8.4</span>
+                  <span className="text-gray-600">Location</span>
+                  <span className="text-lg font-bold text-gray-900">{profile?.location ?? "—"}</span>
                 </div>
-                
-                <div className="flex items-center justify-between py-3 border-b border-gray-100">
-                  <span className="text-gray-600">Minutes Played</span>
-                  <span className="text-2xl font-bold text-gray-900">2,640</span>
-                </div>
-                
                 <div className="flex items-center justify-between py-3">
-                  <span className="text-gray-600">Clean Sheets</span>
-                  <span className="text-2xl font-bold text-gray-900">12</span>
+                  <span className="text-gray-600">Gender</span>
+                  <span className="text-lg font-bold text-gray-900">{profile?.gender ?? "—"}</span>
                 </div>
               </div>
             </div>
-
-            {/* Top Scorers Card */}
             <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-              <h3 className="text-xl font-bold text-gray-900 mb-6">Top Scorers - Kathmandu</h3>
-              
+              <h3 className="text-xl font-bold text-gray-900 mb-6">Quick Links</h3>
               <div className="space-y-3">
-                {topScorers.map((scorer) => (
-                  <div 
-                    key={scorer.rank}
-                    className={`flex items-center justify-between p-3 rounded-lg cursor-pointer transition-all ${
-                      scorer.rank === 2 ? 'bg-green-50 hover:bg-green-100' : 'hover:bg-blue-50'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-slate-900 rounded-full flex items-center justify-center text-white font-bold text-sm">
-                        {scorer.rank}
-                      </div>
-                      <div>
-                        <p className="font-semibold text-gray-900">{scorer.name}</p>
-                        <p className="text-sm text-gray-500">{scorer.club}</p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-2xl font-bold text-gray-900">{scorer.goals}</p>
-                      <p className="text-xs text-gray-500">goals</p>
-                    </div>
-                  </div>
-                ))}
+                <Link to="/Profile" className="block p-3 rounded-lg hover:bg-gray-50 transition-colors font-medium text-gray-900">
+                  View full profile →
+                </Link>
+                <Link to="/clubs" className="block p-3 rounded-lg hover:bg-gray-50 transition-colors font-medium text-gray-900">
+                  My clubs ({clubsCount}) →
+                </Link>
+                <Link to="/tournaments" className="block p-3 rounded-lg hover:bg-gray-50 transition-colors font-medium text-gray-900">
+                  My tournaments ({tournamentsCount}) →
+                </Link>
               </div>
             </div>
           </div>
