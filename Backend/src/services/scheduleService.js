@@ -96,6 +96,95 @@ class ScheduleService {
   static async getScheduleById(scheduleId) {
     const schedule = await prisma.schedule.findUnique({
       where: { scheduleId: Number(scheduleId) },
+      include: {
+        teamOne: {
+          select: {
+            clubId: true,
+            name: true,
+            logo: true,
+            location: true,
+          },
+        },
+        teamTwo: {
+          select: {
+            clubId: true,
+            name: true,
+            logo: true,
+            location: true,
+          },
+        },
+        creatorFromClub: {
+          select: {
+            clubId: true,
+            name: true,
+          },
+        },
+        creatorFromTournament: {
+          select: {
+            tournamentId: true,
+            name: true,
+          },
+        },
+        creationFromUser: {
+          select: {
+            userId: true,
+            firstName: true,
+            lastName: true,
+          },
+        },
+        match: {
+          include: {
+            matchEvents: {
+              include: {
+                user: {
+                  select: {
+                    userId: true,
+                    firstName: true,
+                    lastName: true,
+                  },
+                },
+                assistBy: {
+                  select: {
+                    userId: true,
+                    firstName: true,
+                    lastName: true,
+                  },
+                },
+                club: {
+                  select: {
+                    clubId: true,
+                    name: true,
+                  },
+                },
+              },
+              orderBy: {
+                minute: 'asc',
+              },
+            },
+            lineups: {
+              include: {
+                user: {
+                  select: {
+                    userId: true,
+                    firstName: true,
+                    lastName: true,
+                    profilePhoto: true,
+                  },
+                },
+                club: {
+                  select: {
+                    clubId: true,
+                    name: true,
+                  },
+                },
+              },
+              orderBy: {
+                isStarter: 'desc',
+              },
+            },
+          },
+        },
+      },
     });
     return schedule;
   }
@@ -103,7 +192,7 @@ class ScheduleService {
   //Get Schedule For Specific User
   /**
    * Logic
-   * SCHEDULE STATUS = UPCOMING/ONGOING: show if user is member of either team
+   * SCHEDULE STATUS = UPCOMING/ONGOING: show if user is member of either team or creator
    * FINISHED = SHOW ONLY IF USER WAS IN LINEUP
    */
   static async getMySchedules(userId) {
@@ -113,9 +202,18 @@ class ScheduleService {
       select: { clubId: true },
     });
 
-    const clubIds = userClubs.map((uc) => uc.clubId);
+    // Get all clubs where user is the creator
+    const createdClubs = await prisma.club.findMany({
+      where: { createdBy: userId },
+      select: { clubId: true },
+    });
 
-    // Get upcoming and ongoing schedules for clubs the user is a member of
+    // Combine both sets of club IDs
+    const memberClubIds = userClubs.map((uc) => uc.clubId);
+    const createdClubIds = createdClubs.map((c) => c.clubId);
+    const clubIds = [...new Set([...memberClubIds, ...createdClubIds])]; // Remove duplicates
+
+    // Get upcoming and ongoing schedules for clubs the user is a member of or created
     const upcomingSchedules = await prisma.schedule.findMany({
       where: {
         AND: [

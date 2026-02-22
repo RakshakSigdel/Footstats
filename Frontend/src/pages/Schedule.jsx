@@ -2,7 +2,8 @@ import React, { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Sidebar from "../components/Global/Sidebar";
 import Topbar from "../components/Global/Topbar";
-import { getMySchedules } from "../services/api.schedules";
+import CreateSchedule from "../components/Schedule/CreateSchedule";
+import { getMySchedules, createSchedule } from "../services/api.schedules";
 import { getAllMatches } from "../services/api.matches";
 import { getAllClubs } from "../services/api.clubs";
 
@@ -14,6 +15,7 @@ export default function Schedule() {
   const [clubsMap, setClubsMap] = useState({})
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [isCreateScheduleOpen, setIsCreateScheduleOpen] = useState(false)
 
   useEffect(() => {
     const load = async () => {
@@ -28,7 +30,7 @@ export default function Schedule() {
         setSchedules(Array.isArray(scheds) ? scheds : [])
         setMatches(Array.isArray(allMatches) ? allMatches : [])
         const map = {}
-        ;(Array.isArray(clubs) ? clubs : []).forEach((c) => { if (c?.id) map[c.id] = c.name })
+        ;(Array.isArray(clubs) ? clubs : []).forEach((c) => { if (c?.clubId) map[c.clubId] = c.name })
         setClubsMap(map)
       } catch (err) {
         setError(err?.message || 'Failed to load schedules')
@@ -39,6 +41,19 @@ export default function Schedule() {
     }
     load()
   }, [])
+
+  const handleCreateSchedule = async (scheduleData) => {
+    try {
+      await createSchedule(scheduleData)
+      // Reload schedules
+      const scheds = await getMySchedules()
+      setSchedules(Array.isArray(scheds) ? scheds : [])
+      setIsCreateScheduleOpen(false)
+    } catch (err) {
+      setError(err?.message || 'Failed to create schedule')
+      throw err
+    }
+  }
 
   const now = new Date()
   const upcomingSchedules = useMemo(() =>
@@ -58,7 +73,7 @@ export default function Schedule() {
     return 'bg-green-100 text-green-700'
   }
 
-  const openScheduleDetails = (schedule) => navigate(`/schedule/${schedule.id}`, { state: { schedule } })
+  const openScheduleDetails = (schedule) => navigate(`/schedule/${schedule.scheduleId}`, { state: { schedule } })
 
   return (
     <div className="flex min-h-screen bg-gray-50">
@@ -69,9 +84,21 @@ export default function Schedule() {
         
         <main className="flex-1 p-6 md:p-8 overflow-auto bg-[#eef1f6]">
           {/* Header Section */}
-          <div className="mb-8">
-            <h2 className="text-3xl font-bold text-gray-900 mb-1">Schedules</h2>
-            <p className="text-sm text-gray-500">Manage your upcoming matches and view past results</p>
+          <div className="flex justify-between items-start mb-8">
+            <div>
+              <h2 className="text-3xl font-bold text-gray-900 mb-1">Schedules</h2>
+              <p className="text-sm text-gray-500">Manage your upcoming matches and view past results</p>
+            </div>
+            <button
+              onClick={() => setIsCreateScheduleOpen(true)}
+              className="bg-slate-900 text-white px-6 py-2 rounded-lg font-medium hover:bg-slate-800 transition-colors flex items-center gap-2"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
+              </svg>
+              Create Schedule
+            </button>
           </div>
 
           {/* Tabs */}
@@ -113,7 +140,7 @@ export default function Schedule() {
               const dateStr = schedule.date ? new Date(schedule.date).toLocaleDateString() : 'TBD'
               const timeStr = schedule.date ? new Date(schedule.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''
               return (
-                <div key={schedule.id} className="bg-white rounded-lg shadow-sm border border-gray-100 p-5">
+                <div key={schedule.scheduleId} className="bg-white rounded-lg shadow-sm border border-gray-100 p-5">
                   <div className="flex items-center justify-between gap-6">
                     <div className="flex items-center gap-4 flex-1">
                       <span className={`px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap ${typeColor(schedule.scheduleType)}`}>
@@ -160,7 +187,7 @@ export default function Schedule() {
               <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-8 text-center text-gray-500">No past matches.</div>
             )}
             {activeTab === 'past' && pastSchedules.map((schedule) => {
-              const matchResult = getMatchForSchedule(schedule.id)
+              const matchResult = getMatchForSchedule(schedule.scheduleId)
               const teamOne = clubsMap[schedule.teamOneId] ?? 'Team 1'
               const teamTwo = clubsMap[schedule.teamTwoId] ?? 'Team 2'
               const score = matchResult ? `${matchResult.teamOneGoals ?? 0} - ${matchResult.teamTwoGoals ?? 0}` : '—'
@@ -173,7 +200,7 @@ export default function Schedule() {
                 : '—'
               const resultColor = result === 'Win' ? 'bg-slate-900 text-white' : result === 'Loss' ? 'bg-red-600 text-white' : 'bg-slate-700 text-white'
               return (
-                <div key={schedule.id} className="bg-white rounded-lg shadow-sm border border-gray-100 p-5">
+                <div key={schedule.scheduleId} className="bg-white rounded-lg shadow-sm border border-gray-100 p-5">
                   <div className="flex items-center justify-between gap-6">
                     <div className="flex items-center gap-4 flex-1">
                       <span className={`px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap ${typeColor(schedule.scheduleType)}`}>
@@ -202,23 +229,14 @@ export default function Schedule() {
               )
             })}
           </div>
-
-          {/* Schedule a New Match Section */}
-          <div className="mt-12 flex flex-col items-center justify-center py-12 bg-white rounded-lg border border-gray-100">
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#6B7280" strokeWidth="2" className="mb-4">
-              <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-              <line x1="16" y1="2" x2="16" y2="6" />
-              <line x1="8" y1="2" x2="8" y2="6" />
-              <line x1="3" y1="10" x2="21" y2="10" />
-            </svg>
-            <h3 className="text-lg font-bold text-gray-900 mb-2">Schedule a New Match</h3>
-            <p className="text-sm text-gray-500 mb-6">Organize a match with another club</p>
-            <button className="bg-slate-900 text-white px-6 py-2 rounded-lg font-medium hover:bg-slate-800 transition-colors">
-              Create Match Request
-            </button>
-          </div>
         </main>
       </div>
+
+      <CreateSchedule
+        isOpen={isCreateScheduleOpen}
+        onClose={() => setIsCreateScheduleOpen(false)}
+        onCreateSchedule={handleCreateSchedule}
+      />
     </div>
   )
 }

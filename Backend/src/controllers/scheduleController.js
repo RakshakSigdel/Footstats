@@ -76,11 +76,13 @@ export const getScheduleById = async (req, res) => {
 export const getMySchedules = async (req, res) => {
   try {
     const userId = req.user.userId;
-    const schedules = await ScheduleService.getMySchedules(userId);
+    const result = await ScheduleService.getMySchedules(userId);
     
     res.status(200).json({ 
       message: "Schedules fetched successfully",
-      ...schedules 
+      schedules: result.all,
+      upcoming: result.upcoming,
+      finished: result.finished
     });
   } catch (error) {
     res.status(500).json({ 

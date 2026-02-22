@@ -41,10 +41,32 @@ class ClubService {
   }
 
   static async getClubsByUserId(userId) {
-    const clubs = await prisma.club.findMany({
+    // Get clubs where user is the creator
+    const createdClubs = await prisma.club.findMany({
       where: { createdBy: userId },
     });
-    return clubs;
+
+    // Get clubs where user is a member
+    const userClubMemberships = await prisma.userClub.findMany({
+      where: { userId: userId },
+      include: {
+        club: true,
+      },
+    });
+
+    const memberClubs = userClubMemberships.map((uc) => uc.club);
+
+    // Combine and remove duplicates (in case user is both creator and member)
+    const allClubs = [...createdClubs];
+    const createdClubIds = new Set(createdClubs.map((c) => c.clubId));
+
+    memberClubs.forEach((club) => {
+      if (!createdClubIds.has(club.clubId)) {
+        allClubs.push(club);
+      }
+    });
+
+    return allClubs;
   }
 
   static async updateClub(clubId, data, userId) {
