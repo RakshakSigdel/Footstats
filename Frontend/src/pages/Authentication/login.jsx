@@ -24,6 +24,10 @@ export default function Login() {
       const data = await login(formData.email, formData.password);
       if (!data?.token) throw new Error("Invalid response from server");
       localStorage.setItem("token", data.token);
+      // Store user info for quick access without API calls
+      if (data.user) {
+        localStorage.setItem("user", JSON.stringify(data.user));
+      }
       navigate("/dashboard");
     } catch (err) {
       const message = err?.message || err?.error || "Login failed. Please try again.";
