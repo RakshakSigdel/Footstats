@@ -148,5 +148,104 @@ class PlayerService {
     
     return playersWithStats;
   }
+
+  // Get comprehensive stats for a player
+  static async getPlayerStats(userId) {
+    const userIdNum = Number(userId);
+
+    // Get player basic info
+    const player = await prisma.user.findUnique({
+      where: { userId: userIdNum },
+      select: {
+        userId: true,
+        firstName: true,
+        lastName: true,
+        profilePhoto: true,
+      },
+    });
+
+    if (!player) throw { status: 404, message: "Player not found" };
+
+    // Count total matches played (from lineups)
+    const matchesPlayed = await prisma.matchLineup.count({
+      where: { userId: userIdNum },
+    });
+
+    // Count goals scored
+    const goalsScored = await prisma.matchEvent.count({
+      where: {
+        userId: userIdNum,
+        eventType: 'GOAL',
+      },
+    });
+
+    // Count assists
+    const assists = await prisma.matchEvent.count({
+      where: {
+        assistById: userIdNum,
+        eventType: 'GOAL',
+      },
+    });
+
+    // Count yellow cards
+    const yellowCards = await prisma.matchEvent.count({
+      where: {
+        userId: userIdNum,
+        eventType: 'YELLOW_CARD',
+      },
+    });
+
+    // Count red cards
+    const redCards = await prisma.matchEvent.count({
+      where: {
+        userId: userIdNum,
+        eventType: 'RED_CARD',
+      },
+    });
+
+    // Get matches won (where player's team won)
+    const lineups = await prisma.matchLineup.findMany({
+      where: { userId: userIdNum },
+      include: {
+        match: true,
+        club: true,
+      },
+    });
+
+    let wins = 0;
+    let draws = 0;
+    let losses = 0;
+
+    lineups.forEach((lineup) => {
+      const match = lineup.match;
+      if (!match) return;
+      
+      const isTeamOne = lineup.clubId === match.teamOneClubId;
+      const teamGoals = isTeamOne ? match.teamOneGoals : match.teamTwoGoals;
+      const opponentGoals = isTeamOne ? match.teamTwoGoals : match.teamOneGoals;
+
+      if (teamGoals > opponentGoals) wins++;
+      else if (teamGoals < opponentGoals) losses++;
+      else draws++;
+    });
+
+    const totalGamesWithResult = wins + draws + losses;
+    const winRate = totalGamesWithResult > 0 
+      ? Math.round((wins / totalGamesWithResult) * 100) 
+      : 0;
+
+    return {
+      ...player,
+      matchesPlayed,
+      goalsScored,
+      assists,
+      yellowCards,
+      redCards,
+      wins,
+      draws,
+      losses,
+      winRate,
+    };
+  }
 }
 export default PlayerService;

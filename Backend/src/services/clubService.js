@@ -92,5 +92,131 @@ class ClubService {
     });
     return deletedClub;
   }
+
+  // Get all members of a club (including creator)
+  static async getClubMembers(clubId) {
+    const clubIdNum = Number(clubId);
+    
+    // Get the club with creator info
+    const club = await prisma.club.findUnique({
+      where: { clubId: clubIdNum },
+      select: {
+        clubId: true,
+        createdBy: true,
+        creator: {
+          select: {
+            userId: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            position: true,
+            profilePhoto: true,
+          },
+        },
+      },
+    });
+
+    if (!club) {
+      throw new Error("Club not found");
+    }
+
+    // Get all UserClub memberships for this club
+    const memberships = await prisma.userClub.findMany({
+      where: { clubId: clubIdNum },
+      include: {
+        user: {
+          select: {
+            userId: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            position: true,
+            profilePhoto: true,
+          },
+        },
+      },
+    });
+
+    // Build members list with roles
+    const members = [];
+    
+    // Add creator as admin
+    if (club.creator) {
+      members.push({
+        ...club.creator,
+        role: "admin",
+        isCreator: true,
+      });
+    }
+
+    // Add other members
+    memberships.forEach((m) => {
+      // Avoid duplicate if creator is also in UserClub
+      if (m.user.userId !== club.createdBy) {
+        members.push({
+          ...m.user,
+          role: m.role || "member",
+          isCreator: false,
+          joinedAt: m.joinedAt,
+        });
+      } else {
+        // Update creator role if they have a UserClub entry
+        const existingCreator = members.find(mem => mem.userId === club.createdBy);
+        if (existingCreator && m.role) {
+          existingCreator.role = m.role;
+        }
+      }
+    });
+
+    return members;
+  }
+
+  // Add a member to a club
+  static async addMember(clubId, userId, role = "member") {
+    const membership = await prisma.userClub.create({
+      data: {
+        clubId: Number(clubId),
+        userId: Number(userId),
+        role: role,
+        joinedAt: new Date(),
+      },
+      include: {
+        user: {
+          select: {
+            userId: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+          },
+        },
+      },
+    });
+    return membership;
+  }
+
+  // Remove a member from a club
+  static async removeMember(clubId, userId) {
+    const deleted = await prisma.userClub.deleteMany({
+      where: {
+        clubId: Number(clubId),
+        userId: Number(userId),
+      },
+    });
+    return deleted;
+  }
+
+  // Update member role
+  static async updateMemberRole(clubId, userId, role) {
+    const updated = await prisma.userClub.updateMany({
+      where: {
+        clubId: Number(clubId),
+        userId: Number(userId),
+      },
+      data: {
+        role: role,
+      },
+    });
+    return updated;
+  }
 }
 export default ClubService;

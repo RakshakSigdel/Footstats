@@ -104,3 +104,15 @@ export const getPlayersByClubId = async (req, res) => {
       .json({ message: "Error retrieving club players", error: error.message });
   }
 };
+
+export const getMyStats = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const stats = await PlayerService.getPlayerStats(userId);
+    res.status(200).json({ stats });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Error retrieving player stats", error: error.message });
+  }
+};
