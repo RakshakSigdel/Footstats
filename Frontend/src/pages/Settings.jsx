@@ -2,8 +2,10 @@ import { useState, useEffect } from "react";
 import Sidebar from "../components/Global/Sidebar";
 import Topbar from "../components/Global/Topbar";
 import { getMyProfile, updatePlayerById } from "../services/api.player";
+import { useTheme } from "../context/ThemeContext";
 
 export default function Settings() {
+  const { isDarkMode, toggleDarkMode } = useTheme();
   const [profile, setProfile] = useState(null);
   const [formData, setFormData] = useState({
     firstName: "",
@@ -239,6 +241,38 @@ export default function Settings() {
                   <div
                     className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${
                       notifications.emailNotifications ? "translate-x-6" : "translate-x-0"
+                    }`}
+                  ></div>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Appearance Section */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 mb-6">
+            <div className="flex items-center gap-3 mb-6">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+              </svg>
+              <h2 className="text-2xl font-bold text-gray-900">Appearance</h2>
+            </div>
+
+            <div className="space-y-5">
+              {/* Dark Mode Toggle */}
+              <div className="flex items-center justify-between py-3">
+                <div>
+                  <h3 className="text-base font-semibold text-gray-900 mb-1">Dark Mode</h3>
+                  <p className="text-sm text-gray-600">Switch to dark theme for better viewing in low light</p>
+                </div>
+                <button
+                  onClick={toggleDarkMode}
+                  className={`relative w-12 h-6 rounded-full transition-colors ${
+                    isDarkMode ? "bg-slate-900" : "bg-gray-300"
+                  }`}
+                >
+                  <div
+                    className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${
+                      isDarkMode ? "translate-x-6" : "translate-x-0"
                     }`}
                   ></div>
                 </button>
