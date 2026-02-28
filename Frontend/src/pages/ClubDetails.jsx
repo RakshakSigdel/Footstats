@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Sidebar from "../components/Global/Sidebar";
 import Topbar from "../components/Global/Topbar";
-import { getClubById, updateClub } from "../services/api.clubs";
+import { getClubById, updateClub, getClubMembers, removeClubMember, updateMemberRole } from "../services/api.clubs";
 import { getClubSchedules } from "../services/api.schedules";
 import { getAllClubs } from "../services/api.clubs";
 import { getPlayersByClubId } from "../services/api.player";
@@ -141,6 +141,7 @@ export default function ClubDetails() {
   const [clubSchedules, setClubSchedules] = useState([]);
   const [clubsMap, setClubsMap] = useState({});
   const [clubPlayers, setClubPlayers] = useState([]);
+  const [clubMembers, setClubMembers] = useState([]);
   const [clubRequests, setClubRequests] = useState([]);
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -148,6 +149,7 @@ export default function ClubDetails() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
   const [joinRequestSent, setJoinRequestSent] = useState(false);
+  const [memberActionLoading, setMemberActionLoading] = useState(null);
 
   useEffect(() => {
     if (!clubId) return;
@@ -155,16 +157,18 @@ export default function ClubDetails() {
       setLoading(true);
       setError(null);
       try {
-        const [club, schedules, allClubs, players, user] = await Promise.all([
+        const [club, schedules, allClubs, players, members, user] = await Promise.all([
           getClubById(clubId),
           getClubSchedules(clubId).catch(() => []),
           getAllClubs().catch(() => []),
           getPlayersByClubId(clubId).catch(() => []),
+          getClubMembers(clubId).catch(() => []),
           getMyProfile().catch(() => null),
         ]);
         setClubData(club);
         setClubSchedules(Array.isArray(schedules) ? schedules : []);
         setClubPlayers(Array.isArray(players) ? players : []);
+        setClubMembers(Array.isArray(members) ? members : []);
         setCurrentUser(user);
         const map = {};
         (Array.isArray(allClubs) ? allClubs : []).forEach((c) => { if (c?.clubId) map[c.clubId] = c.name; });
@@ -198,8 +202,13 @@ export default function ClubDetails() {
   }, [clubId]);
 
   // Check if current user is a member of the club
-  const isClubMember = currentUser && clubPlayers.some(player => player.userId === currentUser.userId);
-  const isClubAdmin = currentUser && clubData && currentUser.userId === clubData.createdBy;
+  const isClubMember = currentUser && (
+    clubPlayers.some(player => player.userId === currentUser.userId) ||
+    clubMembers.some(member => member.user?.userId === currentUser.userId)
+  );
+  const currentMemberRole = clubMembers.find(m => m.user?.userId === currentUser?.userId)?.role;
+  const isClubCreator = currentUser && clubData && currentUser.userId === clubData.createdBy;
+  const isClubAdmin = isClubCreator || currentMemberRole === "ADMIN";
 
   // Filter tabs based on user role
   const allTabs = [
@@ -273,6 +282,49 @@ export default function ClubDetails() {
       setJoinRequestSent(true);
     } catch (err) {
       setError(err?.message || "Failed to send join request");
+    }
+  };
+
+  const handleRemoveMember = async (userId) => {
+    if (!clubId || !confirm("Are you sure you want to remove this member from the club?")) return;
+    setMemberActionLoading(userId);
+    try {
+      await removeClubMember(clubId, userId);
+      // Reload members
+      const [players, members] = await Promise.all([
+        getPlayersByClubId(clubId).catch(() => []),
+        getClubMembers(clubId).catch(() => []),
+      ]);
+      setClubPlayers(Array.isArray(players) ? players : []);
+      setClubMembers(Array.isArray(members) ? members : []);
+      setError(null);
+    } catch (err) {
+      setError(err?.message || "Failed to remove member");
+    } finally {
+      setMemberActionLoading(null);
+    }
+  };
+
+  const handleToggleAdminRole = async (userId, currentRole) => {
+    if (!clubId) return;
+    const newRole = currentRole === "ADMIN" ? "MEMBER" : "ADMIN";
+    const action = newRole === "ADMIN" ? "promote to admin" : "demote to member";
+    if (!confirm(`Are you sure you want to ${action}?`)) return;
+    setMemberActionLoading(userId);
+    try {
+      await updateMemberRole(clubId, userId, newRole);
+      // Reload members
+      const [players, members] = await Promise.all([
+        getPlayersByClubId(clubId).catch(() => []),
+        getClubMembers(clubId).catch(() => []),
+      ]);
+      setClubPlayers(Array.isArray(players) ? players : []);
+      setClubMembers(Array.isArray(members) ? members : []);
+      setError(null);
+    } catch (err) {
+      setError(err?.message || "Failed to update member role");
+    } finally {
+      setMemberActionLoading(null);
     }
   };
 
@@ -468,45 +520,90 @@ export default function ClubDetails() {
 
           {activeTab === "members" && (
             <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-              <h2 className="text-xl font-bold text-gray-900 mb-6">Team Members</h2>
-              {clubPlayers.length === 0 ? (
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-bold text-gray-900">Team Members</h2>
+                <span className="text-sm text-gray-500">{clubMembers.length} member{clubMembers.length !== 1 ? 's' : ''}</span>
+              </div>
+              {clubMembers.length === 0 ? (
                 <p className="text-gray-500">No members in this club yet.</p>
               ) : (
                 <div className="space-y-3">
-                  {clubPlayers.map((player) => (
-                    <div key={player.userId} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-                      <div className="flex items-center gap-4 flex-1">
-                        <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
-                          {player.profilePhoto ? (
-                            <img src={player.profilePhoto} alt={player.firstName} className="w-full h-full rounded-full object-cover" />
-                          ) : (
-                            <span className="text-white font-bold text-lg">
-                              {player.firstName?.[0]}{player.lastName?.[0]}
-                            </span>
-                          )}
-                        </div>
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <h3 className="font-semibold text-gray-900">{player.firstName} {player.lastName}</h3>
-                            {player.role === "ADMIN" && (
-                              <span className="bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full text-xs font-medium">Admin</span>
+                  {clubMembers.map((member) => {
+                    const isCreator = clubData && member.user?.userId === clubData.createdBy;
+                    const canManageMember = isClubAdmin && !isCreator && member.user?.userId !== currentUser?.userId;
+                    return (
+                      <div key={member.user?.userId || member.userId} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                        <div className="flex items-center gap-4 flex-1">
+                          <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
+                            {member.user?.profilePhoto ? (
+                              <img src={member.user.profilePhoto} alt={member.user?.firstName} className="w-full h-full rounded-full object-cover" />
+                            ) : (
+                              <span className="text-white font-bold text-lg">
+                                {member.user?.firstName?.[0]}{member.user?.lastName?.[0]}
+                              </span>
                             )}
                           </div>
-                          <p className="text-sm text-gray-600">{player.position || 'No position assigned'}</p>
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1 flex-wrap">
+                              <h3 className="font-semibold text-gray-900">{member.user?.firstName} {member.user?.lastName}</h3>
+                              {isCreator && (
+                                <span className="bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full text-xs font-medium">Owner</span>
+                              )}
+                              {member.role === "ADMIN" && !isCreator && (
+                                <span className="bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full text-xs font-medium">Admin</span>
+                              )}
+                            </div>
+                            <p className="text-sm text-gray-600">{member.user?.position || 'No position assigned'}</p>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center gap-4">
+                          {/* Stats */}
+                          <div className="hidden sm:flex items-center gap-6 text-center mr-4">
+                            <div>
+                              <div className="text-xl font-bold text-gray-900">{member.user?.appearances || 0}</div>
+                              <div className="text-xs text-gray-500">Apps</div>
+                            </div>
+                            <div>
+                              <div className="text-xl font-bold text-blue-600">{member.user?.goals || 0}</div>
+                              <div className="text-xs text-gray-500">Goals</div>
+                            </div>
+                          </div>
+
+                          {/* Admin actions */}
+                          {canManageMember && (
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => handleToggleAdminRole(member.user?.userId, member.role)}
+                                disabled={memberActionLoading === member.user?.userId}
+                                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                                  member.role === "ADMIN"
+                                    ? "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                                    : "bg-yellow-100 text-yellow-700 hover:bg-yellow-200"
+                                }`}
+                                title={member.role === "ADMIN" ? "Demote to Member" : "Promote to Admin"}
+                              >
+                                {memberActionLoading === member.user?.userId ? "..." : member.role === "ADMIN" ? "Demote" : "Make Admin"}
+                              </button>
+                              <button
+                                onClick={() => handleRemoveMember(member.user?.userId)}
+                                disabled={memberActionLoading === member.user?.userId}
+                                className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                title="Remove from club"
+                              >
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                  <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                                  <circle cx="8.5" cy="7" r="4" />
+                                  <line x1="18" y1="8" x2="23" y2="13" />
+                                  <line x1="23" y1="8" x2="18" y2="13" />
+                                </svg>
+                              </button>
+                            </div>
+                          )}
                         </div>
                       </div>
-                      <div className="flex items-center gap-6 text-center">
-                        <div>
-                          <div className="text-2xl font-bold text-gray-900">{player.appearances || 0}</div>
-                          <div className="text-xs text-gray-500">Appearances</div>
-                        </div>
-                        <div>
-                          <div className="text-2xl font-bold text-blue-600">{player.goals || 0}</div>
-                          <div className="text-xs text-gray-500">Goals</div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>

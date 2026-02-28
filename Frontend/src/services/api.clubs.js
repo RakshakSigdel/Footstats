@@ -53,3 +53,43 @@ export const deleteClub = async (id) => {
     throw error.response?.data || { message: "Failed to delete club" };
   }
 };
+
+// Get all members of a club
+export const getClubMembers = async (clubId) => {
+  try {
+    const response = await api.get(`/clubs/${clubId}/members`);
+    return response.data.members;
+  } catch (error) {
+    throw error.response?.data || { message: "Failed to fetch club members" };
+  }
+};
+
+// Add a member to a club
+export const addClubMember = async (clubId, userId, role = "member") => {
+  try {
+    const response = await api.post(`/clubs/${clubId}/members`, { userId, role });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { message: "Failed to add member" };
+  }
+};
+
+// Remove a member from a club
+export const removeClubMember = async (clubId, userId) => {
+  try {
+    const response = await api.delete(`/clubs/${clubId}/members/${userId}`);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { message: "Failed to remove member" };
+  }
+};
+
+// Update member role
+export const updateMemberRole = async (clubId, userId, role) => {
+  try {
+    const response = await api.put(`/clubs/${clubId}/members/${userId}`, { role });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { message: "Failed to update member role" };
+  }
+};
