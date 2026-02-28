@@ -12,6 +12,8 @@ import clubRoutes from "./routes/clubRoute.js";
 import scheduleRoutes from "./routes/scheduleRoute.js";
 import matchRoutes from "./routes/matchRoute.js";
 import requestRoutes from "./routes/requestRoutes.js";
+import matchEventRoutes from "./routes/matchEvent.js";
+import matchLineupRoutes from "./routes/matchLineupRoute.js";
 
 const app = express();
 app.use(cors());
@@ -25,6 +27,8 @@ app.use("/api/clubs", clubRoutes);
 app.use("/api/schedules",scheduleRoutes);
 app.use("/api/matches", matchRoutes);
 app.use("/api/requests", requestRoutes);
+app.use("/api/match-events", matchEventRoutes);
+app.use("/api/match-lineups", matchLineupRoutes);
 app.get("/", (req, res) => {
   res.send("Welcome to Footstat API");
 });
