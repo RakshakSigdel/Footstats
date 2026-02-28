@@ -1,13 +1,26 @@
 import { useEffect, useState } from "react";
 import Sidebar from "../components/Global/Sidebar";
 import Topbar from "../components/Global/Topbar";
-import { getMyProfile } from "../services/api.player";
+import { getMyProfile, updatePlayerById } from "../services/api.player";
 
 export default function Profile() {
   const [profile, setProfile] = useState(null);
   const [activeTab, setActiveTab] = useState("recent");
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
+  
+  // Edit modal state
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editFormData, setEditFormData] = useState({
+    firstName: "",
+    lastName: "",
+    Phone: "",
+    location: "",
+    position: "",
+    dateOfBirth: ""
+  });
+  const [editLoading, setEditLoading] = useState(false);
+  const [editError, setEditError] = useState(null);
 
   useEffect(() => {
     const load = async () => {
@@ -25,6 +38,51 @@ export default function Profile() {
     };
     load();
   }, []);
+
+  const handleOpenEditModal = () => {
+    if (profile) {
+      setEditFormData({
+        firstName: profile.firstName || "",
+        lastName: profile.lastName || "",
+        Phone: profile.Phone || "",
+        location: profile.location || "",
+        position: profile.position || "",
+        dateOfBirth: profile.dateOfBirth ? profile.dateOfBirth.split("T")[0] : ""
+      });
+    }
+    setEditError(null);
+    setShowEditModal(true);
+  };
+
+  const handleEditInputChange = (e) => {
+    setEditFormData({ ...editFormData, [e.target.name]: e.target.value });
+    setEditError(null);
+  };
+
+  const handleSaveProfile = async () => {
+    if (!profile?.userId) return;
+    setEditLoading(true);
+    setEditError(null);
+    try {
+      const updatedData = {
+        firstName: editFormData.firstName,
+        lastName: editFormData.lastName,
+        Phone: editFormData.Phone,
+        location: editFormData.location,
+        position: editFormData.position,
+        dateOfBirth: editFormData.dateOfBirth ? new Date(editFormData.dateOfBirth).toISOString() : null
+      };
+      await updatePlayerById(profile.userId, updatedData);
+      // Refresh profile data
+      const refreshedProfile = await getMyProfile();
+      setProfile(refreshedProfile);
+      setShowEditModal(false);
+    } catch (err) {
+      setEditError(err?.message || "Failed to update profile");
+    } finally {
+      setEditLoading(false);
+    }
+  };
 
   return (
     <div className="flex min-h-screen">
@@ -94,7 +152,10 @@ export default function Profile() {
               </div>
 
               {/* Right side - Edit Button */}
-              <button className="bg-blue-50 text-blue-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-100 flex items-center gap-2">
+              <button 
+                onClick={handleOpenEditModal}
+                className="bg-blue-50 text-blue-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-100 flex items-center gap-2"
+              >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
                   <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
@@ -207,6 +268,122 @@ export default function Profile() {
           )}
         </main>
       </div>
+
+      {/* Edit Profile Modal */}
+      {showEditModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold text-gray-900">Edit Profile</h2>
+              <button 
+                onClick={() => setShowEditModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            </div>
+
+            {editError && (
+              <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm">
+                {editError}
+              </div>
+            )}
+
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">First Name</label>
+                  <input
+                    type="text"
+                    name="firstName"
+                    value={editFormData.firstName}
+                    onChange={handleEditInputChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
+                  <input
+                    type="text"
+                    name="lastName"
+                    value={editFormData.lastName}
+                    onChange={handleEditInputChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                <input
+                  type="tel"
+                  name="Phone"
+                  value={editFormData.Phone}
+                  onChange={handleEditInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
+                <input
+                  type="text"
+                  name="location"
+                  value={editFormData.location}
+                  onChange={handleEditInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Position</label>
+                <select
+                  name="position"
+                  value={editFormData.position}
+                  onChange={handleEditInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">Select Position</option>
+                  <option value="Goalkeeper">Goalkeeper</option>
+                  <option value="Defender">Defender</option>
+                  <option value="Midfielder">Midfielder</option>
+                  <option value="Forward">Forward</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label>
+                <input
+                  type="date"
+                  name="dateOfBirth"
+                  value={editFormData.dateOfBirth}
+                  onChange={handleEditInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => setShowEditModal(false)}
+                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSaveProfile}
+                disabled={editLoading}
+                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+              >
+                {editLoading ? "Saving..." : "Save Changes"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
