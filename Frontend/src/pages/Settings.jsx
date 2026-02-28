@@ -58,11 +58,11 @@ export default function Settings() {
   };
 
   const handleSaveChanges = async () => {
-    if (!profile?.id) return;
+    if (!profile?.userId) return;
     setError(null);
     setSaveSuccess(false);
     try {
-      await updatePlayerById(profile.id, {
+      await updatePlayerById(profile.userId, {
         firstName: formData.firstName,
         lastName: formData.lastName,
         Phone: formData.phone,
