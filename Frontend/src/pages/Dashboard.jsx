@@ -2,7 +2,7 @@ import { useEffect, useState, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Sidebar from "../components/Global/Sidebar";
 import Topbar from "../components/Global/Topbar";
-import { getMyProfile } from "../services/api.player";
+import { getMyProfile, getMyStats } from "../services/api.player";
 import { getMySchedules } from "../services/api.schedules";
 import { getMyClubs } from "../services/api.clubs";
 import { getMyTournaments } from "../services/api.tournaments";
@@ -10,6 +10,7 @@ import { getAllClubs } from "../services/api.clubs";
 
 export default function Dashboard() {
   const [profile, setProfile] = useState(null);
+  const [stats, setStats] = useState(null);
   const [schedules, setSchedules] = useState([]);
   const [clubsMap, setClubsMap] = useState({});
   const [myClubsCount, setMyClubsCount] = useState(0);
@@ -25,8 +26,9 @@ export default function Dashboard() {
       setLoading(true);
       setError(null);
       try {
-        const [profileData, schedulesData, myClubsData, myTournamentsData, allClubsData] = await Promise.all([
+        const [profileData, statsData, schedulesData, myClubsData, myTournamentsData, allClubsData] = await Promise.all([
           getMyProfile().catch(() => null),
+          getMyStats().catch(() => null),
           getMySchedules().catch(() => []),
           getMyClubs().catch(() => []),
           getMyTournaments().catch(() => []),
@@ -34,6 +36,7 @@ export default function Dashboard() {
         ]);
         if (!isCurrent) return;
         setProfile(profileData);
+        setStats(statsData);
         setSchedules(Array.isArray(schedulesData) ? schedulesData : []);
         setMyClubsCount(Array.isArray(myClubsData) ? myClubsData.length : 0);
         setMyTournamentsCount(Array.isArray(myTournamentsData) ? myTournamentsData.length : 0);
@@ -72,8 +75,15 @@ export default function Dashboard() {
     return new Date(dateStr).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
   };
 
-  const appearanceCount = profile?.matchesPlayed ?? 0;
-  const goalsCount = profile?.goalsScored ?? 0;
+  const appearanceCount = stats?.matchesPlayed ?? 0;
+  const goalsCount = stats?.goalsScored ?? 0;
+  const assistsCount = stats?.assists ?? 0;
+  const winsCount = stats?.wins ?? 0;
+  const drawsCount = stats?.draws ?? 0;
+  const lossesCount = stats?.losses ?? 0;
+  const winRate = stats?.winRate ?? 0;
+  const yellowCards = stats?.yellowCards ?? 0;
+  const redCards = stats?.redCards ?? 0;
   const clubsCount = myClubsCount;
   const tournamentsCount = myTournamentsCount;
 
@@ -110,12 +120,12 @@ export default function Dashboard() {
           </div>
 
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
             {/* Appearance Card */}
             <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 hover:shadow-lg hover:scale-105 transition-all cursor-pointer">
               <div className="flex justify-between items-start mb-3">
-                <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2">
                     <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
                     <line x1="16" y1="2" x2="16" y2="6" />
                     <line x1="8" y1="2" x2="8" y2="6" />
@@ -123,16 +133,16 @@ export default function Dashboard() {
                   </svg>
                 </div>
               </div>
-              <p className="text-sm text-gray-600 mb-1">Appearance</p>
-              <h3 className="text-3xl font-bold text-gray-900 mb-1">{appearanceCount}</h3>
-              <p className="text-xs text-gray-500">Matches played</p>
+              <p className="text-sm text-gray-600 mb-1">Matches</p>
+              <h3 className="text-2xl font-bold text-gray-900 mb-1">{appearanceCount}</h3>
+              <p className="text-xs text-gray-500">Played</p>
             </div>
 
             {/* Goals Card */}
             <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 hover:shadow-lg hover:scale-105 transition-all cursor-pointer">
               <div className="flex justify-between items-start mb-3">
-                <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2">
                     <circle cx="12" cy="12" r="10" />
                     <circle cx="12" cy="12" r="6" />
                     <circle cx="12" cy="12" r="2" />
@@ -140,15 +150,15 @@ export default function Dashboard() {
                 </div>
               </div>
               <p className="text-sm text-gray-600 mb-1">Goals</p>
-              <h3 className="text-3xl font-bold text-gray-900 mb-1">{goalsCount}</h3>
-              <p className="text-xs text-gray-500">Total goals</p>
+              <h3 className="text-2xl font-bold text-gray-900 mb-1">{goalsCount}</h3>
+              <p className="text-xs text-gray-500">Scored</p>
             </div>
 
-            {/* Clubs Card */}
+            {/* Assists Card */}
             <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 hover:shadow-lg hover:scale-105 transition-all cursor-pointer">
               <div className="flex justify-between items-start mb-3">
-                <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a855f7" strokeWidth="2">
                     <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
                     <circle cx="9" cy="7" r="4" />
                     <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
@@ -156,22 +166,16 @@ export default function Dashboard() {
                   </svg>
                 </div>
               </div>
-              <p className="text-sm text-gray-600 mb-1">Clubs</p>
-              <h3 className="text-3xl font-bold text-gray-900 mb-1">{clubsCount}</h3>
-              {clubsCount === 0 ? (
-                <Link to="/clubs" className="text-xs text-blue-600 hover:text-blue-700 font-medium">
-                  Join Club Now
-                </Link>
-              ) : (
-                <p className="text-xs text-gray-500">Active Clubs</p>
-              )}
+              <p className="text-sm text-gray-600 mb-1">Assists</p>
+              <h3 className="text-2xl font-bold text-gray-900 mb-1">{assistsCount}</h3>
+              <p className="text-xs text-gray-500">Provided</p>
             </div>
 
-            {/* Tournaments Card */}
+            {/* Win Rate Card */}
             <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 hover:shadow-lg hover:scale-105 transition-all cursor-pointer">
               <div className="flex justify-between items-start mb-3">
-                <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2">
                     <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
                     <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
                     <path d="M4 22h16" />
@@ -181,14 +185,49 @@ export default function Dashboard() {
                   </svg>
                 </div>
               </div>
-              <p className="text-sm text-gray-600 mb-1">Tournaments</p>
-              <h3 className="text-3xl font-bold text-gray-900 mb-1">{tournamentsCount}</h3>
-              {tournamentsCount === 0 ? (
-                <Link to="/tournaments" className="text-xs text-blue-600 hover:text-blue-700 font-medium">
-                  Register Tournament
+              <p className="text-sm text-gray-600 mb-1">Win Rate</p>
+              <h3 className="text-2xl font-bold text-gray-900 mb-1">{winRate}%</h3>
+              <p className="text-xs text-gray-500">{winsCount}W {drawsCount}D {lossesCount}L</p>
+            </div>
+
+            {/* Cards Card */}
+            <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 hover:shadow-lg hover:scale-105 transition-all cursor-pointer">
+              <div className="flex justify-between items-start mb-3">
+                <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2">
+                    <rect x="3" y="2" width="18" height="20" rx="2" />
+                  </svg>
+                </div>
+              </div>
+              <p className="text-sm text-gray-600 mb-1">Cards</p>
+              <div className="flex gap-2 items-baseline">
+                <span className="text-2xl font-bold text-yellow-500">{yellowCards}</span>
+                <span className="text-gray-400">/</span>
+                <span className="text-2xl font-bold text-red-500">{redCards}</span>
+              </div>
+              <p className="text-xs text-gray-500">Yellow / Red</p>
+            </div>
+
+            {/* Clubs Card */}
+            <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 hover:shadow-lg hover:scale-105 transition-all cursor-pointer">
+              <div className="flex justify-between items-start mb-3">
+                <div className="w-10 h-10 bg-cyan-100 rounded-lg flex items-center justify-center">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#06b6d4" strokeWidth="2">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                    <circle cx="9" cy="7" r="4" />
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                  </svg>
+                </div>
+              </div>
+              <p className="text-sm text-gray-600 mb-1">Clubs</p>
+              <h3 className="text-2xl font-bold text-gray-900 mb-1">{clubsCount}</h3>
+              {clubsCount === 0 ? (
+                <Link to="/clubs" className="text-xs text-blue-600 hover:text-blue-700 font-medium">
+                  Join Now
                 </Link>
               ) : (
-                <p className="text-xs text-gray-500">Active Entries</p>
+                <p className="text-xs text-gray-500">Active</p>
               )}
             </div>
           </div>

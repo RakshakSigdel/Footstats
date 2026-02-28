@@ -53,3 +53,12 @@ export const getPlayersByClubId = async (clubId) => {
     throw error.response?.data || { message: "Failed to fetch club players" };
   }
 };
+
+export const getMyStats = async () => {
+  try {
+    const response = await api.get("/players/me/stats");
+    return response.data.stats;
+  } catch (error) {
+    throw error.response?.data || { message: "Failed to fetch player stats" };
+  }
+};
