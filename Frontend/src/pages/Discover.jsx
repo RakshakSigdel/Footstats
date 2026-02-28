@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import Sidebar from "../components/Global/Sidebar";
 import Topbar from "../components/Global/Topbar";
@@ -12,8 +12,9 @@ export default function Discover() {
   const [tournaments, setTournaments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
-  const filters = ["All", "Clubs", "Tournaments", "Within 5km", "This Month"];
+  const filters = ["All", "Clubs", "Tournaments", "Upcoming", "Free Entry"];
 
   useEffect(() => {
     const load = async () => {
@@ -36,8 +37,31 @@ export default function Discover() {
     load();
   }, []);
 
-  const filteredClubs = activeFilter === "Tournaments" ? [] : clubs;
-  const filteredTournaments = activeFilter === "Clubs" ? [] : tournaments;
+  const filteredClubs = useMemo(() => {
+    if (activeFilter === "Tournaments" || activeFilter === "Upcoming" || activeFilter === "Free Entry") return [];
+    return clubs.filter(club => {
+      if (!searchQuery.trim()) return true;
+      const query = searchQuery.toLowerCase();
+      return club.name?.toLowerCase().includes(query) ||
+        club.location?.toLowerCase().includes(query) ||
+        club.description?.toLowerCase().includes(query);
+    });
+  }, [clubs, activeFilter, searchQuery]);
+
+  const filteredTournaments = useMemo(() => {
+    if (activeFilter === "Clubs") return [];
+    return tournaments.filter(t => {
+      const matchesSearch = !searchQuery.trim() ||
+        t.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        t.location?.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesFilter = 
+        activeFilter === "All" || 
+        activeFilter === "Tournaments" ||
+        (activeFilter === "Upcoming" && t.status?.toLowerCase() === "upcoming") ||
+        (activeFilter === "Free Entry" && (!t.entryFee || t.entryFee === 0));
+      return matchesSearch && matchesFilter;
+    });
+  }, [tournaments, activeFilter, searchQuery]);
 
   return (
     <div className="flex min-h-screen">
@@ -69,19 +93,26 @@ export default function Discover() {
                 <input
                   type="text"
                   placeholder="Search clubs or tournaments..."
-                  className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-12 pr-10 py-3 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery("")}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <line x1="18" y1="6" x2="6" y2="18" />
+                      <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                  </button>
+                )}
               </div>
-              <button className="px-6 py-3 bg-gray-50 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-green-600 hover:text-white hover:border-green-600 transition-all flex items-center gap-2">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
-                </svg>
-                Filters
-              </button>
             </div>
 
             {/* Filter Tabs */}
-            <div className="flex gap-3">
+            <div className="flex flex-wrap gap-3">
               {filters.map((filter) => (
                 <button
                   key={filter}

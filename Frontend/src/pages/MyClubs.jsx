@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import Sidebar from "../components/Global/Sidebar";
 import Topbar from "../components/Global/Topbar";
@@ -13,6 +13,7 @@ export default function MyClubs() {
   const [browseClubs, setBrowseClubs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     const load = async () => {
@@ -34,6 +35,27 @@ export default function MyClubs() {
     };
     load();
   }, []);
+
+  // Filter clubs based on search query
+  const filteredMyClubs = useMemo(() => {
+    if (!searchQuery.trim()) return myClubs;
+    const query = searchQuery.toLowerCase();
+    return myClubs.filter(club => 
+      club.name?.toLowerCase().includes(query) ||
+      club.location?.toLowerCase().includes(query) ||
+      club.description?.toLowerCase().includes(query)
+    );
+  }, [myClubs, searchQuery]);
+
+  const filteredBrowseClubs = useMemo(() => {
+    if (!searchQuery.trim()) return browseClubs;
+    const query = searchQuery.toLowerCase();
+    return browseClubs.filter(club => 
+      club.name?.toLowerCase().includes(query) ||
+      club.location?.toLowerCase().includes(query) ||
+      club.description?.toLowerCase().includes(query)
+    );
+  }, [browseClubs, searchQuery]);
 
   const handleCreateClub = async (formData) => {
     try {
@@ -96,6 +118,37 @@ export default function MyClubs() {
             </button>
           </div>
 
+          {/* Search Bar */}
+          <div className="mb-6">
+            <div className="relative max-w-md">
+              <svg 
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" 
+                width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+              >
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
+              <input
+                type="text"
+                placeholder="Search clubs by name, location..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
+                </button>
+              )}
+            </div>
+          </div>
+
           {/* Tabs */}
           <div className="mb-8">
             <div className="inline-flex bg-gray-100 rounded-full p-1 border border-gray-200">
@@ -121,12 +174,12 @@ export default function MyClubs() {
           {/* My Clubs Tab Content */}
           {activeTab === "myClubs" && (
             <div className="space-y-5">
-              {myClubs.length === 0 && !loading && (
+              {filteredMyClubs.length === 0 && !loading && (
                 <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-100 text-center text-gray-500">
-                  You have not created any clubs yet. Create one above.
+                  {searchQuery ? `No clubs found matching "${searchQuery}"` : "You have not created any clubs yet. Create one above."}
                 </div>
               )}
-              {myClubs.map((club) => (
+              {filteredMyClubs.map((club) => (
                 <div
                   key={club.clubId}
                   onClick={() => handleViewDetails(club.clubId)}
@@ -188,10 +241,12 @@ export default function MyClubs() {
           {/* Browse Clubs Tab Content */}
           {activeTab === "browseClubs" && (
             <div className="grid grid-cols-2 gap-6">
-              {browseClubs.length === 0 && !loading && (
-                <div className="col-span-2 text-center py-8 text-gray-500">No clubs to browse yet.</div>
+              {filteredBrowseClubs.length === 0 && !loading && (
+                <div className="col-span-2 text-center py-8 text-gray-500">
+                  {searchQuery ? `No clubs found matching "${searchQuery}"` : "No clubs to browse yet."}
+                </div>
               )}
-              {browseClubs.map((club) => (
+              {filteredBrowseClubs.map((club) => (
                 <div key={club.clubId} className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
                   <div className="flex items-start gap-4 mb-6">
                     <div className="w-14 h-14 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">

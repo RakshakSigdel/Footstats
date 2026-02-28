@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import Sidebar from "../components/Global/Sidebar";
 import Topbar from "../components/Global/Topbar";
@@ -16,6 +16,8 @@ export default function Tournaments() {
   const [browseTournaments, setBrowseTournaments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
 
   useEffect(() => {
     const load = async () => {
@@ -100,7 +102,19 @@ export default function Tournaments() {
     setIsEditTournamentOpen(true);
   };
 
-  const tournaments = activeTab === "my" ? myTournaments : browseTournaments;
+  // Filter tournaments based on search and status
+  const tournaments = useMemo(() => {
+    const source = activeTab === "my" ? myTournaments : browseTournaments;
+    return source.filter(t => {
+      const matchesSearch = !searchQuery.trim() || 
+        t.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        t.location?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        t.format?.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesStatus = statusFilter === "all" || 
+        t.status?.toLowerCase() === statusFilter.toLowerCase();
+      return matchesSearch && matchesStatus;
+    });
+  }, [activeTab, myTournaments, browseTournaments, searchQuery, statusFilter]);
 
   return (
     <div className="flex min-h-screen bg-gray-50">
@@ -140,6 +154,47 @@ export default function Tournaments() {
               </svg>
               Host Tournament
             </button>
+          </div>
+
+          {/* Search and Filters */}
+          <div className="flex flex-wrap gap-4 mb-6">
+            <div className="relative flex-1 min-w-[200px] max-w-md">
+              <svg 
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" 
+                width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+              >
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
+              <input
+                type="text"
+                placeholder="Search tournaments..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
+                </button>
+              )}
+            </div>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="px-4 py-2.5 border border-gray-200 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="all">All Status</option>
+              <option value="upcoming">Upcoming</option>
+              <option value="ongoing">Ongoing</option>
+              <option value="completed">Completed</option>
+            </select>
           </div>
 
           {/* Tabs */}
