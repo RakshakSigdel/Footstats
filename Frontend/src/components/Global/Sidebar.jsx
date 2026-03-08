@@ -44,15 +44,7 @@ export default function Sidebar() {
       <div className={sidebarClasses}>
         {/* Logo Section */}
         <div className="flex items-center gap-3 mb-8">
-          <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
-            <svg viewBox="0 0 40 40" className="w-8 h-8" fill="none">
-              <circle cx="20" cy="20" r="18" fill="#1e293b" stroke="white" strokeWidth="2"/>
-              <circle cx="20" cy="20" r="12" fill="white"/>
-              <path d="M20 8 L20 32 M8 20 L32 20" stroke="#1e293b" strokeWidth="2"/>
-              <circle cx="15" cy="15" r="2" fill="#1e293b"/>
-              <circle cx="25" cy="15" r="2" fill="#1e293b"/>
-            </svg>
-          </div>
+          <img src="/images/NoLogo.png" alt="FootStats logo" className="w-10 h-10 object-contain" />
           <div>
             <h1 className="text-lg font-bold">FootStats</h1>
             <p className="text-xs text-gray-400">Gully To Glory</p>
