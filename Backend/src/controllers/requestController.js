@@ -5,7 +5,11 @@ const prisma = new PrismaClient();
 
 export const createJoinRequest = async (req, res) => {
   const userId = req.user.userId;
-  const { clubId } = req.body;
+  const { clubId, preferredPosition, whyJoin, additionalMessage } = req.body;
+
+  if (!preferredPosition || !preferredPosition.trim()) {
+    return res.status(400).json({ message: "Preferred position is required" });
+  }
 
   try {
     const club = await prisma.club.findUnique({
@@ -57,6 +61,9 @@ export const createJoinRequest = async (req, res) => {
     const newRequest = await RequestService.createJoinRequest({
       userId,
       clubId,
+      preferredPosition: preferredPosition.trim(),
+      whyJoin: whyJoin?.trim() || null,
+      additionalMessage: additionalMessage?.trim() || null,
     });
     res
       .status(201)

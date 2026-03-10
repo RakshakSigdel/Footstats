@@ -2,13 +2,14 @@ import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import Sidebar from "../components/Global/Sidebar";
 import Topbar from "../components/Global/Topbar";
-import { getAllClubs } from "../services/api.clubs";
+import { getAllClubs, getMyClubs } from "../services/api.clubs";
 import { getAllTournaments } from "../services/api.tournaments";
 
 export default function Discover() {
   const navigate = useNavigate();
   const [activeFilter, setActiveFilter] = useState("All");
   const [clubs, setClubs] = useState([]);
+  const [myClubIds, setMyClubIds] = useState(new Set());
   const [tournaments, setTournaments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -21,12 +22,15 @@ export default function Discover() {
       setLoading(true);
       setError(null);
       try {
-        const [clubsData, tournamentsData] = await Promise.all([
+        const [clubsData, tournamentsData, myClubsData] = await Promise.all([
           getAllClubs().catch(() => []),
           getAllTournaments().catch(() => []),
+          getMyClubs().catch(() => []),
         ]);
         setClubs(Array.isArray(clubsData) ? clubsData : []);
         setTournaments(Array.isArray(tournamentsData) ? tournamentsData : []);
+        const ids = new Set((Array.isArray(myClubsData) ? myClubsData : []).map(c => c.clubId));
+        setMyClubIds(ids);
       } catch (err) {
         setError(err?.message || "Failed to load discover data");
         throw err;
@@ -40,13 +44,14 @@ export default function Discover() {
   const filteredClubs = useMemo(() => {
     if (activeFilter === "Tournaments" || activeFilter === "Upcoming" || activeFilter === "Free Entry") return [];
     return clubs.filter(club => {
+      if (myClubIds.has(club.clubId)) return false;
       if (!searchQuery.trim()) return true;
       const query = searchQuery.toLowerCase();
       return club.name?.toLowerCase().includes(query) ||
         club.location?.toLowerCase().includes(query) ||
         club.description?.toLowerCase().includes(query);
     });
-  }, [clubs, activeFilter, searchQuery]);
+  }, [clubs, myClubIds, activeFilter, searchQuery]);
 
   const filteredTournaments = useMemo(() => {
     if (activeFilter === "Clubs") return [];

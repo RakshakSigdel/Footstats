@@ -8,6 +8,9 @@ class RequestService {
             data: {
                 userId: data.userId,
                 clubId: data.clubId,
+                preferredPosition: data.preferredPosition,
+                whyJoin: data.whyJoin || null,
+                additionalMessage: data.additionalMessage || null,
                 status: 'PENDING',
             },
         });

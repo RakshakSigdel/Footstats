@@ -88,14 +88,16 @@ model Club {
 // CLUB REQUEST MODEL (Renamed from Request for clarity)
 // =========================
 model ClubRequest {
-  requestId     Int           @id @default(autoincrement())
-  userId        Int
-  clubId        Int
-  message       String?
-  status        RequestStatus @default(PENDING)
-  dateRequested DateTime      @default(now())
-  reviewedAt    DateTime?
-  reviewedBy    Int?
+  requestId         Int           @id @default(autoincrement())
+  userId            Int
+  clubId            Int
+  preferredPosition String
+  whyJoin           String?
+  additionalMessage String?
+  status            RequestStatus @default(PENDING)
+  dateRequested     DateTime      @default(now())
+  reviewedAt        DateTime?
+  reviewedBy        Int?
 
   // Relations
   user User @relation(fields: [userId], references: [userId], onDelete: Cascade)

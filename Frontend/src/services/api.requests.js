@@ -1,8 +1,8 @@
 import api from "./api";
 
-export const createJoinRequest = async (clubId) => {
+export const createJoinRequest = async (clubId, preferredPosition, whyJoin, additionalMessage) => {
   try {
-    const response = await api.post("/requests/join", { clubId });
+    const response = await api.post("/requests/join", { clubId, preferredPosition, whyJoin, additionalMessage });
     return response.data;
   } catch (error) {
     throw error.response?.data || { message: "Failed to create join request" };
