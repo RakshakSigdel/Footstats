@@ -1,5 +1,14 @@
 import api from "./api";
 
+export const getMyRequestStatus = async (clubId) => {
+  try {
+    const response = await api.get(`/requests/my-status/${clubId}`);
+    return response.data.request; // null or { requestId, status }
+  } catch (error) {
+    return null;
+  }
+};
+
 export const createJoinRequest = async (clubId, preferredPosition, whyJoin, additionalMessage) => {
   try {
     const response = await api.post("/requests/join", { clubId, preferredPosition, whyJoin, additionalMessage });

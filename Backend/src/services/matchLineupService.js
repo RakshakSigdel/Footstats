@@ -31,17 +31,18 @@ class MatchLineupService {
         };
       }
 
-      // Check if user is a member of the club
-      const membership = await prisma.userClub.findUnique({
-        where: {
-          userId_clubId: {
-            userId: Number(player.userId),
-            clubId: Number(player.clubId),
-          },
-        },
-      });
+      // Check if user is a member of the club or its creator
+      const [membership, clubRecord] = await Promise.all([
+        prisma.userClub.findUnique({
+          where: { userId_clubId: { userId: Number(player.userId), clubId: Number(player.clubId) } },
+        }),
+        prisma.club.findUnique({
+          where: { clubId: Number(player.clubId) },
+          select: { createdBy: true },
+        }),
+      ]);
 
-      if (!membership) {
+      if (!membership && clubRecord?.createdBy !== Number(player.userId)) {
         throw {
           status: 400,
           message: `User ${player.userId} is not a member of club ${player.clubId}`,
@@ -125,17 +126,18 @@ class MatchLineupService {
       throw { status: 400, message: "Club is not part of this match" };
     }
 
-    // Verify user is a member of the club
-    const membership = await prisma.userClub.findUnique({
-      where: {
-        userId_clubId: {
-          userId: Number(data.userId),
-          clubId: Number(data.clubId),
-        },
-      },
-    });
+    // Verify user is a member of the club or its creator
+    const [membership, clubRecord] = await Promise.all([
+      prisma.userClub.findUnique({
+        where: { userId_clubId: { userId: Number(data.userId), clubId: Number(data.clubId) } },
+      }),
+      prisma.club.findUnique({
+        where: { clubId: Number(data.clubId) },
+        select: { createdBy: true },
+      }),
+    ]);
 
-    if (!membership) {
+    if (!membership && clubRecord?.createdBy !== Number(data.userId)) {
       throw { status: 400, message: "User is not a member of this club" };
     }
 

@@ -10,9 +10,30 @@ export const createClub = async (req, res) => {
     const club = await ClubService.createClub(req.body, userId);
     res.status(201).json({ club });
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Error creating club", error: error.message });
+    if (error.code === "P2002") {
+      return res.status(409).json({ message: `A club named "${req.body.name}" already exists. Please choose a different name.` });
+    }
+    res.status(500).json({ message: "Error creating club", error: error.message });
+  }
+};
+
+export const getAdminClubs = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const clubs = await ClubService.getAdminClubs(userId);
+    res.status(200).json({ clubs });
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching admin clubs", error: error.message });
+  }
+};
+
+export const searchClubs = async (req, res) => {
+  try {
+    const query = req.query.q || "";
+    const clubs = await ClubService.searchClubs(query);
+    res.status(200).json({ clubs });
+  } catch (error) {
+    res.status(500).json({ message: "Error searching clubs", error: error.message });
   }
 };
 

@@ -187,7 +187,7 @@ export default function ScheduleDetails() {
       setShowEventModal(false)
       await loadSchedule() // Refresh data
     } catch (err) {
-      setModalError(err?.message || "Failed to save event")
+      setModalError(err?.response?.data?.message || err?.message || "Failed to save event")
     } finally {
       setModalLoading(false)
     }
@@ -255,7 +255,7 @@ export default function ScheduleDetails() {
       setShowLineupModal(false)
       await loadSchedule()
     } catch (err) {
-      setModalError(err?.message || "Failed to save lineup")
+      setModalError(err?.response?.data?.message || err?.message || "Failed to save lineup")
     } finally {
       setModalLoading(false)
     }

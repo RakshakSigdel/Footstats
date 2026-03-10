@@ -60,7 +60,7 @@ enum preferredFoot {
 // =========================
 model Club {
   clubId      Int      @id @default(autoincrement())
-  name        String
+  name        String   @unique
   description String
   logo        String?
   location    String
@@ -251,6 +251,8 @@ model Schedule {
   creationFromUser      User        @relation("CreatedByUser", fields: [createdFromUser], references: [userId])
   match                 Match?
 
+  scheduleRequests      ScheduleRequest[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -258,10 +260,34 @@ model Schedule {
 }
 
 enum ScheduleStatus {
+  PENDING
   UPCOMING
   ONGOING
   FINISHED
   CANCELLED
+}
+
+// =========================
+// SCHEDULE REQUEST MODEL
+// =========================
+model ScheduleRequest {
+  requestId    Int                   @id @default(autoincrement())
+  scheduleId   Int
+  teamTwoId    Int
+  status       ScheduleRequestStatus @default(PENDING)
+  requestedAt  DateTime              @default(now())
+  reviewedAt   DateTime?
+
+  // Relations
+  schedule Schedule @relation(fields: [scheduleId], references: [scheduleId], onDelete: Cascade)
+
+  @@map("schedule_requests")
+}
+
+enum ScheduleRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }
 
 // =========================

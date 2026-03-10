@@ -54,6 +54,26 @@ export const deleteClub = async (id) => {
   }
 };
 
+// Get clubs where current user is admin/creator (for schedule creation)
+export const getAdminClubs = async () => {
+  try {
+    const response = await api.get("/clubs/admin");
+    return response.data.clubs;
+  } catch (error) {
+    throw error.response?.data || { message: "Failed to fetch admin clubs" };
+  }
+};
+
+// Search clubs by name (top 10)
+export const searchClubs = async (query) => {
+  try {
+    const response = await api.get(`/clubs/search?q=${encodeURIComponent(query)}`);
+    return response.data.clubs;
+  } catch (error) {
+    throw error.response?.data || { message: "Failed to search clubs" };
+  }
+};
+
 // Get all members of a club
 export const getClubMembers = async (clubId) => {
   try {
