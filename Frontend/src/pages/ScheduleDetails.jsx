@@ -4,6 +4,7 @@ import Sidebar from "../components/Global/Sidebar";
 import Topbar from "../components/Global/Topbar";
 import { getScheduleById } from '../services/api.schedules'
 import { getClubMembers } from '../services/api.clubs'
+import { createMatch } from '../services/api.matches'
 import { createMatchEvent, updateMatchEvent, deleteMatchEvent } from '../services/api.matchEvents'
 import { addPlayerToLineup, updateLineup, removeFromLineup } from '../services/api.matchLineups'
 
@@ -41,6 +42,7 @@ export default function ScheduleDetails() {
   
   const [modalLoading, setModalLoading] = useState(false)
   const [modalError, setModalError] = useState(null)
+  const [creatingMatch, setCreatingMatch] = useState(false)
   
   // Get current user from localStorage
   const currentUser = JSON.parse(localStorage.getItem("user") || "{}")
@@ -112,6 +114,19 @@ export default function ScheduleDetails() {
       if (isTeamTwoMember?.role === 'admin' || isTeamTwoMember?.isCreator) return true
     }
     return false
+  }
+
+  const handleCreateMatch = async () => {
+    setCreatingMatch(true)
+    setError(null)
+    try {
+      await createMatch({ scheduleId: schedule.scheduleId })
+      await loadSchedule()
+    } catch (err) {
+      setError(err?.message || 'Failed to initialize match details')
+    } finally {
+      setCreatingMatch(false)
+    }
   }
 
   // Event Modal Functions
@@ -338,7 +353,22 @@ export default function ScheduleDetails() {
 
                 {!match && (
                   <div className="bg-gray-50 rounded-xl p-6 mt-6 text-center">
-                    <p className="text-gray-500">Match not started yet</p>
+                    {schedule.scheduleStatus === 'FINISHED' && canManage() ? (
+                      <div>
+                        <p className="text-gray-600 mb-4">The match is finished. Record the lineup and match events now.</p>
+                        <button
+                          onClick={handleCreateMatch}
+                          disabled={creatingMatch}
+                          className="bg-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50"
+                        >
+                          {creatingMatch ? 'Setting up...' : 'Record Match Details'}
+                        </button>
+                      </div>
+                    ) : schedule.scheduleStatus === 'FINISHED' ? (
+                      <p className="text-gray-500">Match details have not been recorded yet</p>
+                    ) : (
+                      <p className="text-gray-500">Match not started yet</p>
+                    )}
                   </div>
                 )}
               </div>

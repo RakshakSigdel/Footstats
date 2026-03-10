@@ -109,7 +109,6 @@ class ClubService {
             firstName: true,
             lastName: true,
             email: true,
-            position: true,
             profilePhoto: true,
           },
         },
@@ -130,7 +129,6 @@ class ClubService {
             firstName: true,
             lastName: true,
             email: true,
-            position: true,
             profilePhoto: true,
           },
         },
@@ -143,8 +141,8 @@ class ClubService {
     // Add creator as admin
     if (club.creator) {
       members.push({
-        ...club.creator,
-        role: "admin",
+        user: club.creator,
+        role: "ADMIN",
         isCreator: true,
       });
     }
@@ -154,14 +152,14 @@ class ClubService {
       // Avoid duplicate if creator is also in UserClub
       if (m.user.userId !== club.createdBy) {
         members.push({
-          ...m.user,
-          role: m.role || "member",
+          user: { ...m.user, position: m.position },
+          role: m.role || "MEMBER",
           isCreator: false,
           joinedAt: m.joinedAt,
         });
       } else {
         // Update creator role if they have a UserClub entry
-        const existingCreator = members.find(mem => mem.userId === club.createdBy);
+        const existingCreator = members.find(mem => mem.user?.userId === club.createdBy);
         if (existingCreator && m.role) {
           existingCreator.role = m.role;
         }

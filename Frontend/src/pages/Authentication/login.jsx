@@ -30,7 +30,7 @@ export default function Login() {
       }
       navigate("/dashboard");
     } catch (err) {
-      const message = err?.message || err?.error || "Login failed. Please try again.";
+      const message = "Invalid Credentials";
       setError(message);
     }
   };

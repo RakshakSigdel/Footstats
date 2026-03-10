@@ -2,10 +2,10 @@ import MatchService from "../services/matchService.js";
 
 export const createMatch = async (req, res) => {
   try {
-    const { scheduleId, teamOneGoals, teamTwoGoals } = req.body;
+    const { scheduleId } = req.body;
 
-    if (!scheduleId || !teamOneGoals || !teamTwoGoals) {
-      return res.status(400).json({ error: "All fields are required" });
+    if (!scheduleId) {
+      return res.status(400).json({ error: "Schedule ID is required" });
     }
 
     const match = await MatchService.createMatch(req.body.scheduleId, req.body);
