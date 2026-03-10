@@ -86,6 +86,7 @@ export default function ScheduleDetails() {
   const match = schedule?.match
   const teamOneName = schedule?.teamOne?.name || 'Team 1'
   const teamTwoName = schedule?.teamTwo?.name || 'Team 2'
+  const matchSize = schedule?.matchSize || 11
   const typeColor = schedule?.scheduleType === 'Knockout' ? 'bg-red-100 text-red-700' : schedule?.scheduleType === 'League' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'
 
   const teamOneLineup = match?.lineups?.filter(l => l.club?.clubId === schedule?.teamOneId) || []
@@ -103,16 +104,19 @@ export default function ScheduleDetails() {
 
   // Check if current user can manage this schedule
   const canManage = () => {
-    if (!currentUser.userId) return false
-    // Schedule creator
-    if (schedule?.creationFromUser?.userId === currentUser.userId) return true
-    // Club admin (if club match)
-    if (schedule?.creatorFromClub) {
-      const isTeamOneMember = teamOneMembers.find(m => m.userId === currentUser.userId)
-      const isTeamTwoMember = teamTwoMembers.find(m => m.userId === currentUser.userId)
-      if (isTeamOneMember?.role === 'admin' || isTeamOneMember?.isCreator) return true
-      if (isTeamTwoMember?.role === 'admin' || isTeamTwoMember?.isCreator) return true
-    }
+    if (!currentUser.id) return false
+    // Schedule creator (the user who created/requested it)
+    if (schedule?.creationFromUser?.userId === currentUser.id) return true
+    // Admin of team 1
+    const isTeamOneAdmin = teamOneMembers.find(
+      m => m.user?.userId === currentUser.id && (m.role === 'ADMIN' || m.isCreator)
+    )
+    if (isTeamOneAdmin) return true
+    // Admin of team 2
+    const isTeamTwoAdmin = teamTwoMembers.find(
+      m => m.user?.userId === currentUser.id && (m.role === 'ADMIN' || m.isCreator)
+    )
+    if (isTeamTwoAdmin) return true
     return false
   }
 
@@ -268,12 +272,13 @@ export default function ScheduleDetails() {
     }
   }
 
-  // Get available players for the selected club in forms
+  // Get available players (as user objects) for the selected club in forms
   const getPlayersForClub = (clubId) => {
     const id = Number(clubId)
-    if (id === schedule?.teamOneId) return teamOneMembers
-    if (id === schedule?.teamTwoId) return teamTwoMembers
-    return []
+    let members = []
+    if (id === schedule?.teamOneId) members = teamOneMembers
+    else if (id === schedule?.teamTwoId) members = teamTwoMembers
+    return members.map(m => m.user).filter(Boolean)
   }
 
   return (
@@ -299,9 +304,14 @@ export default function ScheduleDetails() {
               <div className="bg-white rounded-xl shadow-sm p-6 md:p-8 mb-6">
                 <div className="flex flex-col md:flex-row justify-between items-start mb-6 gap-4">
                   <div>
-                    <span className={`inline-block px-3 py-1 rounded-full text-sm font-semibold ${typeColor} mb-3`}>
-                      {schedule.scheduleType ?? 'Match'}
-                    </span>
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className={`inline-block px-3 py-1 rounded-full text-sm font-semibold ${typeColor}`}>
+                        {schedule.scheduleType ?? 'Match'}
+                      </span>
+                      <span className="inline-block px-3 py-1 rounded-full text-sm font-semibold bg-purple-100 text-purple-700">
+                        {matchSize}v{matchSize}
+                      </span>
+                    </div>
                     <h1 className="text-2xl md:text-4xl font-bold text-gray-900 mb-2">{teamOneName} vs {teamTwoName}</h1>
                     <div className="flex flex-wrap items-center gap-2 md:gap-4 text-gray-600 text-sm">
                       <div className="flex items-center gap-2">
@@ -353,9 +363,13 @@ export default function ScheduleDetails() {
 
                 {!match && (
                   <div className="bg-gray-50 rounded-xl p-6 mt-6 text-center">
-                    {schedule.scheduleStatus === 'FINISHED' && canManage() ? (
+                    {canManage() ? (
                       <div>
-                        <p className="text-gray-600 mb-4">The match is finished. Record the lineup and match events now.</p>
+                        <p className="text-gray-600 mb-4">
+                          {schedule.scheduleStatus === 'FINISHED'
+                            ? 'The match is finished. Record the lineup and match events now.'
+                            : 'Record lineup and match events for this match.'}
+                        </p>
                         <button
                           onClick={handleCreateMatch}
                           disabled={creatingMatch}
@@ -364,10 +378,12 @@ export default function ScheduleDetails() {
                           {creatingMatch ? 'Setting up...' : 'Record Match Details'}
                         </button>
                       </div>
-                    ) : schedule.scheduleStatus === 'FINISHED' ? (
-                      <p className="text-gray-500">Match details have not been recorded yet</p>
                     ) : (
-                      <p className="text-gray-500">Match not started yet</p>
+                      <p className="text-gray-500">
+                        {schedule.scheduleStatus === 'FINISHED'
+                          ? 'Match details have not been recorded yet'
+                          : 'Match not started yet'}
+                      </p>
                     )}
                   </div>
                 )}
@@ -450,8 +466,13 @@ export default function ScheduleDetails() {
                   {/* Team One Lineup */}
                   <div>
                     <div className="flex justify-between items-center mb-4">
-                      <h3 className="text-lg font-bold text-gray-900">{teamOneName}</h3>
-                      {canManage() && match && (
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-lg font-bold text-gray-900">{teamOneName}</h3>
+                        <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+                          teamOneLineup.length >= matchSize ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
+                        }`}>{teamOneLineup.length}/{matchSize}</span>
+                      </div>
+                      {canManage() && match && teamOneLineup.length < matchSize && (
                         <button 
                           onClick={() => openAddLineupModal(schedule.teamOneId)}
                           className="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center gap-1"
@@ -462,6 +483,9 @@ export default function ScheduleDetails() {
                           </svg>
                           Add Player
                         </button>
+                      )}
+                      {canManage() && match && teamOneLineup.length >= matchSize && (
+                        <span className="text-xs text-green-600 font-medium">Lineup full</span>
                       )}
                     </div>
                     <div className="space-y-2">
@@ -514,8 +538,13 @@ export default function ScheduleDetails() {
                   {/* Team Two Lineup */}
                   <div>
                     <div className="flex justify-between items-center mb-4">
-                      <h3 className="text-lg font-bold text-gray-900">{teamTwoName}</h3>
-                      {canManage() && match && (
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-lg font-bold text-gray-900">{teamTwoName}</h3>
+                        <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+                          teamTwoLineup.length >= matchSize ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
+                        }`}>{teamTwoLineup.length}/{matchSize}</span>
+                      </div>
+                      {canManage() && match && teamTwoLineup.length < matchSize && (
                         <button 
                           onClick={() => openAddLineupModal(schedule.teamTwoId)}
                           className="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center gap-1"
@@ -526,6 +555,9 @@ export default function ScheduleDetails() {
                           </svg>
                           Add Player
                         </button>
+                      )}
+                      {canManage() && match && teamTwoLineup.length >= matchSize && (
+                        <span className="text-xs text-green-600 font-medium">Lineup full</span>
                       )}
                     </div>
                     <div className="space-y-2">

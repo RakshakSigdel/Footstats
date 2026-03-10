@@ -16,13 +16,6 @@ class MatchService {
       throw { status: 404, message: "Schedule not found" };
     }
 
-    if (schedule.scheduleStatus !== "FINISHED") {
-      throw {
-        status: 400,
-        message: "Cannot create match for an incomplete schedule",
-      };
-    }
-
     // checking if a match already exists for the given schedule
     const existingMatch = await prisma.match.findUnique({
       where: { scheduleId: Number(scheduleId) },
@@ -37,7 +30,7 @@ class MatchService {
         scheduleId: Number(scheduleId),
         teamOneGoals: data.teamOneGoals || 0,
         teamTwoGoals: data.teamTwoGoals || 0,
-        playedAt: data.playedAt ? new Date(data.playedAt) : null,
+        playedAt: data.playedAt ? new Date(data.playedAt) : (schedule.date ?? new Date()),
         startedAt: data.startedAt ? new Date(data.startedAt) : null,
         endedAt: data.endedAt ? new Date(data.endedAt) : null,
       },

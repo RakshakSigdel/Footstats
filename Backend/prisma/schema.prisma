@@ -232,6 +232,7 @@ model Schedule {
   scheduleType   String
   location       String
   date           DateTime
+  matchSize      Int            @default(11)
 
   // Team references
   teamOneId Int

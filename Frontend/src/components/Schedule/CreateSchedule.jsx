@@ -7,6 +7,7 @@ export default function CreateSchedule({ isOpen, onClose, onCreateSchedule }) {
     teamOneId: '',
     teamTwoId: '',
     scheduleType: 'Friendly',
+    matchSize: 11,
     location: '',
     date: '',
     time: '',
@@ -94,6 +95,7 @@ export default function CreateSchedule({ isOpen, onClose, onCreateSchedule }) {
       teamOneId: parseInt(formData.teamOneId),
       teamTwoId: parseInt(formData.teamTwoId),
       scheduleType: formData.scheduleType,
+      matchSize: formData.matchSize,
       location: formData.location,
       date: dateTime.toISOString(),
       scheduleStatus: 'UPCOMING',
@@ -102,19 +104,10 @@ export default function CreateSchedule({ isOpen, onClose, onCreateSchedule }) {
     };
 
     try {
-      await onCreateSchedule(scheduleData);
-      // Reset form
-      setFormData({
-        teamOneId: '',
-        teamTwoId: '',
-        scheduleType: 'Friendly',
-        location: '',
-        date: '',
-        time: '',
-        creationType: 'club',
-        createdFromClub: '',
-        createdFromTournament: '',
-      });
+      await createScheduleRequest(payload);
+      setFormData({ scheduleType: 'Friendly', matchSize: 11, location: '', date: '', time: '', creationType: 'club', createdFromClub: '', createdFromTournament: '' });
+      setTeamOneId(''); setTeamOneName(''); setTeamTwoId(''); setTeamTwoName(''); setTeam2Query('');
+      if (onCreated) onCreated();
       onClose();
     } catch (err) {
       console.error('Failed to create schedule:', err);
@@ -257,22 +250,27 @@ export default function CreateSchedule({ isOpen, onClose, onCreateSchedule }) {
             </div>
           </div>
 
-          {/* Schedule Type */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">
-              Match Type
-            </label>
-            <select
-              name="scheduleType"
-              value={formData.scheduleType}
-              onChange={handleInputChange}
-              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="Friendly">Friendly</option>
-              <option value="League">League</option>
-              <option value="Knockout">Knockout</option>
-              <option value="Cup">Cup</option>
-            </select>
+          {/* Match Type + Match Size */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Match Type</label>
+              <select name="scheduleType" value={formData.scheduleType} onChange={handleInputChange}
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500">
+                <option value="Friendly">Friendly</option>
+                <option value="League">League</option>
+                <option value="Knockout">Knockout</option>
+                <option value="Cup">Cup</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Match Format</label>
+              <select name="matchSize" value={formData.matchSize} onChange={(e) => setFormData(prev => ({ ...prev, matchSize: Number(e.target.value) }))}
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500">
+                {[5, 6, 7, 8, 9, 10, 11].map(n => (
+                  <option key={n} value={n}>{n}v{n}</option>
+                ))}
+              </select>
+            </div>
           </div>
 
           {/* Date and Time */}

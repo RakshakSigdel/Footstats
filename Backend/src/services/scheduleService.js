@@ -12,6 +12,7 @@ class ScheduleService {
         date: new Date(data.date),
         scheduleType: data.scheduleType,
         location: data.location,
+        matchSize: data.matchSize ? Number(data.matchSize) : 11,
         createdFromClub: data.createdFromClub || null,
         createdFromTournament: data.createdFromTournament || null,
         createdFromUser: UserId,
