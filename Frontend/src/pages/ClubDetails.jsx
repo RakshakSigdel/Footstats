@@ -7,7 +7,7 @@ import { getClubSchedules } from "../services/api.schedules";
 import { getAllClubs } from "../services/api.clubs";
 import { getPlayersByClubId } from "../services/api.player";
 import { getMyProfile } from "../services/api.player";
-import { getClubRequests, approveJoinRequest, rejectJoinRequest, createJoinRequest } from "../services/api.requests";
+import { getClubRequests, approveJoinRequest, rejectJoinRequest, createJoinRequest, getMyRequestStatus } from "../services/api.requests";
 
 // EditClub Modal Component
 const EditClub = ({ isOpen, onClose, onEditClub, clubData }) => {
@@ -275,7 +275,7 @@ export default function ClubDetails() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
-  const [joinRequestSent, setJoinRequestSent] = useState(false);
+  const [myRequestStatus, setMyRequestStatus] = useState(null); // null | 'PENDING'
   const [memberActionLoading, setMemberActionLoading] = useState(null);
 
   useEffect(() => {
@@ -301,22 +301,16 @@ export default function ClubDetails() {
         (Array.isArray(allClubs) ? allClubs : []).forEach((c) => { if (c?.clubId) map[c.clubId] = c.name; });
         setClubsMap(map);
 
-        // Load requests and check user's request status
-        if (user && club) {
-          // Try to fetch requests - will only succeed if user is admin
+        // Check the current user's own request status (works for any logged-in user)
+        if (user) {
+          const myReq = await getMyRequestStatus(clubId).catch(() => null);
+          setMyRequestStatus(myReq?.status || null);
+        }
+
+        // Load requests for admin
+        if (user && club && user.userId === club.createdBy) {
           const requests = await getClubRequests(clubId).catch(() => []);
-          const allRequests = Array.isArray(requests) ? requests : [];
-          
-          // If admin, show all requests
-          if (user.userId === club.createdBy) {
-            setClubRequests(allRequests);
-          }
-          
-          // Check if current user has a pending request
-          if (allRequests.length > 0) {
-            const userHasRequest = allRequests.some(req => req.userId === user.userId && req.status === 'PENDING');
-            setJoinRequestSent(userHasRequest);
-          }
+          setClubRequests(Array.isArray(requests) ? requests : []);
         }
       } catch (err) {
         setError(err?.message || "Failed to load club");
@@ -408,7 +402,7 @@ export default function ClubDetails() {
   const handleRequestToJoin = async (preferredPosition, whyJoin, additionalMessage) => {
     if (!clubId || !currentUser) return;
     await createJoinRequest(Number(clubId), preferredPosition, whyJoin, additionalMessage);
-    setJoinRequestSent(true);
+    setMyRequestStatus('PENDING');
   };
 
   const handleRemoveMember = async (userId) => {
@@ -513,11 +507,11 @@ export default function ClubDetails() {
                   {/* Request to Join button for non-members */}
                   {!isClubAdmin && !isClubMember && (
                     <button 
-                      onClick={() => !joinRequestSent && setIsJoinModalOpen(true)}
-                      disabled={joinRequestSent}
+                      onClick={() => myRequestStatus !== 'PENDING' && setIsJoinModalOpen(true)}
+                      disabled={myRequestStatus === 'PENDING'}
                       className={`px-5 py-2.5 md:px-6 md:py-3 rounded-lg font-medium flex items-center gap-2 transition-colors ${
-                        joinRequestSent 
-                          ? 'bg-gray-400 text-white cursor-not-allowed' 
+                        myRequestStatus === 'PENDING'
+                          ? 'bg-yellow-500 text-white cursor-not-allowed' 
                           : 'bg-green-600 hover:bg-green-700 text-white'
                       }`}
                     >
@@ -534,7 +528,7 @@ export default function ClubDetails() {
                         <line x1="20" y1="8" x2="20" y2="14" />
                         <line x1="23" y1="11" x2="17" y2="11" />
                       </svg>
-                      {joinRequestSent ? 'Request Sent' : 'Request to Join Club'}
+                      {myRequestStatus === 'PENDING' ? 'Request Pending' : 'Request to Join Club'}
                     </button>
                   )}
 
@@ -594,6 +588,11 @@ export default function ClubDetails() {
                 >
                   <span className="text-lg">{tab.icon}</span>
                   <span>{tab.label}</span>
+                  {tab.id === "requests" && clubRequests.length > 0 && (
+                    <span className="ml-1 min-w-[1.25rem] h-5 px-1 flex items-center justify-center rounded-full bg-red-500 text-white text-xs font-bold leading-none">
+                      {clubRequests.length > 99 ? "99+" : clubRequests.length}
+                    </span>
+                  )}
                   {activeTab === tab.id && <div className="absolute bottom-0 left-0 right-0 h-1 bg-blue-600"></div>}
                 </button>
               ))}

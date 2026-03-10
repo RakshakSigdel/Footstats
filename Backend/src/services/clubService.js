@@ -216,5 +216,35 @@ class ClubService {
     });
     return updated;
   }
+
+  // Get clubs where user is creator or has ADMIN role
+  static async getAdminClubs(userId) {
+    const createdClubs = await prisma.club.findMany({
+      where: { createdBy: userId },
+    });
+
+    const adminMemberships = await prisma.userClub.findMany({
+      where: { userId, role: "ADMIN" },
+      include: { club: true },
+    });
+
+    const memberAdminClubs = adminMemberships.map((m) => m.club);
+    const createdIds = new Set(createdClubs.map((c) => c.clubId));
+    const all = [...createdClubs];
+    memberAdminClubs.forEach((c) => { if (!createdIds.has(c.clubId)) all.push(c); });
+    return all;
+  }
+
+  // Search clubs by name (top 10)
+  static async searchClubs(query) {
+    return prisma.club.findMany({
+      where: {
+        name: { contains: query, mode: "insensitive" },
+      },
+      select: { clubId: true, name: true, location: true },
+      orderBy: { name: "asc" },
+      take: 10,
+    });
+  }
 }
 export default ClubService;
