@@ -3,9 +3,10 @@ import { useNavigate } from 'react-router-dom'
 import Sidebar from "../components/Global/Sidebar";
 import Topbar from "../components/Global/Topbar";
 import CreateSchedule from "../components/Schedule/CreateSchedule";
-import { getMySchedules, createSchedule } from "../services/api.schedules";
+import { getMySchedules } from "../services/api.schedules";
 import { getAllMatches } from "../services/api.matches";
 import { getAllClubs } from "../services/api.clubs";
+import { getMyScheduleRequests, approveScheduleRequest, rejectScheduleRequest } from "../services/api.scheduleRequests";
 
 export default function Schedule() {
   const navigate = useNavigate()
@@ -18,6 +19,9 @@ export default function Schedule() {
   const [isCreateScheduleOpen, setIsCreateScheduleOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const [typeFilter, setTypeFilter] = useState("all")
+  const [inboxRequests, setInboxRequests] = useState([])
+  const [inboxLoading, setInboxLoading] = useState(false)
+  const [actionLoading, setActionLoading] = useState(null)
 
   useEffect(() => {
     const load = async () => {
@@ -29,6 +33,7 @@ export default function Schedule() {
           getAllMatches().catch(() => []),
           getAllClubs().catch(() => []),
         ])
+        loadInbox()
         setSchedules(Array.isArray(scheds) ? scheds : [])
         setMatches(Array.isArray(allMatches) ? allMatches : [])
         const map = {}
@@ -44,16 +49,49 @@ export default function Schedule() {
     load()
   }, [])
 
-  const handleCreateSchedule = async (scheduleData) => {
+  const loadInbox = async () => {
+    setInboxLoading(true)
     try {
-      await createSchedule(scheduleData)
-      // Reload schedules
+      const reqs = await getMyScheduleRequests().catch(() => [])
+      setInboxRequests(Array.isArray(reqs) ? reqs : [])
+    } finally {
+      setInboxLoading(false)
+    }
+  }
+
+  const handleApprove = async (requestId) => {
+    setActionLoading(requestId)
+    try {
+      await approveScheduleRequest(requestId)
+      setInboxRequests((prev) => prev.filter((r) => r.requestId !== requestId))
+      // Refresh schedules so the newly approved one appears
+      const scheds = await getMySchedules().catch(() => [])
+      setSchedules(Array.isArray(scheds) ? scheds : [])
+    } catch (err) {
+      setError(err?.message || 'Failed to approve request')
+    } finally {
+      setActionLoading(null)
+    }
+  }
+
+  const handleReject = async (requestId) => {
+    setActionLoading(requestId)
+    try {
+      await rejectScheduleRequest(requestId)
+      setInboxRequests((prev) => prev.filter((r) => r.requestId !== requestId))
+    } catch (err) {
+      setError(err?.message || 'Failed to reject request')
+    } finally {
+      setActionLoading(null)
+    }
+  }
+
+  const handleScheduleCreated = async () => {
+    try {
       const scheds = await getMySchedules()
       setSchedules(Array.isArray(scheds) ? scheds : [])
-      setIsCreateScheduleOpen(false)
     } catch (err) {
-      setError(err?.message || 'Failed to create schedule')
-      throw err
+      setError(err?.message || 'Failed to reload schedules')
     }
   }
 
@@ -180,13 +218,98 @@ export default function Schedule() {
               >
                 Past Matches
               </button>
+              <button
+                onClick={() => { setActiveTab('inbox'); loadInbox(); }}
+                className={`relative px-5 py-2 text-sm font-semibold rounded-full transition-all ${
+                  activeTab === 'inbox'
+                    ? 'bg-white shadow-sm'
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                Match Requests
+                {inboxRequests.length > 0 && (
+                  <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                    {inboxRequests.length > 99 ? '99+' : inboxRequests.length}
+                  </span>
+                )}
+              </button>
             </div>
           </div>
 
           {error && <div className="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 text-red-700">{error}</div>}
-          {loading && <div className="mb-6 text-gray-500">Loading schedules...</div>}
+          {loading && activeTab !== 'inbox' && <div className="mb-6 text-gray-500">Loading schedules...</div>}
 
-          <div className="space-y-4">
+          {/* Match Request Inbox */}
+          {activeTab === 'inbox' && (
+            <div className="space-y-4">
+              {inboxLoading && <div className="text-gray-500">Loading requests...</div>}
+              {!inboxLoading && inboxRequests.length === 0 && (
+                <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-8 text-center">
+                  <svg className="mx-auto mb-3 text-gray-300" width="40" height="40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                  </svg>
+                  <p className="text-gray-500 font-medium">No pending match requests</p>
+                  <p className="text-gray-400 text-sm mt-1">When another club requests a match against your club, it will appear here.</p>
+                </div>
+              )}
+              {inboxRequests.map((req) => {
+                const s = req.schedule
+                const dateStr = s?.date ? new Date(s.date).toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' }) : 'TBD'
+                const timeStr = s?.date ? new Date(s.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''
+                const requester = s?.creationFromUser ? `${s.creationFromUser.firstName} ${s.creationFromUser.lastName}` : 'Unknown'
+                const isActing = actionLoading === req.requestId
+                return (
+                  <div key={req.requestId} className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+                    <div className="flex items-start justify-between gap-4 flex-wrap">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-2 flex-wrap">
+                          <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-yellow-100 text-yellow-700">PENDING</span>
+                          <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-100 text-blue-700">{s?.scheduleType ?? 'Friendly'}</span>
+                        </div>
+                        <h3 className="text-lg font-bold text-gray-900 mb-1">
+                          {s?.teamOne?.name ?? 'Team 1'} <span className="text-gray-400 font-normal">vs</span> {s?.teamTwo?.name ?? 'Your Club'}
+                        </h3>
+                        <div className="flex items-center gap-4 text-sm text-gray-600 flex-wrap">
+                          <span className="flex items-center gap-1.5">
+                            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" />
+                            </svg>
+                            {dateStr} {timeStr && `· ${timeStr}`}
+                          </span>
+                          {s?.location && (
+                            <span className="flex items-center gap-1.5">
+                              <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" />
+                              </svg>
+                              {s.location}
+                            </span>
+                          )}
+                          <span className="flex items-center gap-1.5 text-gray-400">
+                            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />
+                            </svg>
+                            Requested by {requester}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <button onClick={() => handleReject(req.requestId)} disabled={isActing}
+                          className="px-4 py-2 text-sm font-medium text-red-600 border border-red-200 rounded-lg hover:bg-red-50 disabled:opacity-50 transition-colors">
+                          {isActing ? '...' : 'Decline'}
+                        </button>
+                        <button onClick={() => handleApprove(req.requestId)} disabled={isActing}
+                          className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors">
+                          {isActing ? '...' : 'Accept'}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+
+          {activeTab !== 'inbox' && <div className="space-y-4">
             {activeTab === 'upcoming' && upcomingSchedules.length === 0 && !loading && (
               <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-8 text-center text-gray-500">No upcoming matches.</div>
             )}
@@ -284,14 +407,14 @@ export default function Schedule() {
                 </div>
               )
             })}
-          </div>
+          </div>}
         </main>
       </div>
 
       <CreateSchedule
         isOpen={isCreateScheduleOpen}
         onClose={() => setIsCreateScheduleOpen(false)}
-        onCreateSchedule={handleCreateSchedule}
+        onCreated={handleScheduleCreated}
       />
     </div>
   )
