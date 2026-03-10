@@ -13,10 +13,14 @@ import {
   addClubMember,
   removeClubMember,
   updateMemberRole,
+  getAdminClubs,
+  searchClubs,
 } from "../controllers/clubController.js";
 
 router.post("/", verifyToken, createClub);
 router.get("/me", verifyToken, getMyClubs);
+router.get("/admin", verifyToken, getAdminClubs);
+router.get("/search", searchClubs);
 router.get("/", getAllClubs);
 router.get("/:id", getClubById);
 router.put("/:id", verifyToken, authorizeClubOwnership, updateClub);
