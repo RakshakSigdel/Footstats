@@ -78,6 +78,20 @@ export const createJoinRequest = async (req, res) => {
   }
 };
 
+export const getMyRequestStatus = async (req, res) => {
+  const userId = req.user.userId;
+  const clubId = Number(req.params.clubId);
+  try {
+    const request = await prisma.clubRequest.findUnique({
+      where: { userId_clubId: { userId, clubId } },
+      select: { requestId: true, status: true },
+    });
+    res.status(200).json({ request });
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching request status", error: error.message });
+  }
+};
+
 export const getClubRequests = async (req, res) => {
   const clubId = Number(req.params.clubId);
   try {

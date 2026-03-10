@@ -7,9 +7,11 @@ import {
   getClubRequests,
   approveJoinRequest,
   rejectJoinRequest,
+  getMyRequestStatus,
 } from "../controllers/requestController.js";
 
 router.post("/join", verifyToken, createJoinRequest);
+router.get("/my-status/:clubId", verifyToken, getMyRequestStatus);
 router.get("/club/:clubId", verifyToken, authorizeClubAdmin, getClubRequests);
 router.post("/approve/:requestId", verifyToken, authorizeRequestAction, approveJoinRequest);
 router.delete("/reject/:requestId", verifyToken, authorizeRequestAction, rejectJoinRequest);
