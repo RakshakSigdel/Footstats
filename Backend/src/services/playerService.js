@@ -198,45 +198,78 @@ class PlayerService {
   }
 
   static async getPlayersByClubId(clubId) {
-    const clubMembers = await prisma.userClub.findMany({
-      where: { clubId: Number(clubId) },
-      include: {
-        user: {
-          select: {
-            userId: true,
-            firstName: true,
-            lastName: true,
-            email: true,
-            dateOfBirth: true,
-            gender: true,
-            Phone: true,
-            location: true,
-            profilePhoto: true,
-            preferredFoot: true,
+    const clubIdNum = Number(clubId);
+
+    const [clubMembers, club] = await Promise.all([
+      prisma.userClub.findMany({
+        where: { clubId: clubIdNum },
+        include: {
+          user: {
+            select: {
+              userId: true,
+              firstName: true,
+              lastName: true,
+              email: true,
+              dateOfBirth: true,
+              gender: true,
+              Phone: true,
+              location: true,
+              profilePhoto: true,
+              preferredFoot: true,
+            },
           },
         },
-      },
-    });
-    
+      }),
+      prisma.club.findUnique({
+        where: { clubId: clubIdNum },
+        select: {
+          createdBy: true,
+          creator: {
+            select: {
+              userId: true,
+              firstName: true,
+              lastName: true,
+              email: true,
+              dateOfBirth: true,
+              gender: true,
+              Phone: true,
+              location: true,
+              profilePhoto: true,
+              preferredFoot: true,
+            },
+          },
+        },
+      }),
+    ]);
+
+    // Build a unified list: start with UserClub members
+    const memberMap = new Map(clubMembers.map((m) => [m.userId, m]));
+
+    // Include the club creator even if they have no UserClub entry
+    const creatorId = club?.createdBy;
+    if (creatorId && !memberMap.has(creatorId) && club?.creator) {
+      memberMap.set(creatorId, {
+        userId: creatorId,
+        user: club.creator,
+        role: "ADMIN",
+        position: null,
+        joinedAt: null,
+      });
+    }
+
+    const allMembers = [...memberMap.values()];
+
     // Get stats for each player in this club
     const playersWithStats = await Promise.all(
-      clubMembers.map(async (member) => {
-        // Count appearances (match lineups for this club)
-        const appearances = await prisma.matchLineup.count({
-          where: {
-            userId: member.userId,
-            clubId: Number(clubId),
-          },
-        });
-
-        // Count goals (match events where eventType is GOAL for this club)
-        const goals = await prisma.matchEvent.count({
-          where: {
-            userId: member.userId,
-            clubId: Number(clubId),
-            eventType: 'GOAL',
-          },
-        });
+      allMembers.map(async (member) => {
+        const uid = member.userId;
+        const [appearances, goals, assists, yellowCards, redCards] = await Promise.all([
+          prisma.matchLineup.count({ where: { userId: uid, clubId: clubIdNum } }),
+          prisma.matchEvent.count({ where: { userId: uid, clubId: clubIdNum, eventType: "GOAL" } }),
+          prisma.matchEvent.count({ where: { assistById: uid, clubId: clubIdNum, eventType: "GOAL" } }),
+          prisma.matchEvent.count({ where: { userId: uid, clubId: clubIdNum, eventType: "YELLOW_CARD" } }),
+          prisma.matchEvent.count({ where: { userId: uid, clubId: clubIdNum, eventType: "RED_CARD" } }),
+        ]);
 
         return {
           ...member.user,
@@ -245,10 +278,13 @@ class PlayerService {
           joinedAt: member.joinedAt,
           appearances,
           goals,
+          assists,
+          yellowCards,
+          redCards,
         };
       })
     );
-    
+
     return playersWithStats;
   }
 
