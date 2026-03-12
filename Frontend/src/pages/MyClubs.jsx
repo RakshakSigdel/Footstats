@@ -200,7 +200,15 @@ export default function MyClubs() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-3 mb-2">
                           <h3 className="text-base font-bold text-gray-900 truncate">{club.name}</h3>
-                          <span className="bg-blue-50 text-blue-700 text-xs px-2.5 py-0.5 rounded-full font-medium whitespace-nowrap">Owner</span>
+                          {club.userRole === "OWNER" && (
+                            <span className="bg-purple-100 text-purple-700 text-xs px-2.5 py-0.5 rounded-full font-medium whitespace-nowrap">Owner</span>
+                          )}
+                          {club.userRole === "ADMIN" && (
+                            <span className="bg-yellow-100 text-yellow-700 text-xs px-2.5 py-0.5 rounded-full font-medium whitespace-nowrap">Admin</span>
+                          )}
+                          {club.userRole === "MEMBER" && (
+                            <span className="bg-blue-50 text-blue-700 text-xs px-2.5 py-0.5 rounded-full font-medium whitespace-nowrap">Member</span>
+                          )}
                         </div>
                         <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-gray-600">
                           {club.location && (

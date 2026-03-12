@@ -393,7 +393,7 @@ export default function ScheduleDetails() {
               <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
                 <div className="flex justify-between items-center mb-6">
                   <h2 className="text-xl md:text-2xl font-bold text-gray-900">Match Events</h2>
-                  {canManage() && match && (
+                {canManage() && match && schedule?.date && new Date(schedule.date) <= new Date() && (
                     <button 
                       onClick={openAddEventModal}
                       className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 flex items-center gap-2"

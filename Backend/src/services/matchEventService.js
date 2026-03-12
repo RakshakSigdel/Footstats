@@ -16,6 +16,15 @@ class MatchEventService {
       throw { status: 404, message: "Match not found" };
     }
 
+    // Block adding events before the scheduled match start time
+    const scheduledDate = match.schedule?.date;
+    if (scheduledDate && new Date(scheduledDate) > new Date()) {
+      throw {
+        status: 400,
+        message: "Match events can only be added once the match has started (scheduled time must have passed)",
+      };
+    }
+
     // Verify user is in the lineup for this match
     const userInLineup = await prisma.matchLineup.findFirst({
       where: {

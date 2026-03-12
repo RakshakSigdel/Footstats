@@ -95,6 +95,16 @@ class ScheduleService {
   }
   //Get Schedule By ID
   static async getScheduleById(scheduleId) {
+    // Auto-finish: if status is not FINISHED and 3+ hours have passed, update it
+    await prisma.schedule.updateMany({
+      where: {
+        scheduleId: Number(scheduleId),
+        scheduleStatus: { not: "FINISHED" },
+        date: { lte: new Date(Date.now() - 3 * 60 * 60 * 1000) },
+      },
+      data: { scheduleStatus: "FINISHED" },
+    });
+
     const schedule = await prisma.schedule.findUnique({
       where: { scheduleId: Number(scheduleId) },
       include: {

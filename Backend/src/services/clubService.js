@@ -46,27 +46,24 @@ class ClubService {
       where: { createdBy: userId },
     });
 
-    // Get clubs where user is a member
+    // Get clubs where user is a member (via UserClub)
     const userClubMemberships = await prisma.userClub.findMany({
       where: { userId: userId },
-      include: {
-        club: true,
-      },
+      include: { club: true },
     });
 
-    const memberClubs = userClubMemberships.map((uc) => uc.club);
-
-    // Combine and remove duplicates (in case user is both creator and member)
-    const allClubs = [...createdClubs];
+    // Build result: created clubs tagged as OWNER
     const createdClubIds = new Set(createdClubs.map((c) => c.clubId));
+    const results = createdClubs.map((club) => ({ ...club, userRole: "OWNER" }));
 
-    memberClubs.forEach((club) => {
-      if (!createdClubIds.has(club.clubId)) {
-        allClubs.push(club);
+    // Add member clubs (skip if user is also creator to avoid duplicates)
+    userClubMemberships.forEach((m) => {
+      if (!createdClubIds.has(m.club.clubId)) {
+        results.push({ ...m.club, userRole: m.role ?? "MEMBER" });
       }
     });
 
-    return allClubs;
+    return results;
   }
 
   static async updateClub(clubId, data, userId) {
