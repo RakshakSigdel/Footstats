@@ -1,12 +1,12 @@
 import { useEffect, useState, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import Sidebar from "../components/Global/Sidebar";
-import Topbar from "../components/Global/Topbar";
-import { getMyProfile, getMyStats } from "../services/api.player";
-import { getMySchedules } from "../services/api.schedules";
-import { getMyClubs } from "../services/api.clubs";
-import { getMyTournaments } from "../services/api.tournaments";
-import { getAllClubs } from "../services/api.clubs";
+import Sidebar from "../../components/Global/Sidebar";
+import Topbar from "../../components/Global/Topbar";
+import { getMyProfile, getMyStats } from "../../services/api.player";
+import { getMySchedules } from "../../services/api.schedules";
+import { getMyClubs } from "../../services/api.clubs";
+import { getMyTournaments } from "../../services/api.tournaments";
+import { getAllClubs } from "../../services/api.clubs";
 
 export default function Dashboard() {
   const [profile, setProfile] = useState(null);

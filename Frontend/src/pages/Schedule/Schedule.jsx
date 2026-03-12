@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import Sidebar from "../components/Global/Sidebar";
-import Topbar from "../components/Global/Topbar";
-import CreateSchedule from "../components/Schedule/CreateSchedule";
-import { getMySchedules } from "../services/api.schedules";
-import { getAllMatches } from "../services/api.matches";
-import { getAllClubs } from "../services/api.clubs";
-import { getMyScheduleRequests, approveScheduleRequest, rejectScheduleRequest } from "../services/api.scheduleRequests";
+import Sidebar from "../../components/Global/Sidebar";
+import Topbar from "../../components/Global/Topbar";
+import CreateSchedule from "./Components/CreateSchedule";
+import { getMySchedules } from "../../services/api.schedules";
+import { getAllMatches } from "../../services/api.matches";
+import { getAllClubs } from "../../services/api.clubs";
+import { getMyScheduleRequests, approveScheduleRequest, rejectScheduleRequest } from "../../services/api.scheduleRequests";
 
 export default function Schedule() {
   const navigate = useNavigate()

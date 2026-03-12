@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import Sidebar from "../components/Global/Sidebar";
-import Topbar from "../components/Global/Topbar";
-import { getScheduleById } from '../services/api.schedules'
-import { getClubMembers } from '../services/api.clubs'
-import { createMatch } from '../services/api.matches'
-import { createMatchEvent, updateMatchEvent, deleteMatchEvent } from '../services/api.matchEvents'
-import { addPlayerToLineup, updateLineup, removeFromLineup } from '../services/api.matchLineups'
+import Sidebar from "../../components/Global/Sidebar";
+import Topbar from "../../components/Global/Topbar";
+import { getScheduleById } from '../../services/api.schedules'
+import { getClubMembers } from '../../services/api.clubs'
+import { createMatch } from '../../services/api.matches'
+import { createMatchEvent, updateMatchEvent, deleteMatchEvent } from '../../services/api.matchEvents'
+import { addPlayerToLineup, updateLineup, removeFromLineup } from '../../services/api.matchLineups'
 
 export default function ScheduleDetails() {
   const { scheduleId } = useParams()

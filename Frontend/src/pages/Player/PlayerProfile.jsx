@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import Sidebar from "../components/Global/Sidebar";
-import Topbar from "../components/Global/Topbar";
-import { getPlayerById } from "../services/api.player";
+import Sidebar from "../../components/Global/Sidebar";
+import Topbar from "../../components/Global/Topbar";
+import { getPlayerById } from "../../services/api.player";
 
 function StatCard({ label, value, color = "text-gray-900" }) {
   return (
@@ -60,6 +60,13 @@ export default function PlayerProfile() {
     return "bg-gray-100 text-gray-600";
   };
 
+  const getProfilePhotoUrl = (photoPath) => {
+    if (!photoPath) return null;
+    return photoPath.startsWith('http') 
+      ? photoPath 
+      : `http://localhost:5555${photoPath}`;
+  };
+
   return (
     <div className="flex min-h-screen bg-gray-50">
       <Sidebar />
@@ -100,9 +107,9 @@ export default function PlayerProfile() {
                 <div className="flex flex-col sm:flex-row items-start gap-6">
                   {/* Avatar */}
                   <div className="w-28 h-28 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0 overflow-hidden">
-                    {player.profilePhoto ? (
+                    {getProfilePhotoUrl(player.profilePhoto) ? (
                       <img
-                        src={player.profilePhoto}
+                        src={getProfilePhotoUrl(player.profilePhoto)}
                         alt={player.firstName}
                         className="w-full h-full object-cover"
                       />

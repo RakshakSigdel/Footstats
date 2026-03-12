@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import Sidebar from "../components/Global/Sidebar";
-import Topbar from "../components/Global/Topbar";
-import { getMyProfile, updatePlayerById, uploadProfilePhoto } from "../services/api.player";
+import Sidebar from "../../components/Global/Sidebar";
+import Topbar from "../../components/Global/Topbar";
+import { getMyProfile, updatePlayerById, uploadProfilePhoto } from "../../services/api.player";
 
 export default function Profile() {
   const [profile, setProfile] = useState(null);

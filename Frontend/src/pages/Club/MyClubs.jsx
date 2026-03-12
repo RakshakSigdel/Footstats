@@ -1,9 +1,9 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import Sidebar from "../components/Global/Sidebar";
-import Topbar from "../components/Global/Topbar";
-import CreateClub from "../components/Club/CreateClub";
-import { getMyClubs, getAllClubs, createClub } from "../services/api.clubs";
+import Sidebar from "../../components/Global/Sidebar";
+import Topbar from "../../components/Global/Topbar";
+import CreateClub from "./Components/CreateClub";
+import { getMyClubs, getAllClubs, createClub } from "../../services/api.clubs";
 
 export default function MyClubs() {
   const navigate = useNavigate();

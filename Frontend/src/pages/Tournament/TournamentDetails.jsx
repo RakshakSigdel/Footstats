@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import Sidebar from '../components/Global/Sidebar'
-import Topbar from '../components/Global/Topbar'
-import EditTournament from '../components/Tournament/EditTournament'
-import { getTournamentById, updateTournament } from '../services/api.tournaments'
-import { getTournamentSchedules } from '../services/api.schedules'
-import { getAllClubs } from '../services/api.clubs'
+import Sidebar from '../../components/Global/Sidebar'
+import Topbar from '../../components/Global/Topbar'
+import EditTournament from './Components/EditTournament'
+import { getTournamentById, updateTournament } from '../../services/api.tournaments'
+import { getTournamentSchedules } from '../../services/api.schedules'
+import { getAllClubs } from '../../services/api.clubs'
 
 export default function TournamentDetails() {
   const { tournamentId } = useParams()

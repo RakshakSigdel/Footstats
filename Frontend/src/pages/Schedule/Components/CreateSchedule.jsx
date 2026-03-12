@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { getAdminClubs, searchClubs } from '../../services/api.clubs';
-import { getMyTournaments } from '../../services/api.tournaments';
-import { createScheduleRequest } from '../../services/api.scheduleRequests';
+import { getAdminClubs, searchClubs } from '../../../services/api.clubs';
+import { getMyTournaments } from '../../../services/api.tournaments';
+import { createScheduleRequest } from '../../../services/api.scheduleRequests';
 
 export default function CreateSchedule({ isOpen, onClose, onCreated }) {
   const [formData, setFormData] = useState({

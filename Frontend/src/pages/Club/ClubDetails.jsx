@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import Sidebar from "../components/Global/Sidebar";
-import Topbar from "../components/Global/Topbar";
-import { getClubById, updateClub, getClubMembers, removeClubMember, updateMemberRole, updateMemberPosition, leaveClub, uploadClubLogo } from "../services/api.clubs";
-import { getClubSchedules } from "../services/api.schedules";
-import { getAllClubs } from "../services/api.clubs";
-import { getPlayersByClubId } from "../services/api.player";
-import { getMyProfile } from "../services/api.player";
-import { getClubRequests, approveJoinRequest, rejectJoinRequest, createJoinRequest, getMyRequestStatus } from "../services/api.requests";
+import Sidebar from "../../components/Global/Sidebar";
+import Topbar from "../../components/Global/Topbar";
+import { getClubById, updateClub, getClubMembers, removeClubMember, updateMemberRole, updateMemberPosition, leaveClub, uploadClubLogo } from "../../services/api.clubs";
+import { getClubSchedules } from "../../services/api.schedules";
+import { getAllClubs } from "../../services/api.clubs";
+import { getPlayersByClubId } from "../../services/api.player";
+import { getMyProfile } from "../../services/api.player";
+import { getClubRequests, approveJoinRequest, rejectJoinRequest, createJoinRequest, getMyRequestStatus } from "../../services/api.requests";
 
 // EditClub Modal Component
 const EditClub = ({ isOpen, onClose, onEditClub, clubData }) => {
@@ -410,6 +410,11 @@ export default function ClubDetails() {
       case "Loss": return "bg-red-100 text-red-700";
       default: return "bg-gray-100 text-gray-700";
     }
+  };
+
+  const getProfilePhotoUrl = (photoPath) => {
+    if (!photoPath) return null;
+    return photoPath.startsWith('http') ? photoPath : `http://localhost:5555${photoPath}`;
   };
 
   const handleEditClub = async (updatedData) => {
@@ -899,8 +904,8 @@ export default function ClubDetails() {
                       <div key={member.user?.userId || member.userId} className={`flex items-center justify-between p-4 border rounded-lg transition-colors ${isCurrentUser ? "border-blue-300 bg-blue-50 hover:bg-blue-100" : "border-gray-200 hover:bg-gray-50"}`}>
                         <div className="flex items-center gap-4 flex-1">
                           <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
-                            {member.user?.profilePhoto ? (
-                              <img src={member.user.profilePhoto} alt={member.user?.firstName} className="w-full h-full rounded-full object-cover" />
+                            {getProfilePhotoUrl(member.user?.profilePhoto) ? (
+                              <img src={getProfilePhotoUrl(member.user.profilePhoto)} alt={member.user?.firstName} className="w-full h-full rounded-full object-cover" />
                             ) : (
                               <span className="text-white font-bold text-lg">
                                 {member.user?.firstName?.[0]}{member.user?.lastName?.[0]}
@@ -1054,8 +1059,8 @@ export default function ClubDetails() {
                         )}
                       </div>
                       <div className="w-9 h-9 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0 overflow-hidden">
-                        {player.profilePhoto ? (
-                          <img src={player.profilePhoto} alt="" className="w-full h-full object-cover" />
+                        {getProfilePhotoUrl(player.profilePhoto) ? (
+                          <img src={getProfilePhotoUrl(player.profilePhoto)} alt="" className="w-full h-full object-cover" />
                         ) : (
                           <span className="text-blue-700 font-bold text-sm">
                             {player.firstName?.[0]}{player.lastName?.[0]}
@@ -1133,8 +1138,8 @@ export default function ClubDetails() {
                               : <span className="text-xs font-bold text-gray-400">#{idx + 1}</span>}
                           </div>
                           <div className="w-9 h-9 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0 overflow-hidden">
-                            {player.profilePhoto ? (
-                              <img src={player.profilePhoto} alt="" className="w-full h-full object-cover" />
+                            {getProfilePhotoUrl(player.profilePhoto) ? (
+                              <img src={getProfilePhotoUrl(player.profilePhoto)} alt="" className="w-full h-full object-cover" />
                             ) : (
                               <span className="text-blue-700 font-bold text-sm">{player.firstName?.[0]}{player.lastName?.[0]}</span>
                             )}
