@@ -116,3 +116,30 @@ export const getMyStats = async (req, res) => {
       .json({ message: "Error retrieving player stats", error: error.message });
   }
 };
+
+export const uploadProfilePhoto = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: "No file uploaded" });
+    }
+
+    const userId = req.user.userId;
+    const profilePhotoPath = `/uploads/profiles/${req.file.filename}`;
+
+    // Update user profile with the new photo path
+    const updatedPlayer = await PlayerService.updatePlayer(userId, {
+      profilePhoto: profilePhotoPath
+    });
+
+    res.status(200).json({ 
+      message: "Profile photo uploaded successfully",
+      profilePhoto: profilePhotoPath,
+      user: updatedPlayer
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      message: "Error uploading profile photo", 
+      error: error.message 
+    });
+  }
+};

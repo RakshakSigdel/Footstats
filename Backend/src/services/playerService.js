@@ -100,6 +100,7 @@ class PlayerService {
                 date: true,
                 location: true,
                 scheduleType: true,
+                scheduleStatus: true,
                 teamOne: { select: { clubId: true, name: true } },
                 teamTwo: { select: { clubId: true, name: true } },
               },
@@ -117,7 +118,9 @@ class PlayerService {
       const myGoals = isTeamOne ? match?.teamOneGoals : match?.teamTwoGoals;
       const oppGoals = isTeamOne ? match?.teamTwoGoals : match?.teamOneGoals;
       let result = null;
-      if (myGoals != null && oppGoals != null) {
+      // Only set result if match is completed
+      const isCompleted = schedule?.scheduleStatus === 'FINISHED' || match?.endedAt != null;
+      if (isCompleted && myGoals != null && oppGoals != null) {
         if (myGoals > oppGoals) result = "Win";
         else if (myGoals < oppGoals) result = "Loss";
         else result = "Draw";
@@ -155,12 +158,14 @@ class PlayerService {
       else if (m.result === "Loss") losses++;
     });
 
+    const completedMatches = wins + draws + losses;
+
     return {
       ...player,
       userClubs: userClubsWithStats,
       matches,
       stats: {
-        matchesPlayed: matches.length,
+        matchesPlayed: completedMatches,
         goals: totalGoals,
         assists: totalAssists,
         yellowCards: totalYellow,
@@ -168,7 +173,7 @@ class PlayerService {
         wins,
         draws,
         losses,
-        winRate: matches.length > 0 ? Math.round((wins / matches.length) * 100) : 0,
+        winRate: completedMatches > 0 ? Math.round((wins / completedMatches) * 100) : 0,
       },
     };
   }
@@ -346,7 +351,11 @@ class PlayerService {
     const lineups = await prisma.matchLineup.findMany({
       where: { userId: userIdNum },
       include: {
-        match: true,
+        match: {
+          include: {
+            schedule: true,
+          },
+        },
         club: true,
       },
     });
@@ -357,9 +366,12 @@ class PlayerService {
 
     lineups.forEach((lineup) => {
       const match = lineup.match;
-      if (!match) return;
+      if (!match || !match.schedule) return;
       
-      const isTeamOne = lineup.clubId === match.teamOneClubId;
+      // Only count matches that have been completed
+      if (match.schedule.scheduleStatus !== 'FINISHED' && !match.endedAt) return;
+      
+      const isTeamOne = lineup.clubId === match.schedule.teamOneId;
       const teamGoals = isTeamOne ? match.teamOneGoals : match.teamTwoGoals;
       const opponentGoals = isTeamOne ? match.teamTwoGoals : match.teamOneGoals;
 
@@ -375,7 +387,7 @@ class PlayerService {
 
     return {
       ...player,
-      matchesPlayed,
+      matchesPlayed: totalGamesWithResult,
       goalsScored,
       assists,
       yellowCards,

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import Sidebar from "../components/Global/Sidebar";
 import Topbar from "../components/Global/Topbar";
-import { getMyProfile, updatePlayerById } from "../services/api.player";
+import { getMyProfile, updatePlayerById, uploadProfilePhoto } from "../services/api.player";
 
 export default function Profile() {
   const [profile, setProfile] = useState(null);
@@ -21,6 +21,12 @@ export default function Profile() {
   });
   const [editLoading, setEditLoading] = useState(false);
   const [editError, setEditError] = useState(null);
+
+  // Photo upload state
+  const [photoFile, setPhotoFile] = useState(null);
+  const [photoPreview, setPhotoPreview] = useState(null);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [uploadError, setUploadError] = useState(null);
 
   useEffect(() => {
     const load = async () => {
@@ -84,6 +90,59 @@ export default function Profile() {
     }
   };
 
+  const handlePhotoChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        setUploadError('Please select an image file');
+        return;
+      }
+      // Validate file size (5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        setUploadError('Image size should be less than 5MB');
+        return;
+      }
+      setPhotoFile(file);
+      setPhotoPreview(URL.createObjectURL(file));
+      setUploadError(null);
+    }
+  };
+
+  const handleUploadPhoto = async () => {
+    if (!photoFile) return;
+    setUploadingPhoto(true);
+    setUploadError(null);
+    try {
+      await uploadProfilePhoto(photoFile);
+      // Refresh profile to get the new photo URL
+      const refreshedProfile = await getMyProfile();
+      setProfile(refreshedProfile);
+      setPhotoFile(null);
+      setPhotoPreview(null);
+    } catch (err) {
+      setUploadError(err?.message || 'Failed to upload photo');
+    } finally {
+      setUploadingPhoto(false);
+    }
+  };
+
+  const handleCancelPhotoUpload = () => {
+    setPhotoFile(null);
+    setPhotoPreview(null);
+    setUploadError(null);
+  };
+
+  const getProfilePhotoUrl = () => {
+    if (photoPreview) return photoPreview;
+    if (profile?.profilePhoto) {
+      return profile.profilePhoto.startsWith('http') 
+        ? profile.profilePhoto 
+        : `http://localhost:5555${profile.profilePhoto}`;
+    }
+    return null;
+  };
+
   return (
     <div className="flex min-h-screen">
       <Sidebar />
@@ -101,10 +160,32 @@ export default function Profile() {
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 mb-6">
             <div className="flex items-start justify-between">
               <div className="flex items-start gap-6">
-                <div className="w-32 h-32 bg-blue-100 rounded-full flex items-center justify-center">
-                  <span className="text-4xl font-bold text-gray-700">
-                    {profile ? `${profile.firstName?.charAt(0) || ""}${profile.lastName?.charAt(0) || ""}`.toUpperCase() || "?" : "—"}
-                  </span>
+                <div className="relative">
+                  <div className="w-32 h-32 bg-blue-100 rounded-full flex items-center justify-center overflow-hidden">
+                    {getProfilePhotoUrl() ? (
+                      <img 
+                        src={getProfilePhotoUrl()} 
+                        alt="Profile" 
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <span className="text-4xl font-bold text-gray-700">
+                        {profile ? `${profile.firstName?.charAt(0) || ""}${profile.lastName?.charAt(0) || ""}`.toUpperCase() || "?" : "—"}
+                      </span>
+                    )}
+                  </div>
+                  <label className="absolute bottom-0 right-0 w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center cursor-pointer hover:bg-blue-700 transition-colors shadow-lg">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
+                      <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                      <circle cx="12" cy="13" r="4" />
+                    </svg>
+                    <input 
+                      type="file" 
+                      accept="image/*" 
+                      onChange={handlePhotoChange}
+                      className="hidden"
+                    />
+                  </label>
                 </div>
                 <div>
                   <h1 className="text-3xl font-bold text-gray-900 mb-3">
@@ -163,6 +244,43 @@ export default function Profile() {
                 Edit Profile
               </button>
             </div>
+
+            {/* Photo Upload Confirmation */}
+            {photoFile && (
+              <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <span className="text-sm font-medium text-blue-900">New photo selected</span>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleCancelPhotoUpload}
+                      className="px-3 py-1.5 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
+                      disabled={uploadingPhoto}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleUploadPhoto}
+                      disabled={uploadingPhoto}
+                      className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                    >
+                      {uploadingPhoto ? 'Uploading...' : 'Upload Photo'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Upload Error */}
+            {uploadError && (
+              <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+                {uploadError}
+              </div>
+            )}
 
             {/* ─── divider now inside the card ─── */}
             <div className="border-t border-gray-200 my-8"></div>

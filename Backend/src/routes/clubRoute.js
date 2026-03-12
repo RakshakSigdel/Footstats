@@ -2,6 +2,7 @@ import { Router } from "express";
 const router = Router();
 import { verifyToken } from "../middleware/verifyToken.js";
 import { authorizeClubOwnership, authorizeClubMemberManagement } from "../middleware/authorize.js";
+import upload from "../middleware/upload.js";
 import {
   createClub,
   getMyClubs,
@@ -16,15 +17,17 @@ import {
   getAdminClubs,
   searchClubs,
   leaveClub,
+  uploadClubLogo,
 } from "../controllers/clubController.js";
 
-router.post("/", verifyToken, createClub);
+router.post("/", verifyToken, upload.single('logo'), createClub);
 router.get("/me", verifyToken, getMyClubs);
 router.get("/admin", verifyToken, getAdminClubs);
 router.get("/search", searchClubs);
 router.get("/", getAllClubs);
 router.get("/:id", getClubById);
 router.put("/:id", verifyToken, authorizeClubOwnership, updateClub);
+router.post("/:id/upload-logo", verifyToken, authorizeClubOwnership, upload.single('logo'), uploadClubLogo);
 router.delete("/:id", verifyToken, authorizeClubOwnership, deleteClub);
 
 // Club members management

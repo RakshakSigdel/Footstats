@@ -1,8 +1,27 @@
 import api from "./api";
 
-export const createClub = async (body) => {
+export const createClub = async (body, logoFile = null) => {
   try {
-    const response = await api.post("/clubs", body);
+    let requestData;
+    let config = {};
+    
+    if (logoFile) {
+      // If logo file is provided, use FormData
+      const formData = new FormData();
+      formData.append('name', body.name);
+      formData.append('description', body.description);
+      formData.append('location', body.location);
+      formData.append('foundedDate', body.foundedDate);
+      formData.append('logo', logoFile);
+      
+      requestData = formData;
+      config.headers = { 'Content-Type': 'multipart/form-data' };
+    } else {
+      // Otherwise send JSON
+      requestData = body;
+    }
+    
+    const response = await api.post("/clubs", requestData, config);
     return response.data;
   } catch (error) {
     throw error.response?.data || { message: "Failed to create club" };
@@ -131,5 +150,22 @@ export const leaveClub = async (clubId) => {
     return response.data;
   } catch (error) {
     throw error.response?.data || { message: "Failed to leave club" };
+  }
+};
+
+// Upload club logo
+export const uploadClubLogo = async (clubId, file) => {
+  try {
+    const formData = new FormData();
+    formData.append('logo', file);
+    
+    const response = await api.post(`/clubs/${clubId}/upload-logo`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { message: "Failed to upload club logo" };
   }
 };

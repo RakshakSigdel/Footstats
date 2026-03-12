@@ -7,7 +7,14 @@ export const createClub = async (req, res) => {
     if (!name || !description || !location || !foundedDate) {
       return res.status(400).json({ message: "All fields are required" });
     }
-    const club = await ClubService.createClub(req.body, userId);
+
+    // Add logo path if file was uploaded
+    const clubData = { ...req.body };
+    if (req.file) {
+      clubData.logo = `/uploads/clubs/${req.file.filename}`;
+    }
+
+    const club = await ClubService.createClub(clubData, userId);
     res.status(201).json({ club });
   } catch (error) {
     if (error.code === "P2002") {
@@ -194,5 +201,32 @@ export const leaveClub = async (req, res) => {
   } catch (error) {
     const status = error.status || 500;
     res.status(status).json({ message: error.message || "Error leaving club" });
+  }
+};
+
+export const uploadClubLogo = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: "No file uploaded" });
+    }
+
+    const clubId = req.params.id;
+    const logoPath = `/uploads/clubs/${req.file.filename}`;
+
+    // Update club with the new logo path
+    const updatedClub = await ClubService.updateClub(clubId, {
+      logo: logoPath
+    }, req.user.userId);
+
+    res.status(200).json({ 
+      message: "Club logo uploaded successfully",
+      logo: logoPath,
+      club: updatedClub
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      message: "Error uploading club logo", 
+      error: error.message 
+    });
   }
 };

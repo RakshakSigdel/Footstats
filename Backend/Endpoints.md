@@ -262,6 +262,42 @@ Authorization: Bearer <jwt_token>
 
 ---
 
+### 6. Upload Profile Photo
+- **Endpoint**: `POST /api/players/me/upload-photo`
+- **Authentication**: Required (JWT Token)
+- **Description**: Uploads a profile photo for the authenticated player
+- **Content-Type**: `multipart/form-data`
+
+**Headers**:
+```
+Authorization: Bearer <jwt_token>
+Content-Type: multipart/form-data
+```
+
+**Request Body** (Form Data):
+- `profilePhoto`: Image file (jpeg, jpg, png, gif, webp) - Max 5MB
+
+**Response** (200 OK):
+```json
+{
+  "message": "Profile photo uploaded successfully",
+  "profilePhoto": "/uploads/profiles/profilePhoto-1234567890-123456789.jpg",
+  "user": {
+    "userId": "user_id",
+    "firstName": "John",
+    "lastName": "Doe",
+    "profilePhoto": "/uploads/profiles/profilePhoto-1234567890-123456789.jpg"
+  }
+}
+```
+
+**Error Responses**:
+- `400`: No file uploaded or invalid file type
+- `401`: Unauthorized
+- `500`: Error uploading photo
+
+---
+
 ## Tournaments
 
 ### 1. Create Tournament
@@ -489,14 +525,15 @@ Authorization: Bearer <jwt_token>
 ### 1. Create Club
 - **Endpoint**: `POST /api/clubs`
 - **Authentication**: Required (JWT Token)
-- **Description**: Creates a new club
+- **Description**: Creates a new club (logo is optional)
+- **Content-Type**: `multipart/form-data` (if including logo) or `application/json`
 
 **Headers**:
 ```
 Authorization: Bearer <jwt_token>
 ```
 
-**Request Body** (All fields required):
+**Request Body** (Fields required: name, description, location, foundedDate):
 ```json
 {
   "name": "FC Barcelona",
@@ -506,6 +543,13 @@ Authorization: Bearer <jwt_token>
 }
 ```
 
+**Form Data** (when uploading logo with creation):
+- `name`: Club name (required)
+- `description`: Club description (required)
+- `location`: Club location (required)
+- `foundedDate`: Date club was founded (required)
+- `logo`: Image file (jpeg, jpg, png, gif, webp) - Max 5MB (optional)
+
 **Response** (201 Created):
 ```json
 {
@@ -513,6 +557,7 @@ Authorization: Bearer <jwt_token>
     "id": "club_id",
     "name": "FC Barcelona",
     "description": "Professional football club",
+    "logo": "/uploads/clubs/logo-1234567890-123456789.jpg",
     "location": "Barcelona, Spain",
     "foundedDate": "1899-11-29T00:00:00Z",
     "ownerId": "user_id"
@@ -521,7 +566,7 @@ Authorization: Bearer <jwt_token>
 ```
 
 **Error Responses**:
-- `400`: Missing required fields
+- `400`: Missing required fields or invalid file type
 - `401`: Unauthorized
 - `500`: Error creating club
 
@@ -658,7 +703,47 @@ Authorization: Bearer <jwt_token>
 
 ---
 
-### 6. Delete Club
+### 6. Upload Club Logo
+- **Endpoint**: `POST /api/clubs/:id/upload-logo`
+- **Authentication**: Required (JWT Token)
+- **Authorization**: Must be the club owner or admin
+- **Description**: Uploads or updates a club logo
+- **Content-Type**: `multipart/form-data`
+
+**URL Parameters**:
+- `id`: Club ID
+
+**Headers**:
+```
+Authorization: Bearer <jwt_token>
+Content-Type: multipart/form-data
+```
+
+**Request Body** (Form Data):
+- `logo`: Image file (jpeg, jpg, png, gif, webp) - Max 5MB
+
+**Response** (200 OK):
+```json
+{
+  "message": "Club logo uploaded successfully",
+  "logo": "/uploads/clubs/logo-1234567890-123456789.jpg",
+  "club": {
+    "clubId": "club_id",
+    "name": "FC Barcelona",
+    "logo": "/uploads/clubs/logo-1234567890-123456789.jpg"
+  }
+}
+```
+
+**Error Responses**:
+- `400`: No file uploaded or invalid file type
+- `401`: Unauthorized
+- `403`: Forbidden (not authorized to modify this club)
+- `500`: Error uploading logo
+
+---
+
+### 7. Delete Club
 - **Endpoint**: `DELETE /api/clubs/:id`
 - **Authentication**: Required (JWT Token)
 - **Authorization**: Must be the club owner

@@ -62,3 +62,19 @@ export const getMyStats = async () => {
     throw error.response?.data || { message: "Failed to fetch player stats" };
   }
 };
+
+export const uploadProfilePhoto = async (file) => {
+  try {
+    const formData = new FormData();
+    formData.append('profilePhoto', file);
+    
+    const response = await api.post("/players/me/upload-photo", formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { message: "Failed to upload profile photo" };
+  }
+};

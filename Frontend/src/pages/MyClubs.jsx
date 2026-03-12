@@ -57,9 +57,9 @@ export default function MyClubs() {
     );
   }, [browseClubs, searchQuery]);
 
-  const handleCreateClub = async (formData) => {
+  const handleCreateClub = async (formData, logoFile) => {
     try {
-      await createClub(formData);
+      await createClub(formData, logoFile);
       setIsCreateClubOpen(false);
       const my = await getMyClubs();
       setMyClubs(Array.isArray(my) ? my : []);
