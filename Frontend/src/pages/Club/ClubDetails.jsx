@@ -5,6 +5,7 @@ import Topbar from "../../components/Global/Topbar";
 import { getClubById, updateClub, getClubMembers, removeClubMember, updateMemberRole, updateMemberPosition, leaveClub, uploadClubLogo } from "../../services/api.clubs";
 import { getClubSchedules } from "../../services/api.schedules";
 import { getAllClubs } from "../../services/api.clubs";
+import { getAllMatches } from "../../services/api.matches";
 import { getPlayersByClubId } from "../../services/api.player";
 import { getMyProfile } from "../../services/api.player";
 import { getClubRequests, approveJoinRequest, rejectJoinRequest, createJoinRequest, getMyRequestStatus } from "../../services/api.requests";
@@ -304,12 +305,14 @@ export default function ClubDetails() {
   const [clubPlayers, setClubPlayers] = useState([]);
   const [clubMembers, setClubMembers] = useState([]);
   const [clubRequests, setClubRequests] = useState([]);
+  const [matches, setMatches] = useState([]);
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
+  const [matchesTab, setMatchesTab] = useState("upcoming"); // 'upcoming' | 'played'
   const [myRequestStatus, setMyRequestStatus] = useState(null); // null | 'PENDING'
   const [memberActionLoading, setMemberActionLoading] = useState(null);
   const [confirmModal, setConfirmModal] = useState(null); // { title, message, confirmLabel, confirmStyle, onConfirm }
@@ -335,19 +338,21 @@ export default function ClubDetails() {
       setLoading(true);
       setError(null);
       try {
-        const [club, schedules, allClubs, players, members, user] = await Promise.all([
+        const [club, schedules, allClubs, players, members, user, allMatches] = await Promise.all([
           getClubById(clubId),
           getClubSchedules(clubId).catch(() => []),
           getAllClubs().catch(() => []),
           getPlayersByClubId(clubId).catch(() => []),
           getClubMembers(clubId).catch(() => []),
           getMyProfile().catch(() => null),
+          getAllMatches().catch(() => []),
         ]);
         setClubData(club);
         setClubSchedules(Array.isArray(schedules) ? schedules : []);
         setClubPlayers(Array.isArray(players) ? players : []);
         setClubMembers(Array.isArray(members) ? members : []);
         setCurrentUser(user);
+        setMatches(Array.isArray(allMatches) ? allMatches : []);
         const map = {};
         (Array.isArray(allClubs) ? allClubs : []).forEach((c) => { if (c?.clubId) map[c.clubId] = c.name; });
         setClubsMap(map);
@@ -482,6 +487,13 @@ export default function ClubDetails() {
     }
     return null;
   };
+
+  // Helper functions for matches
+  const getMatchForSchedule = (scheduleId) => matches.find((m) => m.scheduleId === scheduleId);
+  
+  const now = new Date();
+  const upcomingMatches = clubSchedules.filter((s) => !s.date || new Date(s.date) >= now).sort((a, b) => new Date(a.date) - new Date(b.date));
+  const playedMatches = clubSchedules.filter((s) => s.date && new Date(s.date) < now).sort((a, b) => new Date(b.date) - new Date(a.date));
 
   const handleApproveRequest = async (requestId) => {
     try {
@@ -1165,68 +1177,171 @@ export default function ClubDetails() {
 
           {activeTab === "matches" && (
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-6">Club Schedules</h2>
-              {clubSchedules.length === 0 ? (
-                <p className="text-gray-500">No matches scheduled yet.</p>
-              ) : (
-                <div className="space-y-3">
-                  {clubSchedules.map((s) => (
-                    <div 
-                      key={s.scheduleId} 
-                      onClick={() => navigate(`/schedule/${s.scheduleId}`)}
-                      className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 hover:border-gray-300 cursor-pointer transition-all"
-                    >
-                      <div className="flex-1">
-                        <div className="font-semibold text-gray-900 mb-1">
-                          {clubsMap[s.teamOneId] ?? `Team ${s.teamOneId}`} vs {clubsMap[s.teamTwoId] ?? `Team ${s.teamTwoId}`}
-                        </div>
-                        <div className="flex items-center gap-3 text-sm text-gray-600">
-                          <div className="flex items-center gap-1">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                              <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-                              <line x1="16" y1="2" x2="16" y2="6" />
-                              <line x1="8" y1="2" x2="8" y2="6" />
-                              <line x1="3" y1="10" x2="21" y2="10" />
-                            </svg>
-                            <span>{s.date ? new Date(s.date).toLocaleDateString() : "TBD"}</span>
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-bold text-gray-900">Club Matches</h2>
+                <div className="inline-flex bg-gray-100 rounded-full p-1">
+                  <button 
+                    onClick={() => setMatchesTab('upcoming')}
+                    className={`px-4 py-1.5 text-sm font-semibold rounded-full transition-all ${
+                      matchesTab === 'upcoming' ? 'bg-white shadow-sm' : 'text-gray-500 hover:text-gray-700'
+                    }`}
+                  >
+                    Upcoming
+                  </button>
+                  <button 
+                    onClick={() => setMatchesTab('played')}
+                    className={`px-4 py-1.5 text-sm font-semibold rounded-full transition-all ${
+                      matchesTab === 'played' ? 'bg-white shadow-sm' : 'text-gray-500 hover:text-gray-700'
+                    }`}
+                  >
+                    Played
+                  </button>
+                </div>
+              </div>
+
+              {matchesTab === 'upcoming' && (
+                clubSchedules.length === 0 ? (
+                  <p className="text-gray-500 text-center py-8">No matches scheduled yet.</p>
+                ) : upcomingMatches.length === 0 ? (
+                  <p className="text-gray-500 text-center py-8">No upcoming matches.</p>
+                ) : (
+                  <div className="space-y-3">
+                    {upcomingMatches.map((s) => (
+                      <div 
+                        key={s.scheduleId} 
+                        onClick={() => navigate(`/schedule/${s.scheduleId}`)}
+                        className="flex items-center justify-between p-5 border border-gray-200 rounded-lg hover:bg-gray-50 hover:border-blue-300 cursor-pointer transition-all group"
+                      >
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${
+                              s.scheduleType === 'Knockout' ? 'bg-red-100 text-red-700' :
+                              s.scheduleType === 'League' ? 'bg-blue-100 text-blue-700' :
+                              'bg-green-100 text-green-700'
+                            }`}>
+                              {s.scheduleType ?? 'Match'}
+                            </span>
                           </div>
-                          <span>•</span>
-                          <div className="flex items-center gap-1">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                              <circle cx="12" cy="12" r="10" />
-                              <polyline points="12 6 12 12 16 14" />
-                            </svg>
-                            <span>{s.date ? new Date(s.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "TBD"}</span>
+                          <div className="font-bold text-gray-900 mb-2 text-lg group-hover:text-blue-600 transition-colors">
+                            {clubsMap[s.teamOneId] ?? `Team ${s.teamOneId}`} <span className="text-gray-400 font-normal">vs</span> {clubsMap[s.teamTwoId] ?? `Team ${s.teamTwoId}`}
                           </div>
-                          {s.location && (
-                            <>
-                              <span>•</span>
-                              <div className="flex items-center gap-1">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-                                  <circle cx="12" cy="10" r="3" />
-                                </svg>
-                                <span>{s.location}</span>
-                              </div>
-                            </>
-                          )}
+                          <div className="flex items-center gap-4 text-sm text-gray-600">
+                            <div className="flex items-center gap-1.5">
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                                <line x1="16" y1="2" x2="16" y2="6" />
+                                <line x1="8" y1="2" x2="8" y2="6" />
+                                <line x1="3" y1="10" x2="21" y2="10" />
+                              </svg>
+                              <span className="font-medium">{s.date ? new Date(s.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) : "TBD"}</span>
+                            </div>
+                            <span>•</span>
+                            <div className="flex items-center gap-1.5">
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <circle cx="12" cy="12" r="10" />
+                                <polyline points="12 6 12 12 16 14" />
+                              </svg>
+                              <span className="font-medium">{s.date ? new Date(s.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "TBD"}</span>
+                            </div>
+                            {s.location && (
+                              <>
+                                <span>•</span>
+                                <div className="flex items-center gap-1.5">
+                                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                                    <circle cx="12" cy="10" r="3" />
+                                  </svg>
+                                  <span>{s.location}</span>
+                                </div>
+                              </>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                          s.scheduleType === 'Knockout' ? 'bg-red-100 text-red-700' :
-                          s.scheduleType === 'League' ? 'bg-blue-100 text-blue-700' :
-                          'bg-green-100 text-green-700'
-                        }`}>
-                          {s.scheduleType ?? 'Match'}
-                        </span>
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-400">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-400 group-hover:text-blue-600 transition-colors">
                           <path d="M9 18l6-6-6-6" />
                         </svg>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )
+              )}
+
+              {matchesTab === 'played' && (
+                playedMatches.length === 0 ? (
+                  <p className="text-gray-500 text-center py-8">No played matches yet.</p>
+                ) : (
+                  <div className="space-y-3">
+                    {playedMatches.map((s) => {
+                      const matchResult = getMatchForSchedule(s.scheduleId);
+                      const teamOneGoals = matchResult?.teamOneGoals ?? 0;
+                      const teamTwoGoals = matchResult?.teamTwoGoals ?? 0;
+                      const isTeamOneWinner = teamOneGoals > teamTwoGoals;
+                      const isTeamTwoWinner = teamTwoGoals > teamOneGoals;
+                      const isDraw = teamOneGoals === teamTwoGoals;
+                      return (
+                        <div 
+                          key={s.scheduleId} 
+                          onClick={() => navigate(`/schedule/${s.scheduleId}`)}
+                          className="flex items-center justify-between p-5 border border-gray-200 rounded-lg hover:bg-gray-50 hover:border-blue-300 cursor-pointer transition-all group"
+                        >
+                          <div className="flex items-center gap-6 flex-1">
+                            <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${
+                              s.scheduleType === 'Knockout' ? 'bg-red-100 text-red-700' :
+                              s.scheduleType === 'League' ? 'bg-blue-100 text-blue-700' :
+                              'bg-green-100 text-green-700'
+                            }`}>
+                              {s.scheduleType ?? 'Match'}
+                            </span>
+                            <div className="flex-1">
+                              <div className="flex items-center justify-between mb-2">
+                                <span className={`text-lg font-bold ${
+                                  isTeamOneWinner ? 'text-green-600' : isDraw ? 'text-gray-700' : 'text-gray-500'
+                                }`}>
+                                  {clubsMap[s.teamOneId] ?? `Team ${s.teamOneId}`}
+                                </span>
+                                <span className="text-3xl font-bold text-gray-900 mx-4">{teamOneGoals}</span>
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <span className={`text-lg font-bold ${
+                                  isTeamTwoWinner ? 'text-green-600' : isDraw ? 'text-gray-700' : 'text-gray-500'
+                                }`}>
+                                  {clubsMap[s.teamTwoId] ?? `Team ${s.teamTwoId}`}
+                                </span>
+                                <span className="text-3xl font-bold text-gray-900 mx-4">{teamTwoGoals}</span>
+                              </div>
+                              <div className="flex items-center gap-3 text-sm text-gray-500 mt-2">
+                                <div className="flex items-center gap-1.5">
+                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                                    <line x1="16" y1="2" x2="16" y2="6" />
+                                    <line x1="8" y1="2" x2="8" y2="6" />
+                                    <line x1="3" y1="10" x2="21" y2="10" />
+                                  </svg>
+                                  <span>{s.date ? new Date(s.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : "TBD"}</span>
+                                </div>
+                                {s.location && (
+                                  <>
+                                    <span>•</span>
+                                    <div className="flex items-center gap-1.5">
+                                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                                        <circle cx="12" cy="10" r="3" />
+                                      </svg>
+                                      <span>{s.location}</span>
+                                    </div>
+                                  </>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-400 group-hover:text-blue-600 transition-colors flex-shrink-0">
+                            <path d="M9 18l6-6-6-6" />
+                          </svg>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )
               )}
             </div>
           )}

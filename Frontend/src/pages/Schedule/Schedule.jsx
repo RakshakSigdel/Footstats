@@ -23,6 +23,11 @@ export default function Schedule() {
   const [inboxLoading, setInboxLoading] = useState(false)
   const [actionLoading, setActionLoading] = useState(null)
 
+  const getClubLogoUrl = (logoPath) => {
+    if (!logoPath) return null;
+    return logoPath.startsWith('http') ? logoPath : `http://localhost:5555${logoPath}`;
+  };
+
   useEffect(() => {
     const load = async () => {
       setLoading(true)
@@ -37,7 +42,7 @@ export default function Schedule() {
         setSchedules(Array.isArray(scheds) ? scheds : [])
         setMatches(Array.isArray(allMatches) ? allMatches : [])
         const map = {}
-        ;(Array.isArray(clubs) ? clubs : []).forEach((c) => { if (c?.clubId) map[c.clubId] = c.name })
+        ;(Array.isArray(clubs) ? clubs : []).forEach((c) => { if (c?.clubId) map[c.clubId] = c })
         setClubsMap(map)
       } catch (err) {
         setError(err?.message || 'Failed to load schedules')
@@ -99,8 +104,8 @@ export default function Schedule() {
   
   // Filter function for search and type
   const filterSchedule = (s) => {
-    const teamOne = clubsMap[s.teamOneId] || ''
-    const teamTwo = clubsMap[s.teamTwoId] || ''
+    const teamOne = clubsMap[s.teamOneId]?.name || ''
+    const teamTwo = clubsMap[s.teamTwoId]?.name || ''
     const matchesSearch = !searchQuery.trim() ||
       teamOne.toLowerCase().includes(searchQuery.toLowerCase()) ||
       teamTwo.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -314,8 +319,8 @@ export default function Schedule() {
               <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-8 text-center text-gray-500">No upcoming matches.</div>
             )}
             {activeTab === 'upcoming' && upcomingSchedules.map((schedule) => {
-              const teamOne = clubsMap[schedule.teamOneId] ?? 'Team 1'
-              const teamTwo = clubsMap[schedule.teamTwoId] ?? 'Team 2'
+              const teamOne = clubsMap[schedule.teamOneId]
+              const teamTwo = clubsMap[schedule.teamTwoId]
               const dateStr = schedule.date ? new Date(schedule.date).toLocaleDateString() : 'TBD'
               const timeStr = schedule.date ? new Date(schedule.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''
               return (
@@ -325,7 +330,25 @@ export default function Schedule() {
                       <span className={`px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap ${typeColor(schedule.scheduleType)}`}>
                         {schedule.scheduleType ?? 'Match'}
                       </span>
-                      <h3 className="text-base font-bold text-gray-900">{teamOne} vs {teamTwo}</h3>
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center flex-shrink-0">
+                          {getClubLogoUrl(teamOne?.logo) ? (
+                            <img src={getClubLogoUrl(teamOne.logo)} alt={teamOne?.name} className="w-full h-full object-cover" />
+                          ) : (
+                            <span className="text-xs font-bold text-gray-600">{teamOne?.name?.[0] || 'T'}</span>
+                          )}
+                        </div>
+                        <h3 className="text-base font-bold text-gray-900">{teamOne?.name ?? 'Team 1'}</h3>
+                        <span className="text-gray-400 font-medium">vs</span>
+                        <h3 className="text-base font-bold text-gray-900">{teamTwo?.name ?? 'Team 2'}</h3>
+                        <div className="w-8 h-8 rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center flex-shrink-0">
+                          {getClubLogoUrl(teamTwo?.logo) ? (
+                            <img src={getClubLogoUrl(teamTwo.logo)} alt={teamTwo?.name} className="w-full h-full object-cover" />
+                          ) : (
+                            <span className="text-xs font-bold text-gray-600">{teamTwo?.name?.[0] || 'T'}</span>
+                          )}
+                        </div>
+                      </div>
                     </div>
                     <div className="flex items-center gap-8 flex-1">
                       <div className="flex items-center gap-2 text-gray-600">
@@ -367,8 +390,8 @@ export default function Schedule() {
             )}
             {activeTab === 'past' && pastSchedules.map((schedule) => {
               const matchResult = getMatchForSchedule(schedule.scheduleId)
-              const teamOne = clubsMap[schedule.teamOneId] ?? 'Team 1'
-              const teamTwo = clubsMap[schedule.teamTwoId] ?? 'Team 2'
+              const teamOne = clubsMap[schedule.teamOneId]
+              const teamTwo = clubsMap[schedule.teamTwoId]
               const score = matchResult ? `${matchResult.teamOneGoals ?? 0} - ${matchResult.teamTwoGoals ?? 0}` : '—'
               const result = matchResult
                 ? matchResult.teamOneGoals > matchResult.teamTwoGoals
@@ -385,7 +408,25 @@ export default function Schedule() {
                       <span className={`px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap ${typeColor(schedule.scheduleType)}`}>
                         {schedule.scheduleType ?? 'Match'}
                       </span>
-                      <h3 className="text-lg font-bold text-gray-900">{teamOne} vs {teamTwo}</h3>
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center flex-shrink-0">
+                          {getClubLogoUrl(teamOne?.logo) ? (
+                            <img src={getClubLogoUrl(teamOne.logo)} alt={teamOne?.name} className="w-full h-full object-cover" />
+                          ) : (
+                            <span className="text-xs font-bold text-gray-600">{teamOne?.name?.[0] || 'T'}</span>
+                          )}
+                        </div>
+                        <h3 className="text-lg font-bold text-gray-900">{teamOne?.name ?? 'Team 1'}</h3>
+                        <span className="text-gray-400 font-medium">vs</span>
+                        <h3 className="text-lg font-bold text-gray-900">{teamTwo?.name ?? 'Team 2'}</h3>
+                        <div className="w-8 h-8 rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center flex-shrink-0">
+                          {getClubLogoUrl(teamTwo?.logo) ? (
+                            <img src={getClubLogoUrl(teamTwo.logo)} alt={teamTwo?.name} className="w-full h-full object-cover" />
+                          ) : (
+                            <span className="text-xs font-bold text-gray-600">{teamTwo?.name?.[0] || 'T'}</span>
+                          )}
+                        </div>
+                      </div>
                       <span className={`px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap ${resultColor}`}>{result}</span>
                     </div>
                     <div className="flex items-center gap-8">
