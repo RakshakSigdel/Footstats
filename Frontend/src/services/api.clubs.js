@@ -123,3 +123,13 @@ export const updateMemberPosition = async (clubId, userId, position) => {
     throw error.response?.data || { message: "Failed to update member position" };
   }
 };
+
+// Leave a club (current user leaves themselves)
+export const leaveClub = async (clubId) => {
+  try {
+    const response = await api.delete(`/clubs/${clubId}/leave`);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { message: "Failed to leave club" };
+  }
+};

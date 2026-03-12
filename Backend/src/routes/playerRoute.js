@@ -18,7 +18,7 @@ router.get("/", getAllPlayers);
 router.get("/me", verifyToken, getMyProfile);
 router.get("/me/stats", verifyToken, getMyStats);
 router.get("/club/:clubId", getPlayersByClubId);
-router.get("/:id", verifyToken, getPlayerById);
+router.get("/:id", getPlayerById);
 router.put("/:id", verifyToken, authorizeOwnership, updatePlayerById);
 router.delete("/:id", verifyToken, authorizeOwnership, deletePlayerById);
 

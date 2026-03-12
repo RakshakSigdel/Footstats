@@ -175,3 +175,24 @@ export const updateMemberRole = async (req, res) => {
       .json({ message: "Error updating member", error: error.message });
   }
 };
+
+// Leave a club (authenticated user leaves themselves)
+export const leaveClub = async (req, res) => {
+  try {
+    const clubId = req.params.id;
+    const userId = req.user.userId;
+
+    // Prevent creator from leaving (they should delete the club instead)
+    const club = await ClubService.getClubById(clubId);
+    if (!club) return res.status(404).json({ message: "Club not found" });
+    if (club.createdBy === userId) {
+      return res.status(403).json({ message: "Club creator cannot leave. Delete the club instead." });
+    }
+
+    await ClubService.leaveClub(clubId, userId);
+    res.status(200).json({ message: "You have left the club" });
+  } catch (error) {
+    const status = error.status || 500;
+    res.status(status).json({ message: error.message || "Error leaving club" });
+  }
+};

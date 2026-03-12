@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Sidebar from "../components/Global/Sidebar";
 import Topbar from "../components/Global/Topbar";
-import { getClubById, updateClub, getClubMembers, removeClubMember, updateMemberRole, updateMemberPosition } from "../services/api.clubs";
+import { getClubById, updateClub, getClubMembers, removeClubMember, updateMemberRole, updateMemberPosition, leaveClub } from "../services/api.clubs";
 import { getClubSchedules } from "../services/api.schedules";
 import { getAllClubs } from "../services/api.clubs";
 import { getPlayersByClubId } from "../services/api.player";
@@ -455,8 +455,25 @@ export default function ClubDetails() {
     setMyRequestStatus('PENDING');
   };
 
-  const handleRemoveMember = (userId) => {
+  const handleLeaveClub = () => {
     setConfirmModal({
+      title: "Leave Club",
+      message: "Are you sure you want to leave this club? You will need to request to join again.",
+      confirmLabel: "Yes, Leave",
+      confirmStyle: "red",
+      onConfirm: async () => {
+        setConfirmModal(null);
+        try {
+          await leaveClub(clubId);
+          navigate("/clubs");
+        } catch (err) {
+          setError(err?.message || "Failed to leave club");
+        }
+      },
+    });
+  };
+
+  const handleRemoveMember = (userId) => {    setConfirmModal({
       title: "Remove Member",
       message: "Are you sure you want to remove this member from the club?",
       confirmLabel: "Yes, Remove",
@@ -614,6 +631,21 @@ export default function ClubDetails() {
                     </button>
                   )}
 
+                  {/* Leave Club button for non-admin members */}
+                  {isClubMember && !isClubAdmin && (
+                    <button
+                      onClick={handleLeaveClub}
+                      className="px-5 py-2.5 md:px-6 md:py-3 rounded-lg font-medium flex items-center gap-2 transition-colors bg-red-50 text-red-600 border border-red-200 hover:bg-red-100"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                        <polyline points="16 17 21 12 16 7" />
+                        <line x1="21" y1="12" x2="9" y2="12" />
+                      </svg>
+                      Leave Club
+                    </button>
+                  )}
+
                   {/* Admin-only buttons */}
                   {isClubAdmin && (
                     <>
@@ -752,7 +784,12 @@ export default function ClubDetails() {
                           </div>
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1 flex-wrap">
-                              <h3 className="font-semibold text-gray-900">{member.user?.firstName} {member.user?.lastName}</h3>
+                              <h3
+                                className="font-semibold text-gray-900 hover:text-blue-600 cursor-pointer transition-colors"
+                                onClick={() => navigate(`/player/${member.user?.userId}`)}
+                              >
+                                {member.user?.firstName} {member.user?.lastName}
+                              </h3>
                               {isCreator && (
                                 <span className="bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full text-xs font-medium">Owner</span>
                               )}

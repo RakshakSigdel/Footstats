@@ -15,6 +15,7 @@ import {
   updateMemberRole,
   getAdminClubs,
   searchClubs,
+  leaveClub,
 } from "../controllers/clubController.js";
 
 router.post("/", verifyToken, createClub);
@@ -31,5 +32,6 @@ router.get("/:id/members", verifyToken, getClubMembers);
 router.post("/:id/members", verifyToken, authorizeClubMemberManagement, addClubMember);
 router.delete("/:id/members/:userId", verifyToken, authorizeClubMemberManagement, removeClubMember);
 router.put("/:id/members/:userId", verifyToken, authorizeClubMemberManagement, updateMemberRole);
+router.delete("/:id/leave", verifyToken, leaveClub);
 
 export default router;

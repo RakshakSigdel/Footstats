@@ -203,6 +203,18 @@ class ClubService {
     return deleted;
   }
 
+  // Allow a member to leave a club themselves (cannot be the creator)
+  static async leaveClub(clubId, userId) {
+    // Verify they are actually a member (not just creator)
+    const membership = await prisma.userClub.findUnique({
+      where: { userId_clubId: { userId: Number(userId), clubId: Number(clubId) } },
+    });
+    if (!membership) throw { status: 400, message: "You are not a member of this club" };
+    return prisma.userClub.delete({
+      where: { userId_clubId: { userId: Number(userId), clubId: Number(clubId) } },
+    });
+  }
+
   // Update member role and/or position
   static async updateMember(clubId, userId, { role, position }) {
     const data = {};

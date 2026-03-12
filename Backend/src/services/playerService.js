@@ -50,24 +50,127 @@ class PlayerService {
   }
 
   static async getPlayerById(id) {
+    const userIdNum = Number(id);
     const player = await prisma.user.findUnique({
-      where: { userId: Number(id) },
+      where: { userId: userIdNum },
       select: {
         userId: true,
         firstName: true,
         lastName: true,
-        email: true,
-        dateOfBirth: true,
         gender: true,
-        Phone: true,
         location: true,
         profilePhoto: true,
-        // position: true,
+        preferredFoot: true,
+        dateOfBirth: true,
         createdAt: true,
+        userClubs: {
+          include: {
+            club: {
+              select: { clubId: true, name: true, location: true },
+            },
+          },
+          orderBy: { joinedAt: "asc" },
+        },
       },
     });
     if (!player) throw { status: 404, message: "Player not found" };
-    return player;
+
+    // Per-club stats
+    const userClubsWithStats = await Promise.all(
+      player.userClubs.map(async (uc) => {
+        const [appearances, goals, assists] = await Promise.all([
+          prisma.matchLineup.count({ where: { userId: userIdNum, clubId: uc.clubId } }),
+          prisma.matchEvent.count({ where: { userId: userIdNum, clubId: uc.clubId, eventType: "GOAL" } }),
+          prisma.matchEvent.count({ where: { assistById: userIdNum, clubId: uc.clubId, eventType: "GOAL" } }),
+        ]);
+        return { ...uc, appearances, goals, assists };
+      })
+    );
+
+    // Full match history (lineups the player featured in)
+    const lineups = await prisma.matchLineup.findMany({
+      where: { userId: userIdNum },
+      include: {
+        club: { select: { clubId: true, name: true } },
+        match: {
+          include: {
+            schedule: {
+              select: {
+                scheduleId: true,
+                date: true,
+                location: true,
+                scheduleType: true,
+                teamOne: { select: { clubId: true, name: true } },
+                teamTwo: { select: { clubId: true, name: true } },
+              },
+            },
+          },
+        },
+      },
+      orderBy: { match: { playedAt: "desc" } },
+    });
+
+    const matches = lineups.map((lu) => {
+      const match = lu.match;
+      const schedule = match?.schedule;
+      const isTeamOne = lu.clubId === schedule?.teamOne?.clubId;
+      const myGoals = isTeamOne ? match?.teamOneGoals : match?.teamTwoGoals;
+      const oppGoals = isTeamOne ? match?.teamTwoGoals : match?.teamOneGoals;
+      let result = null;
+      if (myGoals != null && oppGoals != null) {
+        if (myGoals > oppGoals) result = "Win";
+        else if (myGoals < oppGoals) result = "Loss";
+        else result = "Draw";
+      }
+      return {
+        matchId: match?.matchId,
+        scheduleId: schedule?.scheduleId,
+        date: schedule?.date,
+        location: schedule?.location,
+        scheduleType: schedule?.scheduleType,
+        teamOne: schedule?.teamOne,
+        teamTwo: schedule?.teamTwo,
+        teamOneGoals: match?.teamOneGoals,
+        teamTwoGoals: match?.teamTwoGoals,
+        myClub: lu.club,
+        position: lu.position,
+        isStarter: lu.isStarter,
+        minutesPlayed: lu.minutesPlayed,
+        result,
+      };
+    });
+
+    // Overall stats
+    const [totalGoals, totalAssists, totalYellow, totalRed] = await Promise.all([
+      prisma.matchEvent.count({ where: { userId: userIdNum, eventType: "GOAL" } }),
+      prisma.matchEvent.count({ where: { assistById: userIdNum, eventType: "GOAL" } }),
+      prisma.matchEvent.count({ where: { userId: userIdNum, eventType: "YELLOW_CARD" } }),
+      prisma.matchEvent.count({ where: { userId: userIdNum, eventType: "RED_CARD" } }),
+    ]);
+
+    let wins = 0, draws = 0, losses = 0;
+    matches.forEach((m) => {
+      if (m.result === "Win") wins++;
+      else if (m.result === "Draw") draws++;
+      else if (m.result === "Loss") losses++;
+    });
+
+    return {
+      ...player,
+      userClubs: userClubsWithStats,
+      matches,
+      stats: {
+        matchesPlayed: matches.length,
+        goals: totalGoals,
+        assists: totalAssists,
+        yellowCards: totalYellow,
+        redCards: totalRed,
+        wins,
+        draws,
+        losses,
+        winRate: matches.length > 0 ? Math.round((wins / matches.length) * 100) : 0,
+      },
+    };
   }
 
   static async updatePlayer(id, data) {

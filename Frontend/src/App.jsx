@@ -17,6 +17,7 @@ import Schedule from "./pages/Schedule";
 import ScheduleDetails from "./pages/ScheduleDetails";
 import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
+import PlayerProfile from "./pages/PlayerProfile";
 //Components
 import ProtectedRoute from "./components/Global/ProtectedRoute";
 //Context
@@ -50,6 +51,7 @@ function App() {
           <Route path="/schedule" element={<ProtectedRoute><Schedule /></ProtectedRoute>} />
           <Route path="/schedule/:scheduleId" element={<ProtectedRoute><ScheduleDetails /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+          <Route path="/player/:playerId" element={<ProtectedRoute><PlayerProfile /></ProtectedRoute>} />
           <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
         </Routes>
       </SidebarProvider>
