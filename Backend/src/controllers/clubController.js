@@ -156,22 +156,22 @@ export const removeClubMember = async (req, res) => {
   }
 };
 
-// Update member role
+// Update member role and/or position
 export const updateMemberRole = async (req, res) => {
   try {
     const clubId = req.params.id;
     const userId = req.params.userId;
-    const { role } = req.body;
-    
-    if (!role) {
-      return res.status(400).json({ message: "role is required" });
+    const { role, position } = req.body;
+
+    if (role === undefined && position === undefined) {
+      return res.status(400).json({ message: "role or position is required" });
     }
-    
-    await ClubService.updateMemberRole(clubId, userId, role);
-    res.status(200).json({ message: "Member role updated successfully" });
+
+    await ClubService.updateMember(clubId, userId, { role, position });
+    res.status(200).json({ message: "Member updated successfully" });
   } catch (error) {
     res
       .status(500)
-      .json({ message: "Error updating member role", error: error.message });
+      .json({ message: "Error updating member", error: error.message });
   }
 };

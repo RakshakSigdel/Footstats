@@ -86,6 +86,31 @@ export const authorizeClubOwnership = async (req, res, next) => {
   }
 };
 
+// Authorize club admin (creator or ADMIN member) for managing club members
+// Uses req.params.id for the club ID
+export const authorizeClubMemberManagement = async (req, res, next) => {
+  const loggedInUserId = req.user.userId;
+  const clubId = parseInt(req.params.id);
+
+  try {
+    const club = await prisma.club.findUnique({ where: { clubId } });
+    if (!club) return res.status(404).json({ message: "Club not found" });
+    if (req.user.role === "SUPERADMIN") return next();
+    if (club.createdBy === loggedInUserId) return next();
+
+    const membership = await prisma.userClub.findUnique({
+      where: { userId_clubId: { userId: loggedInUserId, clubId } },
+    });
+    if (membership && membership.role === "ADMIN") return next();
+
+    return res.status(403).json({
+      message: "Forbidden: Only club admins can manage members",
+    });
+  } catch (error) {
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
 // Authorize club admin for viewing/managing requests
 export const authorizeClubAdmin = async (req, res, next) => {
   const loggedInUserId = req.user.userId;
@@ -106,6 +131,14 @@ export const authorizeClubAdmin = async (req, res, next) => {
 
     // Club creator can manage requests
     if (club.createdBy === loggedInUserId) {
+      return next();
+    }
+
+    // UserClub ADMIN members can manage requests
+    const membership = await prisma.userClub.findUnique({
+      where: { userId_clubId: { userId: loggedInUserId, clubId: clubId } },
+    });
+    if (membership && membership.role === "ADMIN") {
       return next();
     }
 
@@ -145,6 +178,15 @@ export const authorizeRequestAction = async (req, res, next) => {
     // Club creator can approve/reject requests
     if (request.club.createdBy === loggedInUserId) {
       console.log('User is club creator, allowing access');
+      return next();
+    }
+
+    // UserClub ADMIN members can approve/reject requests
+    const membership = await prisma.userClub.findUnique({
+      where: { userId_clubId: { userId: loggedInUserId, clubId: request.clubId } },
+    });
+    if (membership && membership.role === "ADMIN") {
+      console.log('User is club admin member, allowing access');
       return next();
     }
 

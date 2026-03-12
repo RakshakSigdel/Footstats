@@ -203,16 +203,17 @@ class ClubService {
     return deleted;
   }
 
-  // Update member role
-  static async updateMemberRole(clubId, userId, role) {
+  // Update member role and/or position
+  static async updateMember(clubId, userId, { role, position }) {
+    const data = {};
+    if (role !== undefined) data.role = role;
+    if (position !== undefined) data.position = position;
     const updated = await prisma.userClub.updateMany({
       where: {
         clubId: Number(clubId),
         userId: Number(userId),
       },
-      data: {
-        role: role,
-      },
+      data,
     });
     return updated;
   }

@@ -104,12 +104,22 @@ export const removeClubMember = async (clubId, userId) => {
   }
 };
 
-// Update member role
+// Update member role and/or position
 export const updateMemberRole = async (clubId, userId, role) => {
   try {
     const response = await api.put(`/clubs/${clubId}/members/${userId}`, { role });
     return response.data;
   } catch (error) {
     throw error.response?.data || { message: "Failed to update member role" };
+  }
+};
+
+// Update member position
+export const updateMemberPosition = async (clubId, userId, position) => {
+  try {
+    const response = await api.put(`/clubs/${clubId}/members/${userId}`, { position });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { message: "Failed to update member position" };
   }
 };

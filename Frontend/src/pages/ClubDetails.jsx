@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Sidebar from "../components/Global/Sidebar";
 import Topbar from "../components/Global/Topbar";
-import { getClubById, updateClub, getClubMembers, removeClubMember, updateMemberRole } from "../services/api.clubs";
+import { getClubById, updateClub, getClubMembers, removeClubMember, updateMemberRole, updateMemberPosition } from "../services/api.clubs";
 import { getClubSchedules } from "../services/api.schedules";
 import { getAllClubs } from "../services/api.clubs";
 import { getPlayersByClubId } from "../services/api.player";
@@ -259,6 +259,41 @@ const JoinRequestModal = ({ isOpen, onClose, onSubmit }) => {
   );
 };
 
+// Confirm Modal Component
+const ConfirmModal = ({ isOpen, title, message, confirmLabel = "Confirm", confirmStyle = "red", onConfirm, onCancel }) => {
+  if (!isOpen) return null;
+  const btnClass =
+    confirmStyle === "red"
+      ? "bg-red-600 hover:bg-red-700 text-white"
+      : confirmStyle === "yellow"
+      ? "bg-yellow-500 hover:bg-yellow-600 text-white"
+      : "bg-slate-800 hover:bg-slate-900 text-white";
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+      <div className="bg-white rounded-2xl w-full max-w-sm mx-4 shadow-2xl overflow-hidden">
+        <div className="px-6 pt-6 pb-4 border-b border-gray-100">
+          <h2 className="text-lg font-bold text-gray-900">{title}</h2>
+          {message && <p className="text-sm text-gray-500 mt-1">{message}</p>}
+        </div>
+        <div className="flex justify-end gap-3 px-6 py-4">
+          <button
+            onClick={onCancel}
+            className="px-5 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium text-sm"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            className={`px-5 py-2 rounded-lg font-medium text-sm ${btnClass}`}
+          >
+            {confirmLabel}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // Main ClubDetails Component
 export default function ClubDetails() {
   const { clubId } = useParams();
@@ -277,6 +312,15 @@ export default function ClubDetails() {
   const [activeTab, setActiveTab] = useState("overview");
   const [myRequestStatus, setMyRequestStatus] = useState(null); // null | 'PENDING'
   const [memberActionLoading, setMemberActionLoading] = useState(null);
+  const [confirmModal, setConfirmModal] = useState(null); // { title, message, confirmLabel, confirmStyle, onConfirm }
+  const [editingPositionForUser, setEditingPositionForUser] = useState(null);
+  const [positionDraft, setPositionDraft] = useState("");
+
+  const POSITIONS = [
+    "Goalkeeper", "Center Back", "Left Back", "Right Back",
+    "Defensive Midfielder", "Central Midfielder", "Attacking Midfielder",
+    "Left Midfielder", "Right Midfielder", "Left Winger", "Right Winger", "Striker",
+  ];
 
   useEffect(() => {
     if (!clubId) return;
@@ -307,8 +351,14 @@ export default function ClubDetails() {
           setMyRequestStatus(myReq?.status || null);
         }
 
-        // Load requests for admin
-        if (user && club && user.userId === club.createdBy) {
+        // Load requests for admin (club creator or ADMIN role member)
+        const isUserAdmin = user && (
+          club?.createdBy === user.userId ||
+          (Array.isArray(members) ? members : []).some(
+            (m) => m.user?.userId === user.userId && m.role === "ADMIN"
+          )
+        );
+        if (isUserAdmin) {
           const requests = await getClubRequests(clubId).catch(() => []);
           setClubRequests(Array.isArray(requests) ? requests : []);
         }
@@ -405,47 +455,79 @@ export default function ClubDetails() {
     setMyRequestStatus('PENDING');
   };
 
-  const handleRemoveMember = async (userId) => {
-    if (!clubId || !confirm("Are you sure you want to remove this member from the club?")) return;
+  const handleRemoveMember = (userId) => {
+    setConfirmModal({
+      title: "Remove Member",
+      message: "Are you sure you want to remove this member from the club?",
+      confirmLabel: "Yes, Remove",
+      confirmStyle: "red",
+      onConfirm: async () => {
+        setConfirmModal(null);
+        setMemberActionLoading(userId);
+        try {
+              await removeClubMember(clubId, userId);
+          const [players, members] = await Promise.all([
+            getPlayersByClubId(clubId).catch(() => []),
+            getClubMembers(clubId).catch(() => []),
+          ]);
+          setClubPlayers(Array.isArray(players) ? players : []);
+          setClubMembers(Array.isArray(members) ? members : []);
+          setError(null);
+        } catch (err) {
+          setError(err?.message || "Failed to remove member");
+        } finally {
+          setMemberActionLoading(null);
+        }
+      },
+    });
+  };
+
+  const handleChangePosition = async (userId) => {
+    if (!clubId || !positionDraft) return;
     setMemberActionLoading(userId);
     try {
-      await removeClubMember(clubId, userId);
-      // Reload members
-      const [players, members] = await Promise.all([
-        getPlayersByClubId(clubId).catch(() => []),
-        getClubMembers(clubId).catch(() => []),
-      ]);
-      setClubPlayers(Array.isArray(players) ? players : []);
+      await updateMemberPosition(clubId, userId, positionDraft);
+      const members = await getClubMembers(clubId).catch(() => []);
       setClubMembers(Array.isArray(members) ? members : []);
-      setError(null);
+      setEditingPositionForUser(null);
+      setPositionDraft("");
     } catch (err) {
-      setError(err?.message || "Failed to remove member");
+      setError(err?.message || "Failed to update position");
     } finally {
       setMemberActionLoading(null);
     }
   };
 
-  const handleToggleAdminRole = async (userId, currentRole) => {
+  const handleToggleAdminRole = (userId, currentRole) => {
     if (!clubId) return;
     const newRole = currentRole === "ADMIN" ? "MEMBER" : "ADMIN";
-    const action = newRole === "ADMIN" ? "promote to admin" : "demote to member";
-    if (!confirm(`Are you sure you want to ${action}?`)) return;
-    setMemberActionLoading(userId);
-    try {
-      await updateMemberRole(clubId, userId, newRole);
-      // Reload members
-      const [players, members] = await Promise.all([
-        getPlayersByClubId(clubId).catch(() => []),
-        getClubMembers(clubId).catch(() => []),
-      ]);
-      setClubPlayers(Array.isArray(players) ? players : []);
-      setClubMembers(Array.isArray(members) ? members : []);
-      setError(null);
-    } catch (err) {
-      setError(err?.message || "Failed to update member role");
-    } finally {
-      setMemberActionLoading(null);
-    }
+    const isPromoting = newRole === "ADMIN";
+    setConfirmModal({
+      title: isPromoting ? "Make Admin" : "Demote to Member",
+      message: isPromoting
+        ? "This member will be able to manage other members and review join requests."
+        : "This member will lose admin privileges.",
+      confirmLabel: isPromoting ? "Yes, Make Admin" : "Yes, Demote",
+      confirmStyle: isPromoting ? "yellow" : "default",
+      onConfirm: async () => {
+        setConfirmModal(null);
+        setMemberActionLoading(userId);
+        try {
+          await updateMemberRole(clubId, userId, newRole);
+          const [players, members] = await Promise.all([
+            getPlayersByClubId(clubId).catch(() => []),
+            getClubMembers(clubId).catch(() => []),
+          ]);
+          setClubPlayers(Array.isArray(players) ? players : []);
+          setClubMembers(Array.isArray(members) ? members : []);
+          setError(null);
+        } catch (err) {
+          setError(err?.message || "Failed to update member role");
+        } finally {
+          setMemberActionLoading(null);
+        }
+      },
+    });
   };
 
   return (
@@ -697,32 +779,73 @@ export default function ClubDetails() {
 
                           {/* Admin actions */}
                           {canManageMember && (
-                            <div className="flex items-center gap-2">
-                              <button
-                                onClick={() => handleToggleAdminRole(member.user?.userId, member.role)}
-                                disabled={memberActionLoading === member.user?.userId}
-                                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                                  member.role === "ADMIN"
-                                    ? "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                                    : "bg-yellow-100 text-yellow-700 hover:bg-yellow-200"
-                                }`}
-                                title={member.role === "ADMIN" ? "Demote to Member" : "Promote to Admin"}
-                              >
-                                {memberActionLoading === member.user?.userId ? "..." : member.role === "ADMIN" ? "Demote" : "Make Admin"}
-                              </button>
-                              <button
-                                onClick={() => handleRemoveMember(member.user?.userId)}
-                                disabled={memberActionLoading === member.user?.userId}
-                                className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                title="Remove from club"
-                              >
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                  <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                                  <circle cx="8.5" cy="7" r="4" />
-                                  <line x1="18" y1="8" x2="23" y2="13" />
-                                  <line x1="23" y1="8" x2="18" y2="13" />
-                                </svg>
-                              </button>
+                            <div className="flex flex-col items-end gap-2">
+                              <div className="flex items-center gap-2">
+                                {/* Position inline editor */}
+                                {editingPositionForUser === member.user?.userId ? (
+                                  <div className="flex items-center gap-1">
+                                    <select
+                                      value={positionDraft}
+                                      onChange={(e) => setPositionDraft(e.target.value)}
+                                      className="text-xs border border-gray-300 rounded px-2 py-1 bg-white"
+                                    >
+                                      <option value="">Select position</option>
+                                      {POSITIONS.map((p) => (
+                                        <option key={p} value={p}>{p}</option>
+                                      ))}
+                                    </select>
+                                    <button
+                                      onClick={() => handleChangePosition(member.user?.userId)}
+                                      disabled={!positionDraft || memberActionLoading === member.user?.userId}
+                                      className="px-2 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 disabled:opacity-50"
+                                    >
+                                      {memberActionLoading === member.user?.userId ? "..." : "Save"}
+                                    </button>
+                                    <button
+                                      onClick={() => { setEditingPositionForUser(null); setPositionDraft(""); }}
+                                      className="px-2 py-1 bg-gray-200 text-gray-700 text-xs rounded hover:bg-gray-300"
+                                    >
+                                      Cancel
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <button
+                                    onClick={() => {
+                                      setEditingPositionForUser(member.user?.userId);
+                                      setPositionDraft(member.user?.position || "");
+                                    }}
+                                    className="px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg text-xs font-medium transition-colors"
+                                    title="Change position"
+                                  >
+                                    ⚽ Position
+                                  </button>
+                                )}
+                                <button
+                                  onClick={() => handleToggleAdminRole(member.user?.userId, member.role)}
+                                  disabled={memberActionLoading === member.user?.userId}
+                                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                                    member.role === "ADMIN"
+                                      ? "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                                      : "bg-yellow-100 text-yellow-700 hover:bg-yellow-200"
+                                  }`}
+                                  title={member.role === "ADMIN" ? "Demote to Member" : "Promote to Admin"}
+                                >
+                                  {memberActionLoading === member.user?.userId ? "..." : member.role === "ADMIN" ? "Demote" : "Make Admin"}
+                                </button>
+                                <button
+                                  onClick={() => handleRemoveMember(member.user?.userId)}
+                                  disabled={memberActionLoading === member.user?.userId}
+                                  className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                  title="Remove from club"
+                                >
+                                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                                    <circle cx="8.5" cy="7" r="4" />
+                                    <line x1="18" y1="8" x2="23" y2="13" />
+                                    <line x1="23" y1="8" x2="18" y2="13" />
+                                  </svg>
+                                </button>
+                              </div>
                             </div>
                           )}
                         </div>
@@ -888,6 +1011,15 @@ export default function ClubDetails() {
             isOpen={isJoinModalOpen}
             onClose={() => setIsJoinModalOpen(false)}
             onSubmit={handleRequestToJoin}
+          />
+          <ConfirmModal
+            isOpen={!!confirmModal}
+            title={confirmModal?.title}
+            message={confirmModal?.message}
+            confirmLabel={confirmModal?.confirmLabel}
+            confirmStyle={confirmModal?.confirmStyle}
+            onConfirm={confirmModal?.onConfirm}
+            onCancel={() => setConfirmModal(null)}
           />
           </>
           )}

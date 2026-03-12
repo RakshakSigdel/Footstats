@@ -60,7 +60,14 @@ class RequestService {
                     data: {
                         userId: request.userId,
                         clubId: request.clubId,
+                        position: request.preferredPosition || null,
                     },
+                });
+            } else {
+                // Update position even if already a member
+                await tx.userClub.update({
+                    where: { userId_clubId: { userId: request.userId, clubId: request.clubId } },
+                    data: { position: request.preferredPosition || null },
                 });
             }
 

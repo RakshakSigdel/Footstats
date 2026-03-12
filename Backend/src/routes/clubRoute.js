@@ -1,7 +1,7 @@
 import { Router } from "express";
 const router = Router();
 import { verifyToken } from "../middleware/verifyToken.js";
-import { authorizeClubOwnership } from "../middleware/authorize.js";
+import { authorizeClubOwnership, authorizeClubMemberManagement } from "../middleware/authorize.js";
 import {
   createClub,
   getMyClubs,
@@ -28,8 +28,8 @@ router.delete("/:id", verifyToken, authorizeClubOwnership, deleteClub);
 
 // Club members management
 router.get("/:id/members", verifyToken, getClubMembers);
-router.post("/:id/members", verifyToken, authorizeClubOwnership, addClubMember);
-router.delete("/:id/members/:userId", verifyToken, authorizeClubOwnership, removeClubMember);
-router.put("/:id/members/:userId", verifyToken, authorizeClubOwnership, updateMemberRole);
+router.post("/:id/members", verifyToken, authorizeClubMemberManagement, addClubMember);
+router.delete("/:id/members/:userId", verifyToken, authorizeClubMemberManagement, removeClubMember);
+router.put("/:id/members/:userId", verifyToken, authorizeClubMemberManagement, updateMemberRole);
 
 export default router;
