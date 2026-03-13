@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
-import Sidebar from "../components/Global/Sidebar";
-import Topbar from "../components/Global/Topbar";
-import { getMyProfile, updatePlayerById } from "../services/api.player";
-import { useTheme } from "../context/ThemeContext";
+import Sidebar from "../../components/Global/Sidebar";
+import Topbar from "../../components/Global/Topbar";
+import { getMyProfile, updatePlayerById } from "../../services/api.player";
+import { useTheme } from "../../context/ThemeContext";
 
 export default function Settings() {
   const { isDarkMode, toggleDarkMode } = useTheme();

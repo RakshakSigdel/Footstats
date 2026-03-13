@@ -1,9 +1,10 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import Sidebar from "../components/Global/Sidebar";
-import Topbar from "../components/Global/Topbar";
-import CreateClub from "./Club/Components/CreateClub";
-import { getMyClubs, getAllClubs, createClub } from "../services/api.clubs";
+import Sidebar from "../../components/Global/Sidebar";
+import Topbar from "../../components/Global/Topbar";
+import CreateClub from "./Components/CreateClub";
+import { getMyClubs, getAllClubs, createClub } from "../../services/api.clubs";
+import { toMediaUrl } from "../../services/media";
 
 export default function MyClubs() {
   const navigate = useNavigate();
@@ -15,10 +16,7 @@ export default function MyClubs() {
   const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
 
-  const getClubLogoUrl = (logoPath) => {
-    if (!logoPath) return null;
-    return logoPath.startsWith('http') ? logoPath : `http://localhost:5555${logoPath}`;
-  };
+  const getClubLogoUrl = (logoPath) => toMediaUrl(logoPath);
 
   useEffect(() => {
     const load = async () => {
@@ -53,14 +51,19 @@ export default function MyClubs() {
   }, [myClubs, searchQuery]);
 
   const filteredBrowseClubs = useMemo(() => {
-    if (!searchQuery.trim()) return browseClubs;
+    const myClubIds = new Set((myClubs || []).map((club) => Number(club.clubId)));
+    const joinableClubs = (browseClubs || []).filter(
+      (club) => !myClubIds.has(Number(club.clubId))
+    );
+
+    if (!searchQuery.trim()) return joinableClubs;
     const query = searchQuery.toLowerCase();
-    return browseClubs.filter(club => 
+    return joinableClubs.filter(club => 
       club.name?.toLowerCase().includes(query) ||
       club.location?.toLowerCase().includes(query) ||
       club.description?.toLowerCase().includes(query)
     );
-  }, [browseClubs, searchQuery]);
+  }, [browseClubs, myClubs, searchQuery]);
 
   const handleCreateClub = async (formData, logoFile) => {
     try {

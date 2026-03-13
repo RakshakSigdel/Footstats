@@ -1,9 +1,9 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import Sidebar from "../components/Global/Sidebar";
-import Topbar from "../components/Global/Topbar";
-import { getAllClubs, getMyClubs } from "../services/api.clubs";
-import { getAllTournaments } from "../services/api.tournaments";
+import Sidebar from "../../components/Global/Sidebar";
+import Topbar from "../../components/Global/Topbar";
+import { getAllClubs, getMyClubs } from "../../services/api.clubs";
+import { getAllTournaments } from "../../services/api.tournaments";
 
 export default function Discover() {
   const navigate = useNavigate();

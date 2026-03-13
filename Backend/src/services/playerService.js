@@ -66,7 +66,7 @@ class PlayerService {
         userClubs: {
           include: {
             club: {
-              select: { clubId: true, name: true, location: true },
+              select: { clubId: true, name: true, location: true, logo: true },
             },
           },
           orderBy: { joinedAt: "asc" },
@@ -75,15 +75,46 @@ class PlayerService {
     });
     if (!player) throw { status: 404, message: "Player not found" };
 
+    // Include clubs created by this user so owner clubs also carry stats.
+    const createdClubs = await prisma.club.findMany({
+      where: { createdBy: userIdNum },
+      select: { clubId: true, name: true, location: true, logo: true, createdAt: true },
+    });
+
+    const ownerClubIds = new Set(createdClubs.map((club) => club.clubId));
+    const membershipClubIds = new Set(player.userClubs.map((uc) => uc.clubId));
+
+    const mergedUserClubs = [
+      ...player.userClubs,
+      ...createdClubs
+        .filter((club) => !membershipClubIds.has(club.clubId))
+        .map((club) => ({
+          userClubId: null,
+          userId: userIdNum,
+          clubId: club.clubId,
+          role: "OWNER",
+          position: null,
+          joinedAt: club.createdAt,
+          club: {
+            clubId: club.clubId,
+            name: club.name,
+            location: club.location,
+            logo: club.logo,
+          },
+        })),
+    ];
+
     // Per-club stats
     const userClubsWithStats = await Promise.all(
-      player.userClubs.map(async (uc) => {
+      mergedUserClubs.map(async (uc) => {
         const [appearances, goals, assists] = await Promise.all([
           prisma.matchLineup.count({ where: { userId: userIdNum, clubId: uc.clubId } }),
           prisma.matchEvent.count({ where: { userId: userIdNum, clubId: uc.clubId, eventType: "GOAL" } }),
           prisma.matchEvent.count({ where: { assistById: userIdNum, clubId: uc.clubId, eventType: "GOAL" } }),
         ]);
-        return { ...uc, appearances, goals, assists };
+
+        const role = ownerClubIds.has(uc.clubId) ? "OWNER" : uc.role;
+        return { ...uc, role, appearances, goals, assists };
       })
     );
 
