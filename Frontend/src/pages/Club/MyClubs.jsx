@@ -4,6 +4,7 @@ import Sidebar from "../../components/Global/Sidebar";
 import Topbar from "../../components/Global/Topbar";
 import CreateClub from "./Components/CreateClub";
 import { getMyClubs, getAllClubs, createClub } from "../../services/api.clubs";
+import { toMediaUrl } from "../../services/media";
 
 export default function MyClubs() {
   const navigate = useNavigate();
@@ -14,6 +15,8 @@ export default function MyClubs() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
+
+  const getClubLogoUrl = (logoPath) => toMediaUrl(logoPath);
 
   useEffect(() => {
     const load = async () => {
@@ -187,15 +190,19 @@ export default function MyClubs() {
                 >
                   <div className="flex items-center justify-between gap-6">
                     <div className="flex items-center gap-4 flex-1">
-                      <div className="w-12 h-12 bg-green-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <svg width="30" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
-                          <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
-                          <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
-                          <path d="M4 22h16" />
-                          <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
-                          <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
-                          <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
-                        </svg>
+                      <div className="w-12 h-12 bg-green-600 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
+                        {getClubLogoUrl(club.logo) ? (
+                          <img src={getClubLogoUrl(club.logo)} alt={club.name} className="w-full h-full object-cover" />
+                        ) : (
+                          <svg width="30" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
+                            <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
+                            <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
+                            <path d="M4 22h16" />
+                            <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
+                            <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
+                            <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
+                          </svg>
+                        )}
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-3 mb-2">
@@ -257,15 +264,19 @@ export default function MyClubs() {
               {filteredBrowseClubs.map((club) => (
                 <div key={club.clubId} className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
                   <div className="flex items-start gap-4 mb-6">
-                    <div className="w-14 h-14 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
-                        <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
-                        <path d="M4 22h16" />
-                        <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
-                        <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
-                        <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
-                      </svg>
+                    <div className="w-14 h-14 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
+                      {getClubLogoUrl(club.logo) ? (
+                        <img src={getClubLogoUrl(club.logo)} alt={club.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
+                          <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
+                          <path d="M4 22h16" />
+                          <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
+                          <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
+                          <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
+                        </svg>
+                      )}
                     </div>
                     <div className="flex-1">
                       <h3 className="text-xl font-bold text-gray-900 mb-2">{club.name}</h3>

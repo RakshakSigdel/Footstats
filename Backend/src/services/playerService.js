@@ -66,7 +66,7 @@ class PlayerService {
         userClubs: {
           include: {
             club: {
-              select: { clubId: true, name: true, location: true },
+              select: { clubId: true, name: true, location: true, logo: true },
             },
           },
           orderBy: { joinedAt: "asc" },

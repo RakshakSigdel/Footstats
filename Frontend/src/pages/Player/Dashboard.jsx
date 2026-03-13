@@ -7,6 +7,7 @@ import { getMySchedules } from "../../services/api.schedules";
 import { getMyClubs } from "../../services/api.clubs";
 import { getMyTournaments } from "../../services/api.tournaments";
 import { getAllClubs } from "../../services/api.clubs";
+import { toMediaUrl } from "../../services/media";
 
 export default function Dashboard() {
   const [profile, setProfile] = useState(null);
@@ -42,7 +43,12 @@ export default function Dashboard() {
         setMyTournamentsCount(Array.isArray(myTournamentsData) ? myTournamentsData.length : 0);
         const map = {};
         (Array.isArray(allClubsData) ? allClubsData : []).forEach((c) => {
-          if (c?.clubId) map[c.clubId] = c.name || "Unknown";
+          if (c?.clubId) {
+            map[c.clubId] = {
+              name: c.name || "Unknown",
+              logo: c.logo || null,
+            };
+          }
         });
         setClubsMap(map);
       } catch (err) {
@@ -252,8 +258,12 @@ export default function Dashboard() {
                 </div>
               )}
               {upcomingSchedules.map((schedule) => {
-                const teamOne = clubsMap[schedule.teamOneId] || `Team ${schedule.teamOneId}`;
-                const teamTwo = clubsMap[schedule.teamTwoId] || `Team ${schedule.teamTwoId}`;
+                const teamOneData = clubsMap[schedule.teamOneId] || { name: `Team ${schedule.teamOneId}`, logo: null };
+                const teamTwoData = clubsMap[schedule.teamTwoId] || { name: `Team ${schedule.teamTwoId}`, logo: null };
+                const teamOne = teamOneData.name;
+                const teamTwo = teamTwoData.name;
+                const teamOneLogo = toMediaUrl(teamOneData.logo);
+                const teamTwoLogo = toMediaUrl(teamTwoData.logo);
                 const typeColor = schedule.scheduleType === "Knockout" ? "bg-red-100 text-red-700" : schedule.scheduleType === "League" ? "bg-blue-100 text-blue-700" : "bg-green-100 text-green-700";
                 return (
                   <div key={schedule.id} className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 hover:shadow-lg hover:scale-105 transition-all">
@@ -273,8 +283,12 @@ export default function Dashboard() {
                     </div>
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex flex-col items-center gap-2 flex-1">
-                        <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-bold text-lg">
-                          {teamOne.charAt(0)}
+                        <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-bold text-lg overflow-hidden">
+                          {teamOneLogo ? (
+                            <img src={teamOneLogo} alt={teamOne} className="w-full h-full object-cover" />
+                          ) : (
+                            teamOne.charAt(0)
+                          )}
                         </div>
                         <span className="text-sm font-semibold text-gray-900 text-center truncate w-full">{teamOne}</span>
                       </div>
@@ -282,8 +296,12 @@ export default function Dashboard() {
                         <span className="text-gray-400 font-bold text-sm">VS</span>
                       </div>
                       <div className="flex flex-col items-center gap-2 flex-1">
-                        <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center text-green-700 font-bold text-lg">
-                          {teamTwo.charAt(0)}
+                        <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center text-green-700 font-bold text-lg overflow-hidden">
+                          {teamTwoLogo ? (
+                            <img src={teamTwoLogo} alt={teamTwo} className="w-full h-full object-cover" />
+                          ) : (
+                            teamTwo.charAt(0)
+                          )}
                         </div>
                         <span className="text-sm font-semibold text-gray-900 text-center truncate w-full">{teamTwo}</span>
                       </div>

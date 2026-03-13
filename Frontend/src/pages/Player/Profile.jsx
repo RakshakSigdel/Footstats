@@ -1,88 +1,202 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Sidebar from "../../components/Global/Sidebar";
 import Topbar from "../../components/Global/Topbar";
-import { getMyProfile, updatePlayerById, uploadProfilePhoto } from "../../services/api.player";
+import {
+  getMyProfile,
+  getPlayerById,
+  updatePlayerById,
+  uploadProfilePhoto,
+} from "../../services/api.player";
+import { getMyClubs } from "../../services/api.clubs";
+import { toMediaUrl } from "../../services/media";
+
+function StatCard({ label, value, color = "text-gray-900" }) {
+  return (
+    <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 text-center">
+      <div className={`text-3xl font-bold mb-1 ${color}`}>{value ?? "-"}</div>
+      <div className="text-sm font-medium text-gray-700">{label}</div>
+    </div>
+  );
+}
 
 export default function Profile() {
-  const [profile, setProfile] = useState(null);
-  const [activeTab, setActiveTab] = useState("recent");
-  const [error, setError] = useState(null);
+  const navigate = useNavigate();
+  const [player, setPlayer] = useState(null);
+  const [myClubs, setMyClubs] = useState([]);
   const [loading, setLoading] = useState(true);
-  
-  // Edit modal state
+  const [error, setError] = useState(null);
+  const [activeTab, setActiveTab] = useState("details");
+
   const [showEditModal, setShowEditModal] = useState(false);
   const [editFormData, setEditFormData] = useState({
     firstName: "",
     lastName: "",
     Phone: "",
     location: "",
-    position: "",
-    dateOfBirth: ""
+    gender: "",
+    dateOfBirth: "",
   });
   const [editLoading, setEditLoading] = useState(false);
   const [editError, setEditError] = useState(null);
 
-  // Photo upload state
   const [photoFile, setPhotoFile] = useState(null);
   const [photoPreview, setPhotoPreview] = useState(null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [uploadError, setUploadError] = useState(null);
 
-  useEffect(() => {
-    const load = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const data = await getMyProfile();
-        setProfile(data);
-      } catch (err) {
-        setError(err?.message || "Failed to load profile");
-        throw err;
-      } finally {
-        setLoading(false);
+  const loadProfile = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const [me, clubs] = await Promise.all([
+        getMyProfile(),
+        getMyClubs().catch(() => []),
+      ]);
+      if (!me?.userId) {
+        throw new Error("Your profile could not be resolved.");
       }
-    };
-    load();
+
+      // Use the same payload as /player/:playerId so /profile and /player/{id} stay aligned.
+      const fullPlayer = await getPlayerById(me.userId);
+      setPlayer(fullPlayer);
+      setMyClubs(Array.isArray(clubs) ? clubs : []);
+    } catch (err) {
+      setError(err?.message || "Failed to load profile");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadProfile();
   }, []);
 
+  useEffect(() => {
+    return () => {
+      if (photoPreview) {
+        URL.revokeObjectURL(photoPreview);
+      }
+    };
+  }, [photoPreview]);
+
+  const age =
+    player?.dateOfBirth
+      ? Math.floor((Date.now() - new Date(player.dateOfBirth)) / (365.25 * 24 * 60 * 60 * 1000))
+      : null;
+
+  const displayPosition =
+    player?.userClubs?.find((uc) => uc.position)?.position || null;
+
+  const initials = player
+    ? `${player.firstName?.[0] || ""}${player.lastName?.[0] || ""}`.toUpperCase() || "?"
+    : "?";
+
+  const profilePhotoUrl = useMemo(() => {
+    if (photoPreview) return photoPreview;
+    return toMediaUrl(player?.profilePhoto);
+  }, [photoPreview, player?.profilePhoto]);
+
+  const tabs = [
+    { id: "details", label: "Details" },
+    { id: "clubs", label: "Clubs" },
+    { id: "matches", label: "Matches" },
+    { id: "achievements", label: "Achievements" },
+  ];
+
+  const resultStyle = (result) => {
+    if (result === "Win") return "bg-green-100 text-green-700";
+    if (result === "Loss") return "bg-red-100 text-red-700";
+    if (result === "Draw") return "bg-yellow-100 text-yellow-700";
+    return "bg-gray-100 text-gray-600";
+  };
+
+  const clubsForDisplay = useMemo(() => {
+    const membershipClubs = (player?.userClubs || []).map((uc) => ({
+      clubId: uc.club?.clubId,
+      club: uc.club,
+      role: uc.role,
+      position: uc.position,
+      appearances: uc.appearances,
+      goals: uc.goals,
+      assists: uc.assists,
+    }));
+
+    const byId = new Map();
+    membershipClubs.forEach((club) => {
+      if (club.clubId) byId.set(club.clubId, club);
+    });
+
+    (myClubs || []).forEach((club) => {
+      if (!club?.clubId) return;
+      if (!byId.has(club.clubId)) {
+        byId.set(club.clubId, {
+          clubId: club.clubId,
+          club: {
+            clubId: club.clubId,
+            name: club.name,
+            location: club.location,
+            logo: club.logo || null,
+          },
+          role: club.userRole,
+          position: null,
+          appearances: 0,
+          goals: 0,
+          assists: 0,
+        });
+      } else {
+        const existing = byId.get(club.clubId);
+        byId.set(club.clubId, {
+          ...existing,
+          role: existing?.role || club.userRole,
+          club: {
+            ...existing?.club,
+            logo: existing?.club?.logo || club.logo || null,
+          },
+        });
+      }
+    });
+
+    return [...byId.values()];
+  }, [player?.userClubs, myClubs]);
+
   const handleOpenEditModal = () => {
-    if (profile) {
-      setEditFormData({
-        firstName: profile.firstName || "",
-        lastName: profile.lastName || "",
-        Phone: profile.Phone || "",
-        location: profile.location || "",
-        position: profile.position || "",
-        dateOfBirth: profile.dateOfBirth ? profile.dateOfBirth.split("T")[0] : ""
-      });
-    }
+    if (!player?.userId) return;
+    setEditFormData({
+      firstName: player.firstName || "",
+      lastName: player.lastName || "",
+      Phone: player.Phone || "",
+      location: player.location || "",
+      gender: player.gender || "",
+      dateOfBirth: player.dateOfBirth ? new Date(player.dateOfBirth).toISOString().split("T")[0] : "",
+    });
     setEditError(null);
     setShowEditModal(true);
   };
 
   const handleEditInputChange = (e) => {
-    setEditFormData({ ...editFormData, [e.target.name]: e.target.value });
+    setEditFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
     setEditError(null);
   };
 
   const handleSaveProfile = async () => {
-    if (!profile?.userId) return;
+    if (!player?.userId) return;
     setEditLoading(true);
     setEditError(null);
+
     try {
-      const updatedData = {
-        firstName: editFormData.firstName,
-        lastName: editFormData.lastName,
-        Phone: editFormData.Phone,
-        location: editFormData.location,
-        position: editFormData.position,
-        dateOfBirth: editFormData.dateOfBirth ? new Date(editFormData.dateOfBirth).toISOString() : null
-      };
-      await updatePlayerById(profile.userId, updatedData);
-      // Refresh profile data
-      const refreshedProfile = await getMyProfile();
-      setProfile(refreshedProfile);
+      await updatePlayerById(player.userId, {
+        firstName: editFormData.firstName.trim(),
+        lastName: editFormData.lastName.trim(),
+        Phone: editFormData.Phone.trim(),
+        location: editFormData.location.trim(),
+        gender: editFormData.gender || null,
+        dateOfBirth: editFormData.dateOfBirth
+          ? new Date(editFormData.dateOfBirth).toISOString()
+          : null,
+      });
       setShowEditModal(false);
+      await loadProfile();
     } catch (err) {
       setEditError(err?.message || "Failed to update profile");
     } finally {
@@ -91,37 +205,43 @@ export default function Profile() {
   };
 
   const handlePhotoChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      // Validate file type
-      if (!file.type.startsWith('image/')) {
-        setUploadError('Please select an image file');
-        return;
-      }
-      // Validate file size (5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        setUploadError('Image size should be less than 5MB');
-        return;
-      }
-      setPhotoFile(file);
-      setPhotoPreview(URL.createObjectURL(file));
-      setUploadError(null);
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      setUploadError("Please select an image file");
+      return;
     }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setUploadError("Image size should be less than 5MB");
+      return;
+    }
+
+    if (photoPreview) {
+      URL.revokeObjectURL(photoPreview);
+    }
+
+    setPhotoFile(file);
+    setPhotoPreview(URL.createObjectURL(file));
+    setUploadError(null);
   };
 
   const handleUploadPhoto = async () => {
     if (!photoFile) return;
+
     setUploadingPhoto(true);
     setUploadError(null);
     try {
       await uploadProfilePhoto(photoFile);
-      // Refresh profile to get the new photo URL
-      const refreshedProfile = await getMyProfile();
-      setProfile(refreshedProfile);
       setPhotoFile(null);
+      if (photoPreview) {
+        URL.revokeObjectURL(photoPreview);
+      }
       setPhotoPreview(null);
+      await loadProfile();
     } catch (err) {
-      setUploadError(err?.message || 'Failed to upload photo');
+      setUploadError(err?.message || "Failed to upload photo");
     } finally {
       setUploadingPhoto(false);
     }
@@ -129,274 +249,342 @@ export default function Profile() {
 
   const handleCancelPhotoUpload = () => {
     setPhotoFile(null);
+    if (photoPreview) {
+      URL.revokeObjectURL(photoPreview);
+    }
     setPhotoPreview(null);
     setUploadError(null);
   };
 
-  const getProfilePhotoUrl = () => {
-    if (photoPreview) return photoPreview;
-    if (profile?.profilePhoto) {
-      return profile.profilePhoto.startsWith('http') 
-        ? profile.profilePhoto 
-        : `http://localhost:5555${profile.profilePhoto}`;
-    }
-    return null;
-  };
-
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-screen bg-gray-50">
       <Sidebar />
-
       <div className="flex-1 flex flex-col">
         <Topbar />
-        <div className="border-t border-gray-200"></div>
-
         <main className="flex-1 p-6 md:p-8 overflow-auto bg-[#eef1f6]">
           {error && (
-            <div className="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 text-red-700">{error}</div>
+            <div className="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 text-red-700">
+              {error}
+            </div>
           )}
           {loading && <div className="mb-6 text-gray-500">Loading profile...</div>}
-          {/* Profile Header Card */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 mb-6">
-            <div className="flex items-start justify-between">
-              <div className="flex items-start gap-6">
-                <div className="relative">
-                  <div className="w-32 h-32 bg-blue-100 rounded-full flex items-center justify-center overflow-hidden">
-                    {getProfilePhotoUrl() ? (
-                      <img 
-                        src={getProfilePhotoUrl()} 
-                        alt="Profile" 
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <span className="text-4xl font-bold text-gray-700">
-                        {profile ? `${profile.firstName?.charAt(0) || ""}${profile.lastName?.charAt(0) || ""}`.toUpperCase() || "?" : "—"}
-                      </span>
-                    )}
+
+          {player && (
+            <>
+              <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 mb-6">
+                <div className="flex flex-col sm:flex-row items-start gap-6">
+                  <div className="relative w-28 h-28 flex-shrink-0">
+                    <div className="w-full h-full rounded-full bg-blue-100 flex items-center justify-center overflow-hidden">
+                      {profilePhotoUrl ? (
+                        <img src={profilePhotoUrl} alt={player.firstName} className="w-full h-full object-cover" />
+                      ) : (
+                        <span className="text-4xl font-bold text-blue-700">{initials}</span>
+                      )}
+                    </div>
+                    <label className="absolute -bottom-1 -right-1 w-9 h-9 bg-blue-600 rounded-full flex items-center justify-center cursor-pointer hover:bg-blue-700 transition-colors shadow-lg border-2 border-white">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
+                        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                        <circle cx="12" cy="13" r="4" />
+                      </svg>
+                      <input type="file" accept="image/*" onChange={handlePhotoChange} className="hidden" />
+                    </label>
                   </div>
-                  <label className="absolute bottom-0 right-0 w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center cursor-pointer hover:bg-blue-700 transition-colors shadow-lg">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
-                      <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
-                      <circle cx="12" cy="13" r="4" />
-                    </svg>
-                    <input 
-                      type="file" 
-                      accept="image/*" 
-                      onChange={handlePhotoChange}
-                      className="hidden"
-                    />
-                  </label>
-                </div>
-                <div>
-                  <h1 className="text-3xl font-bold text-gray-900 mb-3">
-                    {profile ? `${profile.firstName ?? ""} ${profile.lastName ?? ""}`.trim() || "Player" : "—"}
-                  </h1>
-                  <div className="flex gap-2 mb-4">
-                    {profile?.position && (
-                      <span className="bg-slate-900 text-white text-sm px-3 py-1 rounded-full">{profile.position}</span>
-                    )}
-                    {profile?.gender && (
-                      <span className="bg-gray-100 text-gray-700 text-sm px-3 py-1 rounded-full">{profile.gender}</span>
-                    )}
-                  </div>
-                  <div className="grid grid-cols-2 gap-x-12 gap-y-2 text-sm text-gray-600">
-                    {profile?.Phone && (
-                      <div className="flex items-center gap-2">
+
+                  <div className="flex-1">
+                    <div className="flex items-start justify-between gap-4 mb-2">
+                      <h1 className="text-3xl font-bold text-gray-900">
+                        {player.firstName} {player.lastName}
+                      </h1>
+                      <button
+                        onClick={handleOpenEditModal}
+                        className="bg-blue-50 text-blue-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-100 flex items-center gap-2"
+                      >
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
                         </svg>
-                        <span>{profile.Phone}</span>
-                      </div>
-                    )}
-                    {profile?.location && (
-                      <div className="flex items-center gap-2">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-                          <circle cx="12" cy="10" r="3" />
-                        </svg>
-                        <span>{profile.location}</span>
-                      </div>
-                    )}
-                    {profile?.dateOfBirth && (
-                      <div className="flex items-center gap-2">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-                          <line x1="16" y1="2" x2="16" y2="6" />
-                          <line x1="8" y1="2" x2="8" y2="6" />
-                          <line x1="3" y1="10" x2="21" y2="10" />
-                        </svg>
-                        <span>DOB: {new Date(profile.dateOfBirth).toLocaleDateString()}</span>
-                      </div>
-                    )}
+                        Edit Profile
+                      </button>
+                    </div>
+
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {displayPosition && (
+                        <span className="bg-slate-900 text-white text-sm px-3 py-1 rounded-full">
+                          {displayPosition}
+                        </span>
+                      )}
+                      {player.gender && (
+                        <span className="bg-gray-100 text-gray-700 text-sm px-3 py-1 rounded-full">
+                          {player.gender}
+                        </span>
+                      )}
+                      {player.preferredFoot && (
+                        <span className="bg-blue-50 text-blue-700 text-sm px-3 py-1 rounded-full capitalize">
+                          {player.preferredFoot.toLowerCase()} foot
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex flex-wrap gap-6">
+                      {[
+                        { label: "Matches", value: player.stats?.matchesPlayed ?? 0 },
+                        { label: "Goals", value: player.stats?.goals ?? 0 },
+                        { label: "Assists", value: player.stats?.assists ?? 0 },
+                        { label: "Win Rate", value: `${player.stats?.winRate ?? 0}%` },
+                      ].map((s) => (
+                        <div key={s.label} className="flex flex-col items-center">
+                          <span className="text-xl font-bold text-gray-900">{s.value}</span>
+                          <span className="text-xs text-gray-500">{s.label}</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
+
+                {photoFile && (
+                  <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="text-sm font-medium text-blue-900">New photo selected</span>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={handleCancelPhotoUpload}
+                          className="px-3 py-1.5 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
+                          disabled={uploadingPhoto}
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={handleUploadPhoto}
+                          disabled={uploadingPhoto}
+                          className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                        >
+                          {uploadingPhoto ? "Uploading..." : "Upload Photo"}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {uploadError && (
+                  <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+                    {uploadError}
+                  </div>
+                )}
               </div>
 
-              {/* Right side - Edit Button */}
-              <button 
-                onClick={handleOpenEditModal}
-                className="bg-blue-50 text-blue-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-100 flex items-center gap-2"
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                </svg>
-                Edit Profile
-              </button>
-            </div>
-
-            {/* Photo Upload Confirmation */}
-            {photoFile && (
-              <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    <span className="text-sm font-medium text-blue-900">New photo selected</span>
-                  </div>
-                  <div className="flex gap-2">
+              <div className="bg-white rounded-xl shadow-sm border border-gray-100 mb-6 overflow-hidden">
+                <div className="flex border-b border-gray-200">
+                  {tabs.map((tab) => (
                     <button
-                      onClick={handleCancelPhotoUpload}
-                      className="px-3 py-1.5 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
-                      disabled={uploadingPhoto}
+                      key={tab.id}
+                      onClick={() => setActiveTab(tab.id)}
+                      className={`flex-1 px-4 py-4 text-sm font-semibold transition-all relative ${
+                        activeTab === tab.id
+                          ? "text-blue-600 bg-blue-50"
+                          : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                      }`}
                     >
-                      Cancel
+                      {tab.label}
+                      {activeTab === tab.id && (
+                        <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600" />
+                      )}
                     </button>
-                    <button
-                      onClick={handleUploadPhoto}
-                      disabled={uploadingPhoto}
-                      className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
-                    >
-                      {uploadingPhoto ? 'Uploading...' : 'Upload Photo'}
-                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {activeTab === "details" && (
+                <div className="space-y-6">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    <StatCard label="Matches Played" value={player.stats?.matchesPlayed} />
+                    <StatCard label="Goals" value={player.stats?.goals} color="text-green-600" />
+                    <StatCard label="Assists" value={player.stats?.assists} color="text-blue-600" />
+                    <StatCard label="Win Rate" value={`${player.stats?.winRate ?? 0}%`} color="text-purple-600" />
+                    <StatCard label="Wins" value={player.stats?.wins} color="text-green-600" />
+                    <StatCard label="Draws" value={player.stats?.draws} color="text-yellow-600" />
+                    <StatCard label="Losses" value={player.stats?.losses} color="text-red-600" />
+                    <StatCard label="Yellow Cards" value={player.stats?.yellowCards} color="text-yellow-500" />
+                  </div>
+
+                  <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                    <h2 className="text-lg font-bold text-gray-900 mb-5">Personal Information</h2>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-5 gap-x-12">
+                      {[
+                        { label: "Full Name", value: `${player.firstName} ${player.lastName}` },
+                        { label: "Age", value: age != null ? `${age} years old` : null },
+                        {
+                          label: "Date of Birth",
+                          value: player.dateOfBirth
+                            ? new Date(player.dateOfBirth).toLocaleDateString()
+                            : null,
+                        },
+                        { label: "Gender", value: player.gender },
+                        { label: "Location / Nationality", value: player.location },
+                        {
+                          label: "Preferred Foot",
+                          value: player.preferredFoot
+                            ? player.preferredFoot.charAt(0) + player.preferredFoot.slice(1).toLowerCase()
+                            : null,
+                        },
+                        { label: "Primary Position", value: displayPosition },
+                        {
+                          label: "Clubs",
+                          value: clubsForDisplay.length ? `${clubsForDisplay.length} club(s)` : "None",
+                        },
+                        {
+                          label: "Member Since",
+                          value: player.createdAt ? new Date(player.createdAt).toLocaleDateString() : null,
+                        },
+                      ]
+                        .filter((r) => r.value)
+                        .map((row) => (
+                          <div key={row.label} className="flex flex-col gap-0.5">
+                            <span className="text-xs font-semibold uppercase tracking-wide text-gray-400">
+                              {row.label}
+                            </span>
+                            <span className="text-sm text-gray-800 font-medium">{row.value}</span>
+                          </div>
+                        ))}
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {/* Upload Error */}
-            {uploadError && (
-              <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
-                {uploadError}
-              </div>
-            )}
+              {activeTab === "clubs" && (
+                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                  <h2 className="text-lg font-bold text-gray-900 mb-5">
+                    Clubs <span className="text-gray-400 font-normal text-sm">({clubsForDisplay.length})</span>
+                  </h2>
+                  {clubsForDisplay.length > 0 ? (
+                    <div className="space-y-3">
+                      {clubsForDisplay.map((uc) => (
+                        <div
+                          key={uc.club.clubId}
+                          onClick={() => navigate(`/club/${uc.club.clubId}`)}
+                          className="grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-4 p-4 border border-gray-200 rounded-xl hover:bg-gray-50 hover:border-gray-300 cursor-pointer transition-all"
+                        >
+                          <div className="flex items-center gap-4 min-w-0">
+                            <div className="w-12 h-12 bg-green-600 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden">
+                              {toMediaUrl(uc.club.logo) ? (
+                                <img src={toMediaUrl(uc.club.logo)} alt={uc.club.name} className="w-full h-full object-cover" />
+                              ) : (
+                                <svg width="22" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
+                                  <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
+                                  <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
+                                  <path d="M4 22h16" />
+                                  <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
+                                  <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
+                                  <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
+                                </svg>
+                              )}
+                            </div>
+                            <div className="min-w-0">
+                              <div className="font-semibold text-gray-900 flex items-center gap-2 min-w-0">
+                                <span className="truncate">{uc.club.name}</span>
+                                {uc.role === "OWNER" && (
+                                  <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full font-medium">
+                                    Owner
+                                  </span>
+                                )}
+                                {uc.role === "ADMIN" && (
+                                  <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full font-medium">
+                                    Admin
+                                  </span>
+                                )}
+                              </div>
+                              {uc.club.location && (
+                                <div className="text-sm text-gray-500 mt-0.5">{uc.club.location}</div>
+                              )}
+                              {uc.position && (
+                                <div className="text-sm text-blue-600 font-medium mt-0.5">{uc.position}</div>
+                              )}
+                            </div>
+                          </div>
 
-            {/* ─── divider now inside the card ─── */}
-            <div className="border-t border-gray-200 my-8"></div>
+                          <div className="hidden sm:flex items-center gap-8 mr-4 text-center">
+                            {[
+                              { label: "Apps", value: uc.appearances ?? 0 },
+                              { label: "Goals", value: uc.goals ?? 0 },
+                              { label: "Assists", value: uc.assists ?? 0 },
+                            ].map((s) => (
+                              <div key={s.label}>
+                                <div className="text-lg font-bold text-gray-900">{s.value}</div>
+                                <div className="text-xs text-gray-500">{s.label}</div>
+                              </div>
+                            ))}
+                          </div>
 
-            {/* Stats Cards – now inside same card */}
-            <div className="grid grid-cols-4 gap-6">
-              {/* Goals */}
-              <div className="text-center">
-                <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <circle cx="12" cy="12" r="10" />
-                    <circle cx="12" cy="12" r="6" />
-                    <circle cx="12" cy="12" r="2" />
-                  </svg>
+                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-400 flex-shrink-0">
+                            <path d="M9 18l6-6-6-6" />
+                          </svg>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-gray-500">You have not joined any clubs yet.</p>
+                  )}
                 </div>
-                <h3 className="text-3xl font-bold text-gray-900 mb-1">{profile?.goalsScored ?? "—"}</h3>
-                <p className="text-sm text-gray-600">Goals</p>
-              </div>
+              )}
 
-              {/* Assists */}
-              <div className="text-center">
-                <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
-                    <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
-                    <path d="M4 22h16" />
-                    <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
-                    <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
-                    <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
-                  </svg>
+              {activeTab === "matches" && (
+                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                  <h2 className="text-lg font-bold text-gray-900 mb-5">
+                    Match History <span className="text-gray-400 font-normal text-sm">({player.matches?.length ?? 0} games)</span>
+                  </h2>
+                  {player.matches && player.matches.length > 0 ? (
+                    <div className="space-y-3">
+                      {player.matches.map((m, idx) => (
+                        <div
+                          key={m.matchId ?? idx}
+                          onClick={() => m.scheduleId && navigate(`/schedule/${m.scheduleId}`)}
+                          className="flex items-center justify-between p-4 border border-gray-200 rounded-xl hover:bg-gray-50 hover:border-gray-300 cursor-pointer transition-all"
+                        >
+                          <div className="flex-1 min-w-0">
+                            <div className="font-semibold text-gray-900 mb-1">
+                              {m.teamOne?.name ?? "Team 1"} vs {m.teamTwo?.name ?? "Team 2"}
+                            </div>
+                            <div className="text-base font-bold text-gray-700 mb-1">
+                              {m.teamOneGoals} - {m.teamTwoGoals}
+                            </div>
+                            <div className="text-sm text-gray-500">
+                              {m.date ? new Date(m.date).toLocaleDateString() : "Date TBD"}
+                              {m.location ? ` | ${m.location}` : ""}
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-3 ml-4">
+                            <span className={`text-xs font-semibold px-2 py-1 rounded-full ${resultStyle(m.result)}`}>
+                              {m.result || "Pending"}
+                            </span>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-400">
+                              <path d="M9 18l6-6-6-6" />
+                            </svg>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-gray-500">No match history yet.</p>
+                  )}
                 </div>
-                <h3 className="text-3xl font-bold text-gray-900 mb-1">{profile?.assist ?? "—"}</h3>
-                <p className="text-sm text-gray-600">Assists</p>
-              </div>
+              )}
 
-              {/* Matches */}
-              <div className="text-center">
-                <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <circle cx="12" cy="8" r="6" />
-                  <path d="M12 14v8" />
-                  <path d="M8.5 20h7" />
-                  <path d="M10 17h4" />
-                </svg>
-              </div>
-              <h3 className="text-3xl font-bold text-gray-900 mb-1">{profile?.matchesPlayed ?? "—"}</h3>
-              <p className="text-sm text-gray-600">Matches</p>
-            </div>
-
-              {/* Win Rate */}
-              <div className="text-center">
-                <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
-                    <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
-                    <path d="M4 22h16" />
-                    <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
-                    <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
-                    <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
-                  </svg>
+              {activeTab === "achievements" && (
+                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center text-gray-500">
+                  Achievements are not available yet.
                 </div>
-                <h3 className="text-3xl font-bold text-gray-900 mb-1">{profile?.winRate ?? "—"}%</h3>
-                <p className="text-sm text-gray-600">Win Rate</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Tabs */}
-          <div className="mb-6">
-            <div className="inline-flex bg-gray-100 rounded-full p-1 border border-gray-200">
-              <button
-                onClick={() => setActiveTab("recent")}
-                className={`px-6 py-2 text-sm font-semibold rounded-full transition-all ${
-                  activeTab === "recent" ? "bg-white shadow-sm" : "text-gray-600"
-                }`}
-              >
-                Recent Matches
-              </button>
-              <button
-                onClick={() => setActiveTab("achievements")}
-                className={`px-6 py-2 text-sm font-semibold rounded-full transition-all ${
-                  activeTab === "achievements" ? "bg-white shadow-sm" : "text-gray-600"
-                }`}
-              >
-                Achievements
-              </button>
-            </div>
-          </div>
-
-          {/* Tab Content */}
-          {activeTab === "recent" && (
-            <div className="space-y-4">
-              <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center text-gray-500">
-                Recent matches for your profile are not provided by the backend. View <a href="/schedules" className="text-blue-600 hover:underline">Schedules</a> for match data.
-              </div>
-            </div>
-          )}
-
-          {activeTab === "achievements" && (
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center text-gray-500">
-              Achievements are not provided by the backend yet.
-            </div>
+              )}
+            </>
           )}
         </main>
       </div>
 
-      {/* Edit Profile Modal */}
       {showEditModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 p-6">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-bold text-gray-900">Edit Profile</h2>
-              <button 
-                onClick={() => setShowEditModal(false)}
-                className="text-gray-400 hover:text-gray-600"
-              >
+              <button onClick={() => setShowEditModal(false)} className="text-gray-400 hover:text-gray-600">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <line x1="18" y1="6" x2="6" y2="18" />
                   <line x1="6" y1="6" x2="18" y2="18" />
@@ -457,18 +645,17 @@ export default function Profile() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Position</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Gender</label>
                 <select
-                  name="position"
-                  value={editFormData.position}
+                  name="gender"
+                  value={editFormData.gender}
                   onChange={handleEditInputChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  <option value="">Select Position</option>
-                  <option value="Goalkeeper">Goalkeeper</option>
-                  <option value="Defender">Defender</option>
-                  <option value="Midfielder">Midfielder</option>
-                  <option value="Forward">Forward</option>
+                  <option value="">Select Gender</option>
+                  <option value="MALE">Male</option>
+                  <option value="FEMALE">Female</option>
+                  <option value="OTHER">Other</option>
                 </select>
               </div>
 

@@ -7,6 +7,7 @@ import { getClubMembers } from '../../services/api.clubs'
 import { createMatch } from '../../services/api.matches'
 import { createMatchEvent, updateMatchEvent, deleteMatchEvent } from '../../services/api.matchEvents'
 import { addPlayerToLineup, updateLineup, removeFromLineup } from '../../services/api.matchLineups'
+import { toMediaUrl } from '../../services/media'
 
 export default function ScheduleDetails() {
   const { scheduleId } = useParams()
@@ -281,6 +282,8 @@ export default function ScheduleDetails() {
     return members.map(m => m.user).filter(Boolean)
   }
 
+  const getProfilePhotoUrl = (photoPath) => toMediaUrl(photoPath)
+
   return (
     <div className="flex min-h-screen bg-gray-50">
       <Sidebar />
@@ -494,10 +497,14 @@ export default function ScheduleDetails() {
                       )}
                       {teamOneLineup.map((player) => (
                         <div key={player.matchLineupId} className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg">
-                          <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
-                            <span className="text-white font-bold text-sm">
-                              {player.user?.firstName?.[0]}{player.user?.lastName?.[0]}
-                            </span>
+                          <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
+                            {getProfilePhotoUrl(player.user?.profilePhoto) ? (
+                              <img src={getProfilePhotoUrl(player.user?.profilePhoto)} alt={`${player.user?.firstName || ""} ${player.user?.lastName || ""}`.trim()} className="w-full h-full object-cover" />
+                            ) : (
+                              <span className="text-white font-bold text-sm">
+                                {player.user?.firstName?.[0]}{player.user?.lastName?.[0]}
+                              </span>
+                            )}
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="font-semibold text-gray-900 truncate">{player.user?.firstName} {player.user?.lastName}</p>
@@ -566,10 +573,14 @@ export default function ScheduleDetails() {
                       )}
                       {teamTwoLineup.map((player) => (
                         <div key={player.matchLineupId} className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg">
-                          <div className="w-10 h-10 bg-red-600 rounded-full flex items-center justify-center flex-shrink-0">
-                            <span className="text-white font-bold text-sm">
-                              {player.user?.firstName?.[0]}{player.user?.lastName?.[0]}
-                            </span>
+                          <div className="w-10 h-10 bg-red-600 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
+                            {getProfilePhotoUrl(player.user?.profilePhoto) ? (
+                              <img src={getProfilePhotoUrl(player.user?.profilePhoto)} alt={`${player.user?.firstName || ""} ${player.user?.lastName || ""}`.trim()} className="w-full h-full object-cover" />
+                            ) : (
+                              <span className="text-white font-bold text-sm">
+                                {player.user?.firstName?.[0]}{player.user?.lastName?.[0]}
+                              </span>
+                            )}
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="font-semibold text-gray-900 truncate">{player.user?.firstName} {player.user?.lastName}</p>
