@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import Sidebar from "../../components/Global/Sidebar";
 import Topbar from "../../components/Global/Topbar";
 import {
@@ -21,6 +21,7 @@ function StatCard({ label, value, color = "text-gray-900" }) {
 }
 
 export default function Profile() {
+  const { playerId } = useParams();
   const navigate = useNavigate();
   const [player, setPlayer] = useState(null);
   const [myClubs, setMyClubs] = useState([]);
@@ -45,24 +46,32 @@ export default function Profile() {
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [uploadError, setUploadError] = useState(null);
 
+  const isOwnProfileRoute = !playerId;
+
   const loadProfile = async () => {
     setLoading(true);
     setError(null);
     try {
-      const [me, clubs] = await Promise.all([
-        getMyProfile(),
-        getMyClubs().catch(() => []),
-      ]);
-      if (!me?.userId) {
-        throw new Error("Your profile could not be resolved.");
-      }
+      if (isOwnProfileRoute) {
+        const [me, clubs] = await Promise.all([
+          getMyProfile(),
+          getMyClubs().catch(() => []),
+        ]);
+        if (!me?.userId) {
+          throw new Error("Your profile could not be resolved.");
+        }
 
-      // Use the same payload as /player/:playerId so /profile and /player/{id} stay aligned.
-      const fullPlayer = await getPlayerById(me.userId);
-      setPlayer(fullPlayer);
-      setMyClubs(Array.isArray(clubs) ? clubs : []);
+        // Keep /profile and /player/:id aligned with the same payload shape.
+        const fullPlayer = await getPlayerById(me.userId);
+        setPlayer(fullPlayer);
+        setMyClubs(Array.isArray(clubs) ? clubs : []);
+      } else {
+        const fullPlayer = await getPlayerById(playerId);
+        setPlayer(fullPlayer);
+        setMyClubs([]);
+      }
     } catch (err) {
-      setError(err?.message || "Failed to load profile");
+      setError(err?.message || "Failed to load player profile");
     } finally {
       setLoading(false);
     }
@@ -70,7 +79,7 @@ export default function Profile() {
 
   useEffect(() => {
     loadProfile();
-  }, []);
+  }, [playerId]);
 
   useEffect(() => {
     return () => {
@@ -267,7 +276,11 @@ export default function Profile() {
               {error}
             </div>
           )}
-          {loading && <div className="mb-6 text-gray-500">Loading profile...</div>}
+          {loading && (
+            <div className="mb-6 text-gray-500">
+              {isOwnProfileRoute ? "Loading profile..." : "Loading player..."}
+            </div>
+          )}
 
           {player && (
             <>
@@ -281,13 +294,15 @@ export default function Profile() {
                         <span className="text-4xl font-bold text-blue-700">{initials}</span>
                       )}
                     </div>
-                    <label className="absolute -bottom-1 -right-1 w-9 h-9 bg-blue-600 rounded-full flex items-center justify-center cursor-pointer hover:bg-blue-700 transition-colors shadow-lg border-2 border-white">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
-                        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
-                        <circle cx="12" cy="13" r="4" />
-                      </svg>
-                      <input type="file" accept="image/*" onChange={handlePhotoChange} className="hidden" />
-                    </label>
+                    {isOwnProfileRoute && (
+                      <label className="absolute -bottom-1 -right-1 w-9 h-9 bg-blue-600 rounded-full flex items-center justify-center cursor-pointer hover:bg-blue-700 transition-colors shadow-lg border-2 border-white">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
+                          <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                          <circle cx="12" cy="13" r="4" />
+                        </svg>
+                        <input type="file" accept="image/*" onChange={handlePhotoChange} className="hidden" />
+                      </label>
+                    )}
                   </div>
 
                   <div className="flex-1">
@@ -295,16 +310,18 @@ export default function Profile() {
                       <h1 className="text-3xl font-bold text-gray-900">
                         {player.firstName} {player.lastName}
                       </h1>
-                      <button
-                        onClick={handleOpenEditModal}
-                        className="bg-blue-50 text-blue-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-100 flex items-center gap-2"
-                      >
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                        </svg>
-                        Edit Profile
-                      </button>
+                      {isOwnProfileRoute && (
+                        <button
+                          onClick={handleOpenEditModal}
+                          className="bg-blue-50 text-blue-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-100 flex items-center gap-2"
+                        >
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                          </svg>
+                          Edit Profile
+                        </button>
+                      )}
                     </div>
 
                     <div className="flex flex-wrap gap-2 mb-4">
@@ -341,7 +358,7 @@ export default function Profile() {
                   </div>
                 </div>
 
-                {photoFile && (
+                {photoFile && isOwnProfileRoute && (
                   <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                     <div className="flex items-center justify-between gap-3">
                       <span className="text-sm font-medium text-blue-900">New photo selected</span>
@@ -521,7 +538,11 @@ export default function Profile() {
                       ))}
                     </div>
                   ) : (
-                    <p className="text-gray-500">You have not joined any clubs yet.</p>
+                    <p className="text-gray-500">
+                      {isOwnProfileRoute
+                        ? "You have not joined any clubs yet."
+                        : "This player hasn't joined any clubs yet."}
+                    </p>
                   )}
                 </div>
               )}
@@ -579,7 +600,7 @@ export default function Profile() {
         </main>
       </div>
 
-      {showEditModal && (
+      {showEditModal && isOwnProfileRoute && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
             <div className="flex items-center justify-between mb-6">
