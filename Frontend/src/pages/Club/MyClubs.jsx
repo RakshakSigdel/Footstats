@@ -51,14 +51,19 @@ export default function MyClubs() {
   }, [myClubs, searchQuery]);
 
   const filteredBrowseClubs = useMemo(() => {
-    if (!searchQuery.trim()) return browseClubs;
+    const myClubIds = new Set((myClubs || []).map((club) => Number(club.clubId)));
+    const joinableClubs = (browseClubs || []).filter(
+      (club) => !myClubIds.has(Number(club.clubId))
+    );
+
+    if (!searchQuery.trim()) return joinableClubs;
     const query = searchQuery.toLowerCase();
-    return browseClubs.filter(club => 
+    return joinableClubs.filter(club => 
       club.name?.toLowerCase().includes(query) ||
       club.location?.toLowerCase().includes(query) ||
       club.description?.toLowerCase().includes(query)
     );
-  }, [browseClubs, searchQuery]);
+  }, [browseClubs, myClubs, searchQuery]);
 
   const handleCreateClub = async (formData, logoFile) => {
     try {
