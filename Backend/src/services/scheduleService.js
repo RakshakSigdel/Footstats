@@ -4,17 +4,46 @@ const prisma = new PrismaClient();
 class ScheduleService {
   //Create a new Schedule
   static async createSchedule(data, UserId) {
+    const teamOneId = Number(data.teamOneId);
+    const teamTwoId = Number(data.teamTwoId);
+    const tournamentId = data.createdFromTournament
+      ? Number(data.createdFromTournament)
+      : null;
+
+    if (teamOneId === teamTwoId) {
+      throw new Error("A team cannot play against itself");
+    }
+
+    if (tournamentId) {
+      const accepted = await prisma.tournamentRegistration.findMany({
+        where: {
+          tournamentId,
+          status: "ACCEPTED",
+          clubId: { in: [teamOneId, teamTwoId] },
+        },
+        select: { clubId: true },
+      });
+
+      const acceptedIds = new Set(accepted.map((entry) => entry.clubId));
+
+      if (!acceptedIds.has(teamOneId) || !acceptedIds.has(teamTwoId)) {
+        throw new Error(
+          "Both clubs must be approved tournament participants before scheduling",
+        );
+      }
+    }
+
     const newSchedule = await prisma.schedule.create({
       data: {
-        teamOneId: data.teamOneId,
-        teamTwoId: data.teamTwoId,
+        teamOneId,
+        teamTwoId,
         scheduleStatus: data.scheduleStatus || "UPCOMING",
         date: new Date(data.date),
         scheduleType: data.scheduleType,
         location: data.location,
         matchSize: data.matchSize ? Number(data.matchSize) : 11,
         createdFromClub: data.createdFromClub || null,
-        createdFromTournament: data.createdFromTournament || null,
+        createdFromTournament: tournamentId,
         createdFromUser: UserId,
       },
       include: {
