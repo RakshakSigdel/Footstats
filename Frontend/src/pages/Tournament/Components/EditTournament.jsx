@@ -5,7 +5,7 @@ const EditTournament = ({ isOpen, onClose, onEditTournament, tournamentData }) =
     tournamentName: '',
     description: '',
     location: '',
-    format: 'Knockout',
+    format: 'KNOCKOUT',
     startDate: '',
     endDate: '',
     prizePool: '',
@@ -100,10 +100,8 @@ const EditTournament = ({ isOpen, onClose, onEditTournament, tournamentData }) =
                 onChange={handleInputChange}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white cursor-pointer"
               >
-                <option value="Knockout">Knockout</option>
-                <option value="Round Robin">Round Robin</option>
-                <option value="Group Stage">Group Stage</option>
-                <option value="Swiss">Swiss</option>
+                <option value="KNOCKOUT">Knockout</option>
+                <option value="LEAGUE">League / Round Robin</option>
               </select>
             </div>
           </div>

@@ -50,8 +50,8 @@ export default function Tournaments() {
         startDate: formData.startDate ? new Date(formData.startDate).toISOString() : new Date().toISOString(),
         endDate: formData.endDate ? new Date(formData.endDate).toISOString() : new Date().toISOString(),
         entryFee: entryFeeNum,
-        format: formData.format || "Knockout",
-        status: "Upcoming",
+        format: formData.format || "KNOCKOUT",
+        status: "UPCOMING",
       });
       setIsCreateTournamentOpen(false);
       const my = await getMyTournaments();
@@ -193,7 +193,7 @@ export default function Tournaments() {
               <option value="all">All Status</option>
               <option value="upcoming">Upcoming</option>
               <option value="ongoing">Ongoing</option>
-              <option value="completed">Completed</option>
+              <option value="finished">Finished</option>
             </select>
           </div>
 
@@ -225,21 +225,19 @@ export default function Tournaments() {
 
           {activeTab === "my" ? (
             <div className="space-y-4">
-              {myTournaments.length === 0 && !loading && (
+              {tournaments.length === 0 && !loading && (
                 <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-100 text-center text-gray-500">
-                  You have not hosted any tournaments yet.
+                  No tournaments found for the selected filters.
                 </div>
               )}
-              {myTournaments.map((tournament) => (
+              {tournaments.map((tournament) => (
                 <div key={tournament.tournamentId} className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow">
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-4">
                         <h2 className="text-2xl font-bold text-gray-900">{tournament.name}</h2>
-                        <span className={`px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap ${
-                          tournament.status === "Active" ? "bg-slate-900 text-white" : "bg-slate-600 text-white"
-                        }`}>
-                          {tournament.status ?? "Upcoming"}
+                        <span className="px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap bg-slate-900 text-white">
+                          {tournament.status ?? "UPCOMING"}
                         </span>
                       </div>
                       <div className="flex items-center gap-8 flex-wrap">
@@ -272,22 +270,30 @@ export default function Tournaments() {
                         </div>
                       </div>
                     </div>
-                    <button
-                      onClick={() => navigate(`/tournament/${tournament.tournamentId}`)}
-                      className="bg-slate-900 text-white px-6 py-2 rounded-lg font-medium hover:bg-slate-800 transition-colors whitespace-nowrap ml-6"
-                    >
-                      View Details
-                    </button>
+                    <div className="ml-6 flex gap-2">
+                      <button
+                        onClick={() => openEditTournament(tournament)}
+                        className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => navigate(`/tournament/${tournament.tournamentId}`)}
+                        className="bg-slate-900 text-white px-6 py-2 rounded-lg font-medium hover:bg-slate-800 transition-colors whitespace-nowrap"
+                      >
+                        View Details
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {browseTournaments.length === 0 && !loading && (
+              {tournaments.length === 0 && !loading && (
                 <div className="col-span-full text-center py-8 text-gray-500">No tournaments to browse.</div>
               )}
-              {browseTournaments.map((tournament) => (
+              {tournaments.map((tournament) => (
                 <div key={tournament.tournamentId} className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow flex flex-col">
                   <h2 className="text-xl font-bold text-gray-900 mb-3">{tournament.name}</h2>
                   <div className="mb-4">
@@ -342,6 +348,7 @@ export default function Tournaments() {
       />
 
       <EditTournament
+        key={selectedTournamentData?.id || "new-edit"}
         isOpen={isEditTournamentOpen}
         onClose={() => setIsEditTournamentOpen(false)}
         onEditTournament={handleEditTournament}

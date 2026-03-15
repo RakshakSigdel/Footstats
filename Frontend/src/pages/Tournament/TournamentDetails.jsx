@@ -1,153 +1,161 @@
-import React, { useState, useEffect, useMemo } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
-import Sidebar from '../../components/Global/Sidebar'
-import Topbar from '../../components/Global/Topbar'
-import EditTournament from './Components/EditTournament'
-import { getTournamentById, updateTournament } from '../../services/api.tournaments'
-import { getTournamentSchedules } from '../../services/api.schedules'
-import { getAllClubs } from '../../services/api.clubs'
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import Sidebar from "../../components/Global/Sidebar";
+import Topbar from "../../components/Global/Topbar";
+import EditTournament from "./Components/EditTournament";
+import {
+  getTournamentById,
+  updateTournament,
+  joinTournament,
+  getTournamentRegistrations,
+  reviewTournamentRegistration,
+  updateTournamentStatus,
+} from "../../services/api.tournaments";
+import { getAdminClubs } from "../../services/api.clubs";
+import { createSchedule } from "../../services/api.schedules";
+
+const STATUS_OPTIONS = ["UPCOMING", "ONGOING", "FINISHED", "CANCELLED"];
 
 export default function TournamentDetails() {
-  const { tournamentId } = useParams()
-  const navigate = useNavigate()
-  const [tournament, setTournament] = useState(null)
-  const [schedules, setSchedules] = useState([])
-  const [clubsMap, setClubsMap] = useState({})
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-  const [isEditTournamentOpen, setIsEditTournamentOpen] = useState(false)
-  const [activeTab, setActiveTab] = useState('overview')
+  const { tournamentId } = useParams();
+  const navigate = useNavigate();
+
+  const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
+
+  const [tournament, setTournament] = useState(null);
+  const [adminClubs, setAdminClubs] = useState([]);
+  const [registrations, setRegistrations] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
+  const [activeTab, setActiveTab] = useState("overview");
+  const [isEditTournamentOpen, setIsEditTournamentOpen] = useState(false);
+
+  const [joinForm, setJoinForm] = useState({
+    clubId: "",
+    notes: "",
+    paymentReference: "",
+  });
+  const [joinLoading, setJoinLoading] = useState(false);
+
+  const [statusForm, setStatusForm] = useState({
+    status: "UPCOMING",
+    winnerClubId: "",
+    runnerUpClubId: "",
+  });
+  const [statusLoading, setStatusLoading] = useState(false);
+
+  const [scheduleForm, setScheduleForm] = useState({
+    teamOneId: "",
+    teamTwoId: "",
+    date: "",
+    location: "",
+    scheduleType: "TOURNAMENT_MATCH",
+    matchSize: 11,
+  });
+  const [scheduleLoading, setScheduleLoading] = useState(false);
+
+  const loadTournament = async () => {
+    if (!tournamentId) return;
+
+    const [tournamentDetails, clubs] = await Promise.all([
+      getTournamentById(tournamentId),
+      getAdminClubs().catch(() => []),
+    ]);
+
+    setTournament(tournamentDetails);
+    setAdminClubs(Array.isArray(clubs) ? clubs : []);
+
+    const owner = tournamentDetails?.createdBy === currentUser?.id;
+    const adminIds = Array.isArray(tournamentDetails?.admins)
+      ? tournamentDetails.admins.map((a) => a.userId)
+      : [];
+    const admin = owner || adminIds.includes(currentUser?.id);
+
+    const regs = admin
+      ? await getTournamentRegistrations(tournamentId).catch(() => tournamentDetails?.registrations || [])
+      : tournamentDetails?.registrations || [];
+    setRegistrations(Array.isArray(regs) ? regs : []);
+
+    setStatusForm({
+      status: tournamentDetails?.status || "UPCOMING",
+      winnerClubId: tournamentDetails?.winnerClubId ? String(tournamentDetails.winnerClubId) : "",
+      runnerUpClubId: tournamentDetails?.runnerUpClubId ? String(tournamentDetails.runnerUpClubId) : "",
+    });
+  };
 
   useEffect(() => {
-    if (!tournamentId) return
     const load = async () => {
-      setLoading(true)
-      setError(null)
+      setLoading(true);
+      setError(null);
       try {
-        const [t, scheds, clubs] = await Promise.all([
-          getTournamentById(tournamentId),
-          getTournamentSchedules(tournamentId).catch(() => []),
-          getAllClubs().catch(() => []),
-        ])
-        setTournament(t)
-        setSchedules(Array.isArray(scheds) ? scheds : [])
-        const map = {}
-        ;(Array.isArray(clubs) ? clubs : []).forEach((c) => { if (c?.clubId) map[c.clubId] = c.name })
-        setClubsMap(map)
+        await loadTournament();
       } catch (err) {
-        setError(err?.message || 'Failed to load tournament')
-        throw err
+        setError(err?.message || "Failed to load tournament");
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
+    };
+    load();
+  }, [tournamentId]);
+
+  const refreshRegistrations = async () => {
+    if (!tournamentId) return;
+    try {
+      const regs = await getTournamentRegistrations(tournamentId);
+      setRegistrations(Array.isArray(regs) ? regs : []);
+    } catch {
+      // Keep current state if request is forbidden for non-admin users.
     }
-    load()
-  }, [tournamentId])
+  };
 
-  // Calculate standings from schedules
-  const standings = useMemo(() => {
-    const teamStats = {}
-    
-    schedules.forEach(s => {
-      // Initialize teams if needed
-      if (s.teamOneId && !teamStats[s.teamOneId]) {
-        teamStats[s.teamOneId] = { 
-          clubId: s.teamOneId, 
-          name: clubsMap[s.teamOneId] || `Team ${s.teamOneId}`,
-          played: 0, wins: 0, draws: 0, losses: 0, 
-          goalsFor: 0, goalsAgainst: 0, points: 0 
-        }
-      }
-      if (s.teamTwoId && !teamStats[s.teamTwoId]) {
-        teamStats[s.teamTwoId] = { 
-          clubId: s.teamTwoId, 
-          name: clubsMap[s.teamTwoId] || `Team ${s.teamTwoId}`,
-          played: 0, wins: 0, draws: 0, losses: 0, 
-          goalsFor: 0, goalsAgainst: 0, points: 0 
-        }
-      }
+  const tournamentAdminIds = useMemo(
+    () => (Array.isArray(tournament?.admins) ? tournament.admins.map((a) => a.userId) : []),
+    [tournament],
+  );
 
-      // Only count completed matches (status COMPLETED or has goals data)
-      if (s.status !== 'COMPLETED' && (s.teamOneGoals == null || s.teamTwoGoals == null)) return
-      
-      const t1Goals = s.teamOneGoals ?? 0
-      const t2Goals = s.teamTwoGoals ?? 0
-      
-      if (teamStats[s.teamOneId]) {
-        teamStats[s.teamOneId].played++
-        teamStats[s.teamOneId].goalsFor += t1Goals
-        teamStats[s.teamOneId].goalsAgainst += t2Goals
-        if (t1Goals > t2Goals) {
-          teamStats[s.teamOneId].wins++
-          teamStats[s.teamOneId].points += 3
-        } else if (t1Goals === t2Goals) {
-          teamStats[s.teamOneId].draws++
-          teamStats[s.teamOneId].points += 1
-        } else {
-          teamStats[s.teamOneId].losses++
-        }
-      }
-      
-      if (teamStats[s.teamTwoId]) {
-        teamStats[s.teamTwoId].played++
-        teamStats[s.teamTwoId].goalsFor += t2Goals
-        teamStats[s.teamTwoId].goalsAgainst += t1Goals
-        if (t2Goals > t1Goals) {
-          teamStats[s.teamTwoId].wins++
-          teamStats[s.teamTwoId].points += 3
-        } else if (t1Goals === t2Goals) {
-          teamStats[s.teamTwoId].draws++
-          teamStats[s.teamTwoId].points += 1
-        } else {
-          teamStats[s.teamTwoId].losses++
-        }
-      }
-    })
-    
-    return Object.values(teamStats).sort((a, b) => {
-      if (b.points !== a.points) return b.points - a.points
-      const gdA = a.goalsFor - a.goalsAgainst
-      const gdB = b.goalsFor - b.goalsAgainst
-      if (gdB !== gdA) return gdB - gdA
-      return b.goalsFor - a.goalsFor
-    })
-  }, [schedules, clubsMap])
+  const isTournamentOwner = tournament?.createdBy === currentUser?.id;
+  const isTournamentAdmin = isTournamentOwner || tournamentAdminIds.includes(currentUser?.id);
 
-  // Organize bracket rounds for knockout tournaments
-  const bracketRounds = useMemo(() => {
-    if (tournament?.format !== 'Knockout') return []
-    
-    // Group by round/stage if available, otherwise by date
-    const roundMap = {}
-    const schedulesWithRound = schedules.map((s, idx) => ({
-      ...s,
-      round: s.round || s.stage || `Match ${idx + 1}`
-    }))
-    
-    schedulesWithRound.forEach(s => {
-      const round = s.round
-      if (!roundMap[round]) roundMap[round] = []
-      roundMap[round].push(s)
-    })
-    
-    // Try to sort rounds logically
-    const roundOrder = ['Final', 'Semi-Final', 'Semi-Finals', 'Quarter-Final', 'Quarter-Finals', 'Round of 16', 'Round of 32']
-    const sortedRounds = Object.entries(roundMap).sort((a, b) => {
-      const aIdx = roundOrder.findIndex(r => a[0].toLowerCase().includes(r.toLowerCase()))
-      const bIdx = roundOrder.findIndex(r => b[0].toLowerCase().includes(r.toLowerCase()))
-      if (aIdx === -1 && bIdx === -1) return a[0].localeCompare(b[0])
-      if (aIdx === -1) return 1
-      if (bIdx === -1) return -1
-      return bIdx - aIdx // Reverse so Final is last
-    })
-    
-    return sortedRounds.map(([name, matches]) => ({ name, matches }))
-  }, [schedules, tournament])
+  const acceptedRegistrations = useMemo(
+    () => registrations.filter((r) => r.status === "ACCEPTED"),
+    [registrations],
+  );
+  const pendingRegistrations = useMemo(
+    () => registrations.filter((r) => r.status === "PENDING"),
+    [registrations],
+  );
+
+  const joinedClubIds = useMemo(
+    () => new Set(acceptedRegistrations.map((r) => r.clubId)),
+    [acceptedRegistrations],
+  );
+
+  const canSubmitJoinRequest = adminClubs.some((club) => !joinedClubIds.has(club.clubId));
+
+  const tournamentSchedules = useMemo(
+    () => (Array.isArray(tournament?.schedules) ? tournament.schedules : []),
+    [tournament],
+  );
+
+  const topPlayers = useMemo(
+    () => (Array.isArray(tournament?.topPlayers) ? tournament.topPlayers : []),
+    [tournament],
+  );
+
+  const topClubs = useMemo(
+    () => (Array.isArray(tournament?.topClubs) ? tournament.topClubs : []),
+    [tournament],
+  );
 
   const handleEditTournament = async (formData) => {
-    if (!tournamentId) return
+    if (!tournamentId) return;
+
     try {
-      const entryFeeNum = formData.entryFee ? parseInt(String(formData.entryFee).replace(/\D/g, ''), 10) || 0 : 0
+      const entryFeeNum = formData.entryFee
+        ? parseInt(String(formData.entryFee).replace(/\D/g, ""), 10) || 0
+        : 0;
+
       await updateTournament(tournamentId, {
         name: formData.tournamentName,
         description: formData.description,
@@ -157,376 +165,600 @@ export default function TournamentDetails() {
         entryFee: entryFeeNum,
         format: formData.format,
         status: formData.status || tournament?.status,
-      })
-      const updated = await getTournamentById(tournamentId)
-      setTournament(updated)
-      setIsEditTournamentOpen(false)
+      });
+
+      await loadTournament();
+      setIsEditTournamentOpen(false);
+      setSuccess("Tournament updated successfully.");
     } catch (err) {
-      setError(err?.message || 'Failed to update tournament')
-      throw err
+      setError(err?.message || "Failed to update tournament");
     }
-  }
+  };
+
+  const handleJoinTournament = async (e) => {
+    e.preventDefault();
+    if (!tournamentId || !joinForm.clubId) return;
+
+    setJoinLoading(true);
+    setError(null);
+    setSuccess(null);
+
+    try {
+      await joinTournament(tournamentId, {
+        clubId: Number(joinForm.clubId),
+        notes: joinForm.notes,
+        paymentReference: joinForm.paymentReference,
+      });
+      setSuccess("Join request submitted. Tournament admin will review it.");
+      setJoinForm({ clubId: "", notes: "", paymentReference: "" });
+      await loadTournament();
+    } catch (err) {
+      setError(err?.error || err?.message || "Failed to submit join request");
+    } finally {
+      setJoinLoading(false);
+    }
+  };
+
+  const handleReviewRegistration = async (registrationId, action) => {
+    setError(null);
+    setSuccess(null);
+
+    try {
+      await reviewTournamentRegistration(registrationId, { action });
+      setSuccess(`Request ${action === "APPROVE" ? "approved" : "declined"}.`);
+      await refreshRegistrations();
+      await loadTournament();
+    } catch (err) {
+      setError(err?.error || err?.message || "Failed to review request");
+    }
+  };
+
+  const handleUpdateStatus = async (e) => {
+    e.preventDefault();
+    if (!tournamentId) return;
+
+    setStatusLoading(true);
+    setError(null);
+    setSuccess(null);
+
+    try {
+      await updateTournamentStatus(tournamentId, {
+        status: statusForm.status,
+        winnerClubId: statusForm.winnerClubId ? Number(statusForm.winnerClubId) : null,
+        runnerUpClubId: statusForm.runnerUpClubId ? Number(statusForm.runnerUpClubId) : null,
+      });
+
+      setSuccess("Tournament status updated.");
+      await loadTournament();
+    } catch (err) {
+      setError(err?.error || err?.message || "Failed to update status");
+    } finally {
+      setStatusLoading(false);
+    }
+  };
+
+  const handleCreateSchedule = async (e) => {
+    e.preventDefault();
+    if (!tournamentId) return;
+
+    setScheduleLoading(true);
+    setError(null);
+    setSuccess(null);
+
+    try {
+      await createSchedule({
+        teamOneId: Number(scheduleForm.teamOneId),
+        teamTwoId: Number(scheduleForm.teamTwoId),
+        date: new Date(scheduleForm.date).toISOString(),
+        location: scheduleForm.location,
+        scheduleType: scheduleForm.scheduleType,
+        matchSize: Number(scheduleForm.matchSize || 11),
+        createdFromTournament: Number(tournamentId),
+      });
+
+      setSuccess("Tournament schedule created.");
+      setScheduleForm({
+        teamOneId: "",
+        teamTwoId: "",
+        date: "",
+        location: "",
+        scheduleType: "TOURNAMENT_MATCH",
+        matchSize: 11,
+      });
+
+      await loadTournament();
+    } catch (err) {
+      setError(err?.error || err?.message || "Failed to create schedule");
+    } finally {
+      setScheduleLoading(false);
+    }
+  };
 
   const tabs = [
-    { id: 'overview', label: 'Overview', icon: '📊' },
-    { id: 'standings', label: 'Standings', icon: '🏆' },
-    { id: 'bracket', label: 'Bracket', icon: '🎯', show: tournament?.format === 'Knockout' },
-    { id: 'matches', label: 'Matches', icon: '⚽' },
-  ].filter(t => t.show !== false)
+    { id: "overview", label: "Overview" },
+    { id: "clubs", label: "Clubs" },
+    { id: "requests", label: "Join Requests", adminOnly: true },
+    { id: "schedules", label: "Schedules" },
+    { id: "topPlayers", label: "Top Players" },
+    { id: "topClubs", label: "Top Clubs" },
+  ].filter((tab) => !tab.adminOnly || isTournamentAdmin);
 
   return (
     <div className="flex min-h-screen bg-gray-50">
       <Sidebar />
-      
+
       <div className="flex-1 flex flex-col">
         <Topbar />
-        
+
         <main className="flex-1 p-6 md:p-8 overflow-auto bg-[#eef1f6]">
-          <button onClick={() => navigate(-1)} className="flex items-center justify-center w-8 h-8 text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded transition-colors mb-6">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M19 12H5M12 19l-7-7 7-7"/>
-            </svg>
+          <button
+            onClick={() => navigate(-1)}
+            className="mb-6 inline-flex items-center gap-2 text-sm font-semibold text-slate-700 hover:text-slate-900"
+          >
+            Back
           </button>
 
-          {error && <div className="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 text-red-700">{error}</div>}
-          {loading && <div className="mb-6 text-gray-500">Loading tournament...</div>}
-          {!tournament && !loading && <div className="mb-6 text-gray-500">Tournament not found.</div>}
+          {error && (
+            <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+              {error}
+            </div>
+          )}
+          {success && (
+            <div className="mb-4 rounded-xl border border-green-200 bg-green-50 p-4 text-sm text-green-700">
+              {success}
+            </div>
+          )}
+
+          {loading && <div className="text-gray-500">Loading tournament...</div>}
+          {!loading && !tournament && <div className="text-gray-500">Tournament not found.</div>}
 
           {tournament && (
-          <>
-          <div className="flex items-start justify-between mb-6">
-            <div className="flex items-start gap-4">
-              <div>
-                <div className="flex items-center gap-3 mb-2">
+            <>
+              <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
+                <div>
                   <h1 className="text-3xl font-bold text-gray-900">{tournament.name}</h1>
-                  <span className="bg-slate-900 text-white px-3 py-1 rounded-full text-xs font-bold">{tournament.status ?? 'Upcoming'}</span>
+                  <p className="mt-2 max-w-3xl text-sm text-gray-600">{tournament.description || "No description."}</p>
+                  <div className="mt-3 flex flex-wrap gap-2 text-xs font-semibold uppercase tracking-wide text-gray-600">
+                    <span className="rounded-full bg-white px-3 py-1 border border-gray-200">{tournament.status}</span>
+                    <span className="rounded-full bg-white px-3 py-1 border border-gray-200">{tournament.format}</span>
+                    <span className="rounded-full bg-white px-3 py-1 border border-gray-200">{tournament.location}</span>
+                  </div>
                 </div>
-                <p className="text-sm text-gray-600 max-w-2xl">{tournament.description ?? '—'}</p>
+
+                {isTournamentOwner && (
+                  <button
+                    onClick={() => setIsEditTournamentOpen(true)}
+                    className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800"
+                  >
+                    Edit Tournament
+                  </button>
+                )}
               </div>
-            </div>
-            <button onClick={() => setIsEditTournamentOpen(true)} className="bg-blue-50 text-blue-700 px-4 py-2 rounded-lg font-medium hover:bg-blue-100 transition-colors flex items-center gap-2">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-              </svg>
-              Edit Tournament
-            </button>
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-            <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-              <div className="text-sm text-gray-600 mb-2">Schedules</div>
-              <div className="text-2xl font-bold text-gray-900">{schedules.length}</div>
-            </div>
-            <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-              <div className="text-sm text-gray-600 mb-2">Location</div>
-              <div className="text-2xl font-bold text-gray-900">{tournament.location ?? '—'}</div>
-            </div>
-            <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-              <div className="text-sm text-gray-600 mb-2">Entry Fee</div>
-              <div className="text-2xl font-bold text-gray-900">
-                {tournament.entryFee != null && tournament.entryFee > 0 ? `NPR ${tournament.entryFee}` : 'Free'}
+              <div className="mb-6 grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="rounded-xl border border-gray-100 bg-white p-4">
+                  <div className="text-xs text-gray-500">Joined Clubs</div>
+                  <div className="mt-1 text-2xl font-bold text-gray-900">{acceptedRegistrations.length}</div>
+                </div>
+                <div className="rounded-xl border border-gray-100 bg-white p-4">
+                  <div className="text-xs text-gray-500">Pending Requests</div>
+                  <div className="mt-1 text-2xl font-bold text-gray-900">{pendingRegistrations.length}</div>
+                </div>
+                <div className="rounded-xl border border-gray-100 bg-white p-4">
+                  <div className="text-xs text-gray-500">Schedules</div>
+                  <div className="mt-1 text-2xl font-bold text-gray-900">{tournamentSchedules.length}</div>
+                </div>
+                <div className="rounded-xl border border-gray-100 bg-white p-4">
+                  <div className="text-xs text-gray-500">Entry Fee</div>
+                  <div className="mt-1 text-2xl font-bold text-gray-900">
+                    {Number(tournament.entryFee || 0) > 0 ? `NPR ${tournament.entryFee}` : "Free"}
+                  </div>
+                </div>
               </div>
-            </div>
-            <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-              <div className="text-sm text-gray-600 mb-2">Format</div>
-              <div className="text-2xl font-bold text-gray-900">{tournament.format ?? '—'}</div>
-            </div>
-          </div>
 
-          {/* Tabs */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 mb-6 overflow-hidden">
-            <div className="flex items-center border-b border-gray-200">
-              {tabs.map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`flex-1 px-6 py-4 text-sm font-semibold transition-all relative flex items-center justify-center gap-2 ${
-                    activeTab === tab.id ? "text-blue-600 bg-blue-50" : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
-                  }`}
-                >
-                  <span className="text-lg">{tab.icon}</span>
-                  <span>{tab.label}</span>
-                  {activeTab === tab.id && <div className="absolute bottom-0 left-0 right-0 h-1 bg-blue-600"></div>}
-                </button>
-              ))}
-            </div>
-          </div>
+              <div className="mb-6 flex flex-wrap gap-2 rounded-xl border border-gray-200 bg-white p-2">
+                {tabs.map((tab) => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`rounded-lg px-4 py-2 text-sm font-semibold transition-colors ${
+                      activeTab === tab.id
+                        ? "bg-slate-900 text-white"
+                        : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
 
-          {/* Overview Tab */}
-          {activeTab === 'overview' && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2 bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-              <h2 className="text-xl font-bold text-gray-900 mb-6">Tournament Details</h2>
-              <div className="grid grid-cols-2 gap-8">
+              {activeTab === "overview" && (
                 <div className="space-y-6">
-                  <div>
-                    <p className="text-sm text-gray-600 mb-1">Format</p>
-                    <p className="text-lg font-medium text-gray-900">{tournament.format ?? '—'}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600 mb-1">Start Date</p>
-                    <p className="text-lg font-medium text-gray-900">
-                      {tournament.startDate ? new Date(tournament.startDate).toLocaleDateString() : '—'}
+                  <section className="rounded-xl border border-gray-100 bg-white p-6">
+                    <h2 className="text-lg font-bold text-gray-900">Register Your Club</h2>
+                    <p className="mt-1 text-sm text-gray-600">
+                      Any club where you are a creator/admin can request to join this tournament.
                     </p>
-                  </div>
-                </div>
-                <div className="space-y-6">
-                  <div>
-                    <p className="text-sm text-gray-600 mb-1">Status</p>
-                    <p className="text-lg font-medium text-gray-900">{tournament.status ?? '—'}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600 mb-1">End Date</p>
-                    <p className="text-lg font-medium text-gray-900">
-                      {tournament.endDate ? new Date(tournament.endDate).toLocaleDateString() : '—'}
+                    <p className="mt-2 rounded-lg bg-amber-50 border border-amber-200 p-3 text-sm text-amber-800">
+                      Payment is not integrated yet. Use payment reference field as placeholder for now.
                     </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-              <h2 className="text-xl font-bold text-gray-900 mb-6">Quick Stats</h2>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between py-3 border-b border-gray-100">
-                  <span className="text-gray-600">Teams</span>
-                  <span className="text-lg font-bold text-gray-900">{standings.length}</span>
-                </div>
-                <div className="flex items-center justify-between py-3 border-b border-gray-100">
-                  <span className="text-gray-600">Total Matches</span>
-                  <span className="text-lg font-bold text-gray-900">{schedules.length}</span>
-                </div>
-                <div className="flex items-center justify-between py-3">
-                  <span className="text-gray-600">Completed</span>
-                  <span className="text-lg font-bold text-gray-900">
-                    {schedules.filter(s => s.status === 'COMPLETED' || (s.teamOneGoals != null && s.teamTwoGoals != null)).length}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-          )}
 
-          {/* Standings Tab */}
-          {activeTab === 'standings' && (
-          <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-            <h2 className="text-xl font-bold text-gray-900 mb-6">League Standings</h2>
-            {standings.length === 0 ? (
-              <p className="text-gray-500">No teams in this tournament yet.</p>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-gray-200">
-                      <th className="text-left py-3 px-2 text-sm font-semibold text-gray-600">#</th>
-                      <th className="text-left py-3 px-2 text-sm font-semibold text-gray-600">Team</th>
-                      <th className="text-center py-3 px-2 text-sm font-semibold text-gray-600">P</th>
-                      <th className="text-center py-3 px-2 text-sm font-semibold text-gray-600">W</th>
-                      <th className="text-center py-3 px-2 text-sm font-semibold text-gray-600">D</th>
-                      <th className="text-center py-3 px-2 text-sm font-semibold text-gray-600">L</th>
-                      <th className="text-center py-3 px-2 text-sm font-semibold text-gray-600">GF</th>
-                      <th className="text-center py-3 px-2 text-sm font-semibold text-gray-600">GA</th>
-                      <th className="text-center py-3 px-2 text-sm font-semibold text-gray-600">GD</th>
-                      <th className="text-center py-3 px-2 text-sm font-semibold text-gray-600">Pts</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {standings.map((team, idx) => (
-                      <tr key={team.clubId} className={`border-b border-gray-100 hover:bg-gray-50 ${idx < 4 ? 'bg-green-50/50' : ''}`}>
-                        <td className="py-4 px-2">
-                          <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
-                            idx === 0 ? 'bg-yellow-400 text-yellow-900' :
-                            idx === 1 ? 'bg-gray-300 text-gray-700' :
-                            idx === 2 ? 'bg-amber-600 text-white' :
-                            'bg-gray-100 text-gray-600'
-                          }`}>
-                            {idx + 1}
-                          </span>
-                        </td>
-                        <td className="py-4 px-2">
-                          <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white text-xs font-bold">
-                              {team.name?.charAt(0) || '?'}
-                            </div>
-                            <span className="font-medium text-gray-900">{team.name}</span>
+                    {canSubmitJoinRequest ? (
+                      <form className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4" onSubmit={handleJoinTournament}>
+                        <select
+                          required
+                          value={joinForm.clubId}
+                          onChange={(e) => setJoinForm((p) => ({ ...p, clubId: e.target.value }))}
+                          className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                        >
+                          <option value="">Select your club</option>
+                          {adminClubs
+                            .filter((club) => !joinedClubIds.has(club.clubId))
+                            .map((club) => (
+                              <option key={club.clubId} value={club.clubId}>
+                                {club.name}
+                              </option>
+                            ))}
+                        </select>
+                        <input
+                          type="text"
+                          value={joinForm.paymentReference}
+                          onChange={(e) => setJoinForm((p) => ({ ...p, paymentReference: e.target.value }))}
+                          placeholder="Payment reference (placeholder)"
+                          className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                        />
+                        <textarea
+                          value={joinForm.notes}
+                          onChange={(e) => setJoinForm((p) => ({ ...p, notes: e.target.value }))}
+                          placeholder="Message to tournament admin"
+                          className="md:col-span-2 rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                          rows={3}
+                        />
+                        <button
+                          type="submit"
+                          disabled={joinLoading}
+                          className="md:col-span-2 rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-60"
+                        >
+                          {joinLoading ? "Submitting..." : "Submit Join Request"}
+                        </button>
+                      </form>
+                    ) : (
+                      <p className="mt-4 text-sm text-gray-600">
+                        You do not have any eligible club for this tournament or all your admin clubs are already enrolled/requested.
+                      </p>
+                    )}
+                  </section>
+
+                  {isTournamentAdmin && (
+                    <section className="rounded-xl border border-gray-100 bg-white p-6">
+                      <h2 className="text-lg font-bold text-gray-900">Tournament Controls</h2>
+                      <p className="mt-1 text-sm text-gray-600">
+                        Manage tournament status and winner details.
+                      </p>
+
+                      <form className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4" onSubmit={handleUpdateStatus}>
+                        <select
+                          value={statusForm.status}
+                          onChange={(e) => setStatusForm((p) => ({ ...p, status: e.target.value }))}
+                          className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                        >
+                          {STATUS_OPTIONS.map((status) => (
+                            <option key={status} value={status}>
+                              {status}
+                            </option>
+                          ))}
+                        </select>
+
+                        <select
+                          value={statusForm.winnerClubId}
+                          onChange={(e) => setStatusForm((p) => ({ ...p, winnerClubId: e.target.value }))}
+                          className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                        >
+                          <option value="">Winner club (optional)</option>
+                          {acceptedRegistrations.map((r) => (
+                            <option key={r.registrationId} value={r.clubId}>
+                              {r.club?.name}
+                            </option>
+                          ))}
+                        </select>
+
+                        <select
+                          value={statusForm.runnerUpClubId}
+                          onChange={(e) => setStatusForm((p) => ({ ...p, runnerUpClubId: e.target.value }))}
+                          className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                        >
+                          <option value="">Runner-up club (optional)</option>
+                          {acceptedRegistrations.map((r) => (
+                            <option key={`${r.registrationId}-runner`} value={r.clubId}>
+                              {r.club?.name}
+                            </option>
+                          ))}
+                        </select>
+
+                        <button
+                          type="submit"
+                          disabled={statusLoading}
+                          className="md:col-span-3 rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-60"
+                        >
+                          {statusLoading ? "Updating..." : "Update Tournament Status"}
+                        </button>
+                      </form>
+                    </section>
+                  )}
+                </div>
+              )}
+
+              {activeTab === "clubs" && (
+                <section className="rounded-xl border border-gray-100 bg-white p-6">
+                  <h2 className="text-lg font-bold text-gray-900">Joined Clubs</h2>
+                  {acceptedRegistrations.length === 0 ? (
+                    <p className="mt-3 text-sm text-gray-600">No clubs have been approved yet.</p>
+                  ) : (
+                    <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {acceptedRegistrations.map((r) => (
+                        <div key={r.registrationId} className="rounded-lg border border-gray-200 p-4">
+                          <div className="font-semibold text-gray-900">{r.club?.name || `Club ${r.clubId}`}</div>
+                          <div className="mt-1 text-xs text-gray-500">Payment: {r.paymentStatus}</div>
+                          {r.notes && <p className="mt-2 text-xs text-gray-600">{r.notes}</p>}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </section>
+              )}
+
+              {activeTab === "requests" && isTournamentAdmin && (
+                <section className="rounded-xl border border-gray-100 bg-white p-6">
+                  <h2 className="text-lg font-bold text-gray-900">Join Requests</h2>
+                  <p className="mt-1 text-sm text-gray-600">Review club requests and approve or decline.</p>
+
+                  {pendingRegistrations.length === 0 ? (
+                    <p className="mt-4 text-sm text-gray-600">No pending requests.</p>
+                  ) : (
+                    <div className="mt-4 space-y-3">
+                      {pendingRegistrations.map((registration) => (
+                        <div
+                          key={registration.registrationId}
+                          className="rounded-lg border border-gray-200 p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3"
+                        >
+                          <div>
+                            <div className="font-semibold text-gray-900">{registration.club?.name || `Club ${registration.clubId}`}</div>
+                            <div className="text-xs text-gray-500">Payment status: {registration.paymentStatus}</div>
+                            {registration.notes && (
+                              <p className="mt-1 text-xs text-gray-600">{registration.notes}</p>
+                            )}
                           </div>
-                        </td>
-                        <td className="py-4 px-2 text-center text-gray-700">{team.played}</td>
-                        <td className="py-4 px-2 text-center text-green-600 font-medium">{team.wins}</td>
-                        <td className="py-4 px-2 text-center text-gray-600">{team.draws}</td>
-                        <td className="py-4 px-2 text-center text-red-600 font-medium">{team.losses}</td>
-                        <td className="py-4 px-2 text-center text-gray-700">{team.goalsFor}</td>
-                        <td className="py-4 px-2 text-center text-gray-700">{team.goalsAgainst}</td>
-                        <td className="py-4 px-2 text-center font-medium">
-                          <span className={team.goalsFor - team.goalsAgainst >= 0 ? 'text-green-600' : 'text-red-600'}>
-                            {team.goalsFor - team.goalsAgainst >= 0 ? '+' : ''}{team.goalsFor - team.goalsAgainst}
-                          </span>
-                        </td>
-                        <td className="py-4 px-2 text-center font-bold text-gray-900">{team.points}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-          )}
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => handleReviewRegistration(registration.registrationId, "APPROVE")}
+                              className="rounded-lg bg-green-600 px-3 py-2 text-xs font-semibold text-white hover:bg-green-700"
+                            >
+                              Approve
+                            </button>
+                            <button
+                              onClick={() => handleReviewRegistration(registration.registrationId, "DECLINE")}
+                              className="rounded-lg bg-red-600 px-3 py-2 text-xs font-semibold text-white hover:bg-red-700"
+                            >
+                              Decline
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </section>
+              )}
 
-          {/* Bracket Tab (Knockout only) */}
-          {activeTab === 'bracket' && tournament?.format === 'Knockout' && (
-          <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-            <h2 className="text-xl font-bold text-gray-900 mb-6">Tournament Bracket</h2>
-            {bracketRounds.length === 0 ? (
-              <p className="text-gray-500">No bracket matches scheduled yet.</p>
-            ) : (
-              <div className="flex gap-8 overflow-x-auto pb-4">
-                {bracketRounds.map((round, roundIdx) => (
-                  <div key={round.name} className="flex-shrink-0 min-w-[280px]">
-                    <h3 className="text-sm font-semibold text-gray-600 mb-4 text-center uppercase tracking-wide">
-                      {round.name}
-                    </h3>
-                    <div className="space-y-4">
-                      {round.matches.map((match) => {
-                        const isCompleted = match.status === 'COMPLETED' || (match.teamOneGoals != null && match.teamTwoGoals != null)
-                        const teamOneName = clubsMap[match.teamOneId] || `Team ${match.teamOneId}`
-                        const teamTwoName = clubsMap[match.teamTwoId] || `Team ${match.teamTwoId}`
-                        const t1Goals = match.teamOneGoals ?? '-'
-                        const t2Goals = match.teamTwoGoals ?? '-'
-                        const t1Won = isCompleted && match.teamOneGoals > match.teamTwoGoals
-                        const t2Won = isCompleted && match.teamTwoGoals > match.teamOneGoals
-                        
-                        return (
-                          <div 
-                            key={match.scheduleId} 
-                            className="border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
-                            onClick={() => navigate(`/schedule/${match.scheduleId}`)}
+              {activeTab === "schedules" && (
+                <section className="space-y-4">
+                  {isTournamentAdmin && (
+                    <form className="rounded-xl border border-gray-100 bg-white p-6 grid grid-cols-1 md:grid-cols-2 gap-4" onSubmit={handleCreateSchedule}>
+                      <h2 className="md:col-span-2 text-lg font-bold text-gray-900">Create Tournament Schedule</h2>
+
+                      <select
+                        required
+                        value={scheduleForm.teamOneId}
+                        onChange={(e) => setScheduleForm((p) => ({ ...p, teamOneId: e.target.value }))}
+                        className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                      >
+                        <option value="">Team One</option>
+                        {acceptedRegistrations.map((r) => (
+                          <option key={r.registrationId} value={r.clubId}>
+                            {r.club?.name}
+                          </option>
+                        ))}
+                      </select>
+
+                      <select
+                        required
+                        value={scheduleForm.teamTwoId}
+                        onChange={(e) => setScheduleForm((p) => ({ ...p, teamTwoId: e.target.value }))}
+                        className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                      >
+                        <option value="">Team Two</option>
+                        {acceptedRegistrations.map((r) => (
+                          <option key={`${r.registrationId}-team-two`} value={r.clubId}>
+                            {r.club?.name}
+                          </option>
+                        ))}
+                      </select>
+
+                      <input
+                        required
+                        type="datetime-local"
+                        value={scheduleForm.date}
+                        onChange={(e) => setScheduleForm((p) => ({ ...p, date: e.target.value }))}
+                        className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                      />
+
+                      <input
+                        required
+                        type="text"
+                        value={scheduleForm.location}
+                        onChange={(e) => setScheduleForm((p) => ({ ...p, location: e.target.value }))}
+                        placeholder="Match location"
+                        className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                      />
+
+                      <input
+                        type="text"
+                        value={scheduleForm.scheduleType}
+                        onChange={(e) => setScheduleForm((p) => ({ ...p, scheduleType: e.target.value }))}
+                        className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                      />
+
+                      <input
+                        type="number"
+                        min={5}
+                        max={11}
+                        value={scheduleForm.matchSize}
+                        onChange={(e) => setScheduleForm((p) => ({ ...p, matchSize: e.target.value }))}
+                        className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                      />
+
+                      <button
+                        type="submit"
+                        disabled={scheduleLoading}
+                        className="md:col-span-2 rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-60"
+                      >
+                        {scheduleLoading ? "Creating..." : "Create Schedule"}
+                      </button>
+                    </form>
+                  )}
+
+                  <div className="rounded-xl border border-gray-100 bg-white p-6">
+                    <h2 className="text-lg font-bold text-gray-900">Tournament Matches</h2>
+                    {tournamentSchedules.length === 0 ? (
+                      <p className="mt-3 text-sm text-gray-600">No schedules created yet.</p>
+                    ) : (
+                      <div className="mt-4 space-y-3">
+                        {tournamentSchedules.map((schedule) => (
+                          <div
+                            key={schedule.scheduleId}
+                            onClick={() => navigate(`/schedule/${schedule.scheduleId}`)}
+                            className="cursor-pointer rounded-lg border border-gray-200 p-4 hover:bg-gray-50"
                           >
-                            <div className={`flex items-center justify-between p-3 ${t1Won ? 'bg-green-50' : 'bg-gray-50'} border-b border-gray-200`}>
-                              <div className="flex items-center gap-2 flex-1">
-                                <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center text-white text-xs font-bold">
-                                  {teamOneName.charAt(0)}
-                                </div>
-                                <span className={`text-sm ${t1Won ? 'font-bold text-gray-900' : 'text-gray-700'}`}>{teamOneName}</span>
+                            <div className="flex flex-wrap items-center justify-between gap-2">
+                              <div className="font-semibold text-gray-900">
+                                {schedule.teamOne?.name || `Club ${schedule.teamOneId}`} vs {schedule.teamTwo?.name || `Club ${schedule.teamTwoId}`}
                               </div>
-                              <span className={`text-lg font-bold ${t1Won ? 'text-green-600' : 'text-gray-600'}`}>{t1Goals}</span>
+                              <div className="text-xs text-gray-500">{schedule.scheduleStatus}</div>
                             </div>
-                            <div className={`flex items-center justify-between p-3 ${t2Won ? 'bg-green-50' : 'bg-white'}`}>
-                              <div className="flex items-center gap-2 flex-1">
-                                <div className="w-6 h-6 bg-purple-600 rounded-full flex items-center justify-center text-white text-xs font-bold">
-                                  {teamTwoName.charAt(0)}
-                                </div>
-                                <span className={`text-sm ${t2Won ? 'font-bold text-gray-900' : 'text-gray-700'}`}>{teamTwoName}</span>
-                              </div>
-                              <span className={`text-lg font-bold ${t2Won ? 'text-green-600' : 'text-gray-600'}`}>{t2Goals}</span>
+                            <div className="mt-1 text-xs text-gray-500">
+                              {schedule.date ? new Date(schedule.date).toLocaleString() : "TBD"} at {schedule.location}
                             </div>
-                            {!isCompleted && match.date && (
-                              <div className="px-3 py-2 bg-gray-100 text-xs text-gray-500 text-center">
-                                {new Date(match.date).toLocaleDateString()} • {new Date(match.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            {schedule.match && (
+                              <div className="mt-2 text-sm font-semibold text-slate-700">
+                                Score: {schedule.match.teamOneGoals} - {schedule.match.teamTwoGoals}
                               </div>
                             )}
                           </div>
-                        )
-                      })}
-                    </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                ))}
-              </div>
-            )}
-          </div>
-          )}
+                </section>
+              )}
 
-          {/* Matches Tab */}
-          {activeTab === 'matches' && (
-          <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-            <h2 className="text-xl font-bold text-gray-900 mb-6">All Matches</h2>
-            {schedules.length === 0 ? (
-              <p className="text-gray-500">No matches scheduled yet.</p>
-            ) : (
-              <div className="space-y-3">
-                {schedules.map((s) => {
-                  const isCompleted = s.status === 'COMPLETED' || (s.teamOneGoals != null && s.teamTwoGoals != null)
-                  return (
-                    <div 
-                      key={s.scheduleId} 
-                      onClick={() => navigate(`/schedule/${s.scheduleId}`)}
-                      className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 hover:border-gray-300 cursor-pointer transition-all"
-                    >
-                      <div className="flex items-center gap-6 flex-1">
-                        <div className="flex items-center gap-3 flex-1">
-                          <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold">
-                            {(clubsMap[s.teamOneId] || 'T1').charAt(0)}
-                          </div>
-                          <span className="font-medium text-gray-900">{clubsMap[s.teamOneId] ?? `Team ${s.teamOneId}`}</span>
-                        </div>
-                        
-                        {isCompleted ? (
-                          <div className="flex items-center gap-2 px-4">
-                            <span className={`text-2xl font-bold ${s.teamOneGoals > s.teamTwoGoals ? 'text-green-600' : 'text-gray-600'}`}>
-                              {s.teamOneGoals}
-                            </span>
-                            <span className="text-gray-400">-</span>
-                            <span className={`text-2xl font-bold ${s.teamTwoGoals > s.teamOneGoals ? 'text-green-600' : 'text-gray-600'}`}>
-                              {s.teamTwoGoals}
-                            </span>
-                          </div>
-                        ) : (
-                          <div className="px-4">
-                            <span className="text-sm font-medium text-gray-400">VS</span>
-                          </div>
-                        )}
-                        
-                        <div className="flex items-center gap-3 flex-1 justify-end">
-                          <span className="font-medium text-gray-900">{clubsMap[s.teamTwoId] ?? `Team ${s.teamTwoId}`}</span>
-                          <div className="w-10 h-10 bg-purple-600 rounded-full flex items-center justify-center text-white font-bold">
-                            {(clubsMap[s.teamTwoId] || 'T2').charAt(0)}
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-center gap-4 ml-6">
-                        <div className="text-right">
-                          <div className="text-sm text-gray-600">
-                            {s.date ? new Date(s.date).toLocaleDateString() : 'TBD'}
-                          </div>
-                          {s.location && <div className="text-xs text-gray-400">{s.location}</div>}
-                        </div>
-                        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                          isCompleted ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'
-                        }`}>
-                          {isCompleted ? 'Completed' : 'Upcoming'}
-                        </span>
-                      </div>
+              {activeTab === "topPlayers" && (
+                <section className="rounded-xl border border-gray-100 bg-white p-6">
+                  <h2 className="text-lg font-bold text-gray-900">Top Players</h2>
+                  <p className="mt-1 text-sm text-gray-600">Tournament-specific leaderboard by goals and assists.</p>
+                  {topPlayers.length === 0 ? (
+                    <p className="mt-3 text-sm text-gray-600">No player stats available yet.</p>
+                  ) : (
+                    <div className="mt-4 overflow-x-auto">
+                      <table className="w-full min-w-[520px] text-sm">
+                        <thead>
+                          <tr className="border-b border-gray-200 text-left text-xs uppercase tracking-wide text-gray-500">
+                            <th className="py-2">Player</th>
+                            <th className="py-2">Club ID</th>
+                            <th className="py-2">Goals</th>
+                            <th className="py-2">Assists</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {topPlayers.map((player) => (
+                            <tr key={`${player.userId}-${player.clubId}`} className="border-b border-gray-100">
+                              <td className="py-3 font-semibold text-gray-900">
+                                {player.firstName} {player.lastName}
+                              </td>
+                              <td className="py-3 text-gray-600">{player.clubId}</td>
+                              <td className="py-3 text-gray-900">{player.goals}</td>
+                              <td className="py-3 text-gray-900">{player.assists}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
                     </div>
-                  )
-                })}
-              </div>
-            )}
-          </div>
-          )}
-          </>
+                  )}
+                </section>
+              )}
+
+              {activeTab === "topClubs" && (
+                <section className="rounded-xl border border-gray-100 bg-white p-6">
+                  <h2 className="text-lg font-bold text-gray-900">Top Clubs</h2>
+                  <p className="mt-1 text-sm text-gray-600">Tournament table generated from completed match scores.</p>
+                  {topClubs.length === 0 ? (
+                    <p className="mt-3 text-sm text-gray-600">No club standings available yet.</p>
+                  ) : (
+                    <div className="mt-4 overflow-x-auto">
+                      <table className="w-full min-w-[700px] text-sm">
+                        <thead>
+                          <tr className="border-b border-gray-200 text-left text-xs uppercase tracking-wide text-gray-500">
+                            <th className="py-2">Club</th>
+                            <th className="py-2">P</th>
+                            <th className="py-2">W</th>
+                            <th className="py-2">D</th>
+                            <th className="py-2">L</th>
+                            <th className="py-2">GF</th>
+                            <th className="py-2">GA</th>
+                            <th className="py-2">Pts</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {topClubs.map((club) => (
+                            <tr key={club.clubId} className="border-b border-gray-100">
+                              <td className="py-3 font-semibold text-gray-900">{club.clubName}</td>
+                              <td className="py-3 text-gray-700">{club.played}</td>
+                              <td className="py-3 text-gray-700">{club.wins}</td>
+                              <td className="py-3 text-gray-700">{club.draws}</td>
+                              <td className="py-3 text-gray-700">{club.losses}</td>
+                              <td className="py-3 text-gray-700">{club.goalsFor}</td>
+                              <td className="py-3 text-gray-700">{club.goalsAgainst}</td>
+                              <td className="py-3 font-bold text-gray-900">{club.points}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </section>
+              )}
+            </>
           )}
         </main>
       </div>
 
       {tournament && (
-      <EditTournament
-        isOpen={isEditTournamentOpen}
-        onClose={() => setIsEditTournamentOpen(false)}
-        onEditTournament={handleEditTournament}
-        tournamentData={{
-          id: tournament.tournamentId,
-          tournamentName: tournament.name,
-          description: tournament.description,
-          location: tournament.location,
-          format: tournament.format,
-          startDate: tournament.startDate ? tournament.startDate.slice(0, 10) : '',
-          endDate: tournament.endDate ? tournament.endDate.slice(0, 10) : '',
-          entryFee: tournament.entryFee,
-          status: tournament.status,
-          maxTeams: tournament.maxTeams,
-        }}
-      />
+        <EditTournament
+          key={tournament.tournamentId}
+          isOpen={isEditTournamentOpen}
+          onClose={() => setIsEditTournamentOpen(false)}
+          onEditTournament={handleEditTournament}
+          tournamentData={{
+            id: tournament.tournamentId,
+            tournamentName: tournament.name,
+            description: tournament.description,
+            location: tournament.location,
+            format: tournament.format,
+            startDate: tournament.startDate ? tournament.startDate.slice(0, 10) : "",
+            endDate: tournament.endDate ? tournament.endDate.slice(0, 10) : "",
+            entryFee: tournament.entryFee,
+            status: tournament.status,
+          }}
+        />
       )}
     </div>
-  )
+  );
 }

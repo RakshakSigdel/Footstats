@@ -36,6 +36,43 @@ export const getTournamentById = async (id) => {
   }
 };
 
+export const joinTournament = async (tournamentId, body) => {
+  try {
+    const response = await api.post(`/tournaments/${tournamentId}/join`, body);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { message: "Failed to submit join request" };
+  }
+};
+
+export const getTournamentRegistrations = async (tournamentId, status) => {
+  try {
+    const query = status ? `?status=${encodeURIComponent(status)}` : "";
+    const response = await api.get(`/tournaments/${tournamentId}/registrations${query}`);
+    return response.data.registrations;
+  } catch (error) {
+    throw error.response?.data || { message: "Failed to fetch tournament registrations" };
+  }
+};
+
+export const reviewTournamentRegistration = async (registrationId, body) => {
+  try {
+    const response = await api.patch(`/tournaments/registrations/${registrationId}/review`, body);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { message: "Failed to review tournament registration" };
+  }
+};
+
+export const updateTournamentStatus = async (tournamentId, body) => {
+  try {
+    const response = await api.patch(`/tournaments/${tournamentId}/status`, body);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { message: "Failed to update tournament status" };
+  }
+};
+
 export const updateTournament = async (id, body) => {
   try {
     const response = await api.put(`/tournaments/${id}`, body);

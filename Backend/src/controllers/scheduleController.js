@@ -35,7 +35,12 @@ export const createSchedule = async (req, res) => {
       schedule 
     });
   } catch (error) {
-    res.status(500).json({ 
+    const status =
+      error.message?.includes("must") ||
+      error.message?.includes("cannot")
+        ? 400
+        : 500;
+    res.status(status).json({ 
       message: "Error creating schedule", 
       error: error.message 
     });

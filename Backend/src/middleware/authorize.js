@@ -200,4 +200,98 @@ export const authorizeRequestAction = async (req, res, next) => {
   }
 };
 
+export const authorizeTournamentAdmin = async (req, res, next) => {
+  const loggedInUserId = req.user.userId;
+  const tournamentId = parseInt(req.params.id || req.params.tournamentId);
+
+  try {
+    const tournament = await prisma.tournament.findUnique({
+      where: { tournamentId },
+      select: { tournamentId: true, createdBy: true },
+    });
+
+    if (!tournament) {
+      return res.status(404).json({ message: "Tournament not found" });
+    }
+
+    if (req.user.role === "SUPERADMIN") {
+      return next();
+    }
+
+    if (tournament.createdBy === loggedInUserId) {
+      return next();
+    }
+
+    const admin = await prisma.tournamentAdmin.findUnique({
+      where: {
+        tournamentId_userId: {
+          tournamentId,
+          userId: loggedInUserId,
+        },
+      },
+    });
+
+    if (admin) {
+      return next();
+    }
+
+    return res.status(403).json({
+      message: "Forbidden: Only tournament admins can perform this action",
+    });
+  } catch (error) {
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+export const authorizeTournamentRegistrationReview = async (req, res, next) => {
+  const registrationId = parseInt(req.params.registrationId);
+  const loggedInUserId = req.user.userId;
+
+  try {
+    const registration = await prisma.tournamentRegistration.findUnique({
+      where: { registrationId },
+      select: {
+        registrationId: true,
+        tournamentId: true,
+      },
+    });
+
+    if (!registration) {
+      return res.status(404).json({ message: "Tournament registration not found" });
+    }
+
+    if (req.user.role === "SUPERADMIN") {
+      return next();
+    }
+
+    const tournament = await prisma.tournament.findUnique({
+      where: { tournamentId: registration.tournamentId },
+      select: { createdBy: true },
+    });
+
+    if (tournament?.createdBy === loggedInUserId) {
+      return next();
+    }
+
+    const admin = await prisma.tournamentAdmin.findUnique({
+      where: {
+        tournamentId_userId: {
+          tournamentId: registration.tournamentId,
+          userId: loggedInUserId,
+        },
+      },
+    });
+
+    if (admin) {
+      return next();
+    }
+
+    return res.status(403).json({
+      message: "Forbidden: Only tournament admins can review registrations",
+    });
+  } catch (error) {
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
 
