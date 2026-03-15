@@ -105,7 +105,7 @@ class MatchEventService {
     await NotificationService.createBulkNotifications(recipients, {
       type: "MATCH_EVENT_ADDED",
       title: "Match stat updated",
-      message: `A ${data.eventType.replace("_", " ").toLowerCase()} event was recorded for your match activity.",
+      message: `A ${data.eventType.replace("_", " ").toLowerCase()} event was recorded for your match activity.`,
       link: `/schedule/${schedule.scheduleId}`,
       data: {
         matchId: Number(data.matchId),
