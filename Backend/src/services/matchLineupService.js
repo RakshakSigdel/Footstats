@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import NotificationService from "./notificationService.js";
 const prisma = new PrismaClient();
 
 class MatchLineupService {
@@ -99,6 +100,18 @@ class MatchLineupService {
       )
     );
 
+    const scheduleId = match.schedule?.scheduleId;
+    await NotificationService.createBulkNotifications(
+      createdLineups.map((entry) => entry.userId),
+      {
+        type: "LINEUP_ADDED",
+        title: "Added to match lineup",
+        message: "You were included in a lineup for an upcoming match.",
+        link: scheduleId ? `/schedule/${scheduleId}` : null,
+        data: { matchId: Number(matchId), scheduleId },
+      },
+    );
+
     return createdLineups;
   }
 
@@ -180,6 +193,15 @@ class MatchLineupService {
           },
         },
       },
+    });
+
+    const scheduleId = match.schedule?.scheduleId;
+    await NotificationService.createNotification(lineup.userId, {
+      type: "LINEUP_ADDED",
+      title: "Added to match lineup",
+      message: "You were included in a lineup for an upcoming match.",
+      link: scheduleId ? `/schedule/${scheduleId}` : null,
+      data: { matchId: Number(data.matchId), scheduleId },
     });
 
     return lineup;

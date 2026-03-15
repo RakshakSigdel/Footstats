@@ -38,12 +38,44 @@ model User {
   matchLineups     MatchLineup[]
   createdSchedules Schedule[]     @relation("CreatedByUser")
   messages    Message[]
+  notifications Notification[]
 
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@map("users")
+}
+
+model Notification {
+  notificationId Int              @id @default(autoincrement())
+  userId         Int
+  type           NotificationType
+  title          String
+  message        String
+  link           String?
+  data           Json?
+  isRead         Boolean          @default(false)
+  readAt         DateTime?
+  createdAt      DateTime         @default(now())
+
+  user User @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  @@index([userId, isRead, createdAt])
+  @@map("notifications")
+}
+
+enum NotificationType {
+  CLUB_JOIN_REQUEST
+  CLUB_JOIN_APPROVED
+  CLUB_JOIN_REJECTED
+  SCHEDULE_CREATED
+  TOURNAMENT_JOIN_REQUEST
+  TOURNAMENT_JOIN_APPROVED
+  TOURNAMENT_JOIN_REJECTED
+  LINEUP_ADDED
+  MATCH_EVENT_ADDED
+  SYSTEM
 }
 
 enum Role {

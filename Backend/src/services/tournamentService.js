@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import NotificationService from "./notificationService.js";
 
 const prisma = new PrismaClient();
 
@@ -502,6 +503,22 @@ class TournamentService {
       },
     });
 
+    const adminIds = await NotificationService.getTournamentAdminUserIds(id);
+    await NotificationService.createBulkNotifications(
+      adminIds.filter((adminId) => Number(adminId) !== Number(userId)),
+      {
+        type: "TOURNAMENT_JOIN_REQUEST",
+        title: "New tournament join request",
+        message: `${registration.club?.name || "A club"} requested to join your tournament.`,
+        link: `/tournament/${id}`,
+        data: {
+          tournamentId: id,
+          clubId,
+          registrationId: registration.registrationId,
+        },
+      },
+    );
+
     return registration;
   }
 
@@ -570,6 +587,32 @@ class TournamentService {
             name: true,
           },
         },
+      },
+    });
+
+    const clubMemberIds = await NotificationService.getClubMemberUserIds(
+      updated.club.clubId,
+      true,
+    );
+
+    await NotificationService.createBulkNotifications(clubMemberIds, {
+      type:
+        status === "ACCEPTED"
+          ? "TOURNAMENT_JOIN_APPROVED"
+          : "TOURNAMENT_JOIN_REJECTED",
+      title:
+        status === "ACCEPTED"
+          ? "Tournament request approved"
+          : "Tournament request declined",
+      message:
+        status === "ACCEPTED"
+          ? `${updated.club.name} has been approved for ${updated.tournament.name}.`
+          : `${updated.club.name} was not approved for ${updated.tournament.name}.`,
+      link: `/tournament/${updated.tournament.tournamentId}`,
+      data: {
+        tournamentId: updated.tournament.tournamentId,
+        clubId: updated.club.clubId,
+        registrationId: updated.registrationId,
       },
     });
 

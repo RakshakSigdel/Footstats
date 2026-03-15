@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import NotificationService from "./notificationService.js";
 const prisma = new PrismaClient();
 
 class MatchEventService {
@@ -95,6 +96,21 @@ class MatchEventService {
             name: true,
           },
         },
+      },
+    });
+
+    const recipients = [Number(data.userId)];
+    if (data.assistById) recipients.push(Number(data.assistById));
+
+    await NotificationService.createBulkNotifications(recipients, {
+      type: "MATCH_EVENT_ADDED",
+      title: "Match stat updated",
+      message: `A ${data.eventType.replace("_", " ").toLowerCase()} event was recorded for your match activity.",
+      link: `/schedule/${schedule.scheduleId}`,
+      data: {
+        matchId: Number(data.matchId),
+        matchEventId: matchEvent.matchEventId,
+        eventType: data.eventType,
       },
     });
 
