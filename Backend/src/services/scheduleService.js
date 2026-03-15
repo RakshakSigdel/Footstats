@@ -1,20 +1,50 @@
 import { PrismaClient } from "@prisma/client";
+import NotificationService from "./notificationService.js";
 const prisma = new PrismaClient();
 
 class ScheduleService {
   //Create a new Schedule
   static async createSchedule(data, UserId) {
+    const teamOneId = Number(data.teamOneId);
+    const teamTwoId = Number(data.teamTwoId);
+    const tournamentId = data.createdFromTournament
+      ? Number(data.createdFromTournament)
+      : null;
+
+    if (teamOneId === teamTwoId) {
+      throw new Error("A team cannot play against itself");
+    }
+
+    if (tournamentId) {
+      const accepted = await prisma.tournamentRegistration.findMany({
+        where: {
+          tournamentId,
+          status: "ACCEPTED",
+          clubId: { in: [teamOneId, teamTwoId] },
+        },
+        select: { clubId: true },
+      });
+
+      const acceptedIds = new Set(accepted.map((entry) => entry.clubId));
+
+      if (!acceptedIds.has(teamOneId) || !acceptedIds.has(teamTwoId)) {
+        throw new Error(
+          "Both clubs must be approved tournament participants before scheduling",
+        );
+      }
+    }
+
     const newSchedule = await prisma.schedule.create({
       data: {
-        teamOneId: data.teamOneId,
-        teamTwoId: data.teamTwoId,
+        teamOneId,
+        teamTwoId,
         scheduleStatus: data.scheduleStatus || "UPCOMING",
         date: new Date(data.date),
         scheduleType: data.scheduleType,
         location: data.location,
         matchSize: data.matchSize ? Number(data.matchSize) : 11,
         createdFromClub: data.createdFromClub || null,
-        createdFromTournament: data.createdFromTournament || null,
+        createdFromTournament: tournamentId,
         createdFromUser: UserId,
       },
       include: {
@@ -31,6 +61,27 @@ class ScheduleService {
         },
       },
     });
+
+    const [teamOneMembers, teamTwoMembers] = await Promise.all([
+      NotificationService.getClubMemberUserIds(teamOneId, true),
+      NotificationService.getClubMemberUserIds(teamTwoId, true),
+    ]);
+
+    const allRecipients = [...new Set([...teamOneMembers, ...teamTwoMembers])];
+
+    await NotificationService.createBulkNotifications(allRecipients, {
+      type: "SCHEDULE_CREATED",
+      title: "New schedule created",
+      message: `${newSchedule.teamOne?.name || "Team 1"} vs ${newSchedule.teamTwo?.name || "Team 2"} has been scheduled.",
+      link: `/schedule/${newSchedule.scheduleId}`,
+      data: {
+        scheduleId: newSchedule.scheduleId,
+        teamOneId,
+        teamTwoId,
+        createdFromTournament: tournamentId,
+      },
+    });
+
     return newSchedule;
   }
   //Get All Schedule
