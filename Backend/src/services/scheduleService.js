@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import NotificationService from "./notificationService.js";
 const prisma = new PrismaClient();
 
 class ScheduleService {
@@ -60,6 +61,27 @@ class ScheduleService {
         },
       },
     });
+
+    const [teamOneMembers, teamTwoMembers] = await Promise.all([
+      NotificationService.getClubMemberUserIds(teamOneId, true),
+      NotificationService.getClubMemberUserIds(teamTwoId, true),
+    ]);
+
+    const allRecipients = [...new Set([...teamOneMembers, ...teamTwoMembers])];
+
+    await NotificationService.createBulkNotifications(allRecipients, {
+      type: "SCHEDULE_CREATED",
+      title: "New schedule created",
+      message: `${newSchedule.teamOne?.name || "Team 1"} vs ${newSchedule.teamTwo?.name || "Team 2"} has been scheduled.",
+      link: `/schedule/${newSchedule.scheduleId}`,
+      data: {
+        scheduleId: newSchedule.scheduleId,
+        teamOneId,
+        teamTwoId,
+        createdFromTournament: tournamentId,
+      },
+    });
+
     return newSchedule;
   }
   //Get All Schedule

@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+import NotificationService from './notificationService.js';
 
 const prisma = new PrismaClient();
 
@@ -14,6 +15,23 @@ class RequestService {
                 status: 'PENDING',
             },
         });
+
+        const [club, admins] = await Promise.all([
+            prisma.club.findUnique({
+                where: { clubId: Number(data.clubId) },
+                select: { name: true },
+            }),
+            NotificationService.getClubAdminUserIds(data.clubId),
+        ]);
+
+        await NotificationService.createBulkNotifications(admins, {
+            type: 'CLUB_JOIN_REQUEST',
+            title: 'New club join request',
+            message: `A player requested to join ${club?.name || 'your club'}.`,
+            link: `/club/${data.clubId}`,
+            data: { clubId: Number(data.clubId), requestId: newRequest.requestId },
+        });
+
         return newRequest;
     }
 
@@ -82,13 +100,37 @@ class RequestService {
             return updatedRequest;
         });
 
+        await NotificationService.createNotification(request.userId, {
+            type: 'CLUB_JOIN_APPROVED',
+            title: 'Club join approved',
+            message: `Your request to join ${request.club?.name || 'the club'} was approved.`,
+            link: `/club/${request.clubId}`,
+            data: { clubId: request.clubId, requestId: Number(requestId) },
+        });
+
         return result;
     }
 
     static async rejectJoinRequest(requestId) {
+        const request = await prisma.clubRequest.findUnique({
+            where: { requestId: Number(requestId) },
+            include: { club: { select: { name: true } } },
+        });
+
         const deletedrequest = await prisma.clubRequest.delete({
             where: { requestId: Number(requestId) },
         });
+
+        if (request) {
+            await NotificationService.createNotification(request.userId, {
+                type: 'CLUB_JOIN_REJECTED',
+                title: 'Club join request declined',
+                message: `Your request to join ${request.club?.name || 'the club'} was declined.`,
+                link: `/club/${request.clubId}`,
+                data: { clubId: request.clubId, requestId: Number(requestId) },
+            });
+        }
+
         return deletedrequest;
     }
 }
