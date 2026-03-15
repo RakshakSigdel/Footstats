@@ -468,7 +468,12 @@ export default function ClubDetails() {
             />
           )}
 
-          {activeTab === "chat" && <ClubChat />}
+          {activeTab === "chat" && (
+            <ClubChat
+              clubId={clubId}
+              currentUser={currentUser}
+            />
+          )}
 
           <EditClub
             isOpen={isEditModalOpen}
