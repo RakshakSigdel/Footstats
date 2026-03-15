@@ -38,12 +38,44 @@ model User {
   matchLineups     MatchLineup[]
   createdSchedules Schedule[]     @relation("CreatedByUser")
   messages    Message[]
+  notifications Notification[]
 
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@map("users")
+}
+
+model Notification {
+  notificationId Int              @id @default(autoincrement())
+  userId         Int
+  type           NotificationType
+  title          String
+  message        String
+  link           String?
+  data           Json?
+  isRead         Boolean          @default(false)
+  readAt         DateTime?
+  createdAt      DateTime         @default(now())
+
+  user User @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  @@index([userId, isRead, createdAt])
+  @@map("notifications")
+}
+
+enum NotificationType {
+  CLUB_JOIN_REQUEST
+  CLUB_JOIN_APPROVED
+  CLUB_JOIN_REJECTED
+  SCHEDULE_CREATED
+  TOURNAMENT_JOIN_REQUEST
+  TOURNAMENT_JOIN_APPROVED
+  TOURNAMENT_JOIN_REJECTED
+  LINEUP_ADDED
+  MATCH_EVENT_ADDED
+  SYSTEM
 }
 
 enum Role {
@@ -79,6 +111,8 @@ model Club {
   matchEvents            MatchEvent[]
   matchLineups           MatchLineup[]
   tournamentRegistrations TournamentRegistration[]
+  tournamentsWon         Tournament[]             @relation("TournamentWinner")
+  tournamentsRunnerUp    Tournament[]             @relation("TournamentRunnerUp")
   messages    Message[]
 
 
@@ -157,13 +191,18 @@ model Tournament {
   endDate      DateTime
   format       Format
   createdBy    Int
-  status       Status
+  status       Status                 @default(UPCOMING)
+  winnerClubId Int?
+  runnerUpClubId Int?
+  paymentInstructions String?
 
   // Relations
   creator        User                     @relation("TournamentCreator", fields: [createdBy], references: [userId])
   schedules      Schedule[]               @relation("CreatedFromTournament")
   registrations  TournamentRegistration[]
   admins         TournamentAdmin[]
+  winnerClub     Club?                    @relation("TournamentWinner", fields: [winnerClubId], references: [clubId])
+  runnerUpClub   Club?                    @relation("TournamentRunnerUp", fields: [runnerUpClubId], references: [clubId])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -174,7 +213,7 @@ model Tournament {
 enum Status {
   UPCOMING
   ONGOING
-  COMPLETED
+  FINISHED
   CANCELLED
 }
 
@@ -208,6 +247,9 @@ model TournamentRegistration {
   clubId         Int
   registeredBy   Int
   status         RegistrationStatus     @default(PENDING)
+  paymentStatus  PaymentStatus          @default(PENDING)
+  paymentReference String?
+  paymentAmount  Decimal?               @db.Decimal(10, 2)
   registeredAt   DateTime               @default(now())
   reviewedAt     DateTime?
   reviewedBy     Int?
@@ -225,6 +267,13 @@ enum RegistrationStatus {
   PENDING
   ACCEPTED
   REJECTED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  WAIVED
 }
 
 // =========================

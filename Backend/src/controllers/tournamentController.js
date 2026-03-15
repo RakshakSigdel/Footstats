@@ -1,4 +1,4 @@
-import  TournamentService  from "../services/tournamentService.js";
+import TournamentService from "../services/tournamentService.js";
 
 export const createTournament = async (req, res) => {
   try {
@@ -12,6 +12,7 @@ export const createTournament = async (req, res) => {
       entryFee,
       format,
       status,
+      paymentInstructions,
     } = req.body;
     if (
       !name ||
@@ -19,14 +20,23 @@ export const createTournament = async (req, res) => {
       !location ||
       !startDate ||
       !endDate ||
-      !entryFee ||
-      !format ||
-      !status
+      entryFee === undefined ||
+      !format
     ) {
       return res.status(400).json({ message: "All fields are required" });
     }
     const tournament = await TournamentService.createTournament(
-      req.body,
+      {
+        name,
+        description,
+        location,
+        startDate,
+        endDate,
+        entryFee,
+        format,
+        status,
+        paymentInstructions,
+      },
       userId,
     );
     res.status(201).json({ tournament });
@@ -41,11 +51,6 @@ export const getMyTournaments = async (req, res) => {
   try {
     const userId = req.user.userId;
     const tournaments = await TournamentService.getTournamentsByUserId(userId);
-    if (tournaments.length === 0) {
-      return res
-        .status(200)
-        .json({ message: "No tournaments found for this user" });
-    }
     res.status(200).json({ tournaments });
   } catch (error) {
     res
@@ -90,9 +95,16 @@ export const updateTournament = async (req, res) => {
     );
     res.status(200).json({ updatedTournament });
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Error updating tournament", error: error.message });
+    const status =
+      error.message?.includes("not found")
+        ? 404
+        : error.message?.includes("Only tournament owner")
+          ? 403
+          : 500;
+    res.status(status).json({
+      message: "Error updating tournament",
+      error: error.message,
+    });
   }
 };
 
@@ -105,5 +117,87 @@ export const deleteTournament = async (req, res) => {
     res
       .status(500)
       .json({ message: "Error deleting tournament", error: error.message });
+  }
+};
+
+export const requestTournamentJoin = async (req, res) => {
+  try {
+    const registration = await TournamentService.requestTournamentJoin(
+      req.params.id,
+      req.user.userId,
+      req.body,
+    );
+
+    res.status(201).json({
+      message: "Tournament join request submitted",
+      registration,
+    });
+  } catch (error) {
+    const status =
+      error.message?.includes("not found")
+        ? 404
+        : error.message?.includes("Only club admins")
+          ? 403
+          : 400;
+    res.status(status).json({
+      message: "Failed to submit tournament join request",
+      error: error.message,
+    });
+  }
+};
+
+export const getTournamentRegistrations = async (req, res) => {
+  try {
+    const registrations = await TournamentService.getTournamentRegistrations(
+      req.params.id,
+      req.query,
+    );
+
+    res.status(200).json({ registrations });
+  } catch (error) {
+    res.status(500).json({
+      message: "Failed to fetch tournament registrations",
+      error: error.message,
+    });
+  }
+};
+
+export const reviewTournamentRegistration = async (req, res) => {
+  try {
+    const updatedRegistration = await TournamentService.reviewTournamentRegistration(
+      req.params.registrationId,
+      req.user.userId,
+      req.body,
+    );
+
+    res.status(200).json({
+      message: "Tournament registration reviewed",
+      registration: updatedRegistration,
+    });
+  } catch (error) {
+    const status = error.message?.includes("Action must") ? 400 : 500;
+    res.status(status).json({
+      message: "Failed to review registration",
+      error: error.message,
+    });
+  }
+};
+
+export const updateTournamentStatus = async (req, res) => {
+  try {
+    const tournament = await TournamentService.updateTournamentStatus(
+      req.params.id,
+      req.body,
+    );
+    res.status(200).json({
+      message: "Tournament status updated",
+      tournament,
+    });
+  } catch (error) {
+    const status = error.message?.includes("Invalid") ? 400 : 400;
+    res.status(status).json({
+      message: "Failed to update tournament status",
+      error: error.message,
+    });
   }
 };
