@@ -37,6 +37,8 @@ model User {
   assists          MatchEvent[]   @relation("AssistPlayer")
   matchLineups     MatchLineup[]
   createdSchedules Schedule[]     @relation("CreatedByUser")
+  messages    Message[]
+
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -77,6 +79,8 @@ model Club {
   matchEvents            MatchEvent[]
   matchLineups           MatchLineup[]
   tournamentRegistrations TournamentRegistration[]
+  messages    Message[]
+
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -367,3 +371,33 @@ model MatchLineup {
   @@unique([matchId, userId])
   @@map("match_lineups")
 }
+
+// =========================
+// MESSAGE MODEL
+// =========================
+model Message{
+  messageId   Int          @id @default(autoincrement())
+  clubId      Int
+  userId      Int
+  content     String
+  messageType MessageType  @default(TEXT) 
+  attachment  String?
+
+  //Relations
+  club        Club     @relation(fields: [clubId], references: [clubId], onDelete: Cascade)
+  user        User     @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([clubId])
+  @@index([userId])
+  @@map("messages")
+}
+
+enum MessageType {
+  TEXT
+  IMAGE
+  FILE
+}
+
