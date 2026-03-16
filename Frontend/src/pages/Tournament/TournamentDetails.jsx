@@ -672,7 +672,7 @@ export default function TournamentDetails() {
                         <thead>
                           <tr className="border-b border-gray-200 text-left text-xs uppercase tracking-wide text-gray-500">
                             <th className="py-2">Player</th>
-                            <th className="py-2">Club ID</th>
+                            <th className="py-2">Club</th>
                             <th className="py-2">Goals</th>
                             <th className="py-2">Assists</th>
                           </tr>
@@ -683,7 +683,7 @@ export default function TournamentDetails() {
                               <td className="py-3 font-semibold text-gray-900">
                                 {player.firstName} {player.lastName}
                               </td>
-                              <td className="py-3 text-gray-600">{player.clubId}</td>
+                              <td className="py-3 text-gray-600">{player.clubName || `Club ${player.clubId}`}</td>
                               <td className="py-3 text-gray-900">{player.goals}</td>
                               <td className="py-3 text-gray-900">{player.assists}</td>
                             </tr>

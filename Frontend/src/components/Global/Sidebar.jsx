@@ -11,6 +11,9 @@ export default function Sidebar() {
   };
 
   const handleLogout = () => {
+    const confirmed = window.confirm("Do you really want to logout from FootStats?");
+    if (!confirmed) return;
+
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     closeSidebar();

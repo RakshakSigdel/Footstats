@@ -191,10 +191,105 @@ class PlayerService {
 
     const completedMatches = wins + draws + losses;
 
+    const hatTrickBuckets = await prisma.matchEvent.groupBy({
+      by: ["matchId"],
+      where: {
+        userId: userIdNum,
+        eventType: "GOAL",
+      },
+      _count: { _all: true },
+    });
+
+    const hatTrickCount = hatTrickBuckets.filter((bucket) => bucket._count._all >= 3).length;
+
+    const achievements = [];
+    if (completedMatches >= 1) {
+      achievements.push({
+        id: "first-cap",
+        title: "First Cap",
+        description: "Played your first completed match.",
+        tier: "Bronze",
+        icon: "CAP",
+      });
+    }
+    if (wins >= 1) {
+      achievements.push({
+        id: "first-win",
+        title: "First Win",
+        description: "Registered your first win.",
+        tier: "Bronze",
+        icon: "WIN",
+      });
+    }
+    if (totalGoals >= 1) {
+      achievements.push({
+        id: "first-goal",
+        title: "On The Scoresheet",
+        description: "Scored your first official goal.",
+        tier: "Bronze",
+        icon: "GOAL",
+      });
+    }
+    if (totalAssists >= 5) {
+      achievements.push({
+        id: "playmaker",
+        title: "Playmaker",
+        description: `Created ${totalAssists} assists for teammates.`,
+        tier: "Silver",
+        icon: "AST",
+      });
+    }
+    if (totalGoals >= 10) {
+      achievements.push({
+        id: "goal-machine",
+        title: "Goal Machine",
+        description: `Hit ${totalGoals} career goals.`,
+        tier: "Gold",
+        icon: "G10",
+      });
+    }
+    if (hatTrickCount >= 1) {
+      achievements.push({
+        id: "hat-trick",
+        title: "Hat Trick Hero",
+        description: `Recorded ${hatTrickCount} hat-trick${hatTrickCount > 1 ? "s" : ""}.`,
+        tier: "Gold",
+        icon: "H3",
+      });
+    }
+    if (completedMatches >= 3 && wins === completedMatches) {
+      achievements.push({
+        id: "perfect-run",
+        title: "Perfect Run",
+        description: `Maintained a 100% win rate across ${completedMatches} completed matches.`,
+        tier: "Gold",
+        icon: "100",
+      });
+    }
+    if (completedMatches >= 5 && totalYellow === 0 && totalRed === 0) {
+      achievements.push({
+        id: "clean-discipline",
+        title: "Clean Discipline",
+        description: "Played 5+ completed matches without cards.",
+        tier: "Silver",
+        icon: "FAIR",
+      });
+    }
+    if (mergedUserClubs.length >= 2) {
+      achievements.push({
+        id: "multi-club",
+        title: "Club Journeyman",
+        description: `Contributed across ${mergedUserClubs.length} clubs.`,
+        tier: "Bronze",
+        icon: "CLUB",
+      });
+    }
+
     return {
       ...player,
       userClubs: userClubsWithStats,
       matches,
+      achievements,
       stats: {
         matchesPlayed: completedMatches,
         goals: totalGoals,

@@ -72,7 +72,7 @@ class ScheduleService {
     await NotificationService.createBulkNotifications(allRecipients, {
       type: "SCHEDULE_CREATED",
       title: "New schedule created",
-      message: `${newSchedule.teamOne?.name || "Team 1"} vs ${newSchedule.teamTwo?.name || "Team 2"} has been scheduled.",
+      message: `${newSchedule.teamOne?.name || "Team 1"} vs ${newSchedule.teamTwo?.name || "Team 2"} has been scheduled.`,
       link: `/schedule/${newSchedule.scheduleId}`,
       data: {
         scheduleId: newSchedule.scheduleId,

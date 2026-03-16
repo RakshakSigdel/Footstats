@@ -335,36 +335,77 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Bottom Section - Profile summary (backend does not provide top scorers / full stats) */}
+          {/* Bottom Section - performance and actions */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-              <h3 className="text-xl font-bold text-gray-900 mb-6">Your Profile</h3>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between py-3 border-b border-gray-100">
-                  <span className="text-gray-600">Position</span>
-                  <span className="text-lg font-bold text-gray-900">{profile?.position ?? "—"}</span>
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-bold text-gray-900">Performance Snapshot</h3>
+                <span className="text-xs font-semibold px-3 py-1 rounded-full bg-slate-100 text-slate-700">Season Form</span>
+              </div>
+              <div className="space-y-5">
+                <div>
+                  <div className="flex items-center justify-between text-sm mb-2">
+                    <span className="text-gray-600 font-medium">Win Rate</span>
+                    <span className="text-gray-900 font-bold">{winRate}%</span>
+                  </div>
+                  <div className="h-2.5 rounded-full bg-gray-100 overflow-hidden">
+                    <div className="h-full rounded-full bg-gradient-to-r from-blue-500 to-emerald-500" style={{ width: `${Math.max(0, Math.min(100, Number(winRate) || 0))}%` }} />
+                  </div>
                 </div>
-                <div className="flex items-center justify-between py-3 border-b border-gray-100">
-                  <span className="text-gray-600">Location</span>
-                  <span className="text-lg font-bold text-gray-900">{profile?.location ?? "—"}</span>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+                    <div className="text-xs uppercase tracking-wide text-gray-500 font-semibold">Goal Contributions</div>
+                    <div className="mt-1 text-2xl font-bold text-gray-900">{goalsCount + assistsCount}</div>
+                    <div className="text-xs text-gray-500 mt-1">{goalsCount} goals + {assistsCount} assists</div>
+                  </div>
+                  <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+                    <div className="text-xs uppercase tracking-wide text-gray-500 font-semibold">Discipline</div>
+                    <div className="mt-1 text-2xl font-bold text-gray-900">{yellowCards + redCards}</div>
+                    <div className="text-xs text-gray-500 mt-1">{yellowCards} yellow, {redCards} red</div>
+                  </div>
                 </div>
-                <div className="flex items-center justify-between py-3">
-                  <span className="text-gray-600">Gender</span>
-                  <span className="text-lg font-bold text-gray-900">{profile?.gender ?? "—"}</span>
+
+                <div className="rounded-xl border border-blue-100 bg-blue-50 p-4">
+                  <div className="text-xs uppercase tracking-wide text-blue-700 font-semibold">Next Steps</div>
+                  <p className="text-sm text-blue-900 mt-1">
+                    {upcomingSchedules.length > 0
+                      ? `You have ${upcomingSchedules.length} upcoming match${upcomingSchedules.length > 1 ? "es" : ""}. Stay sharp and check venue/time details.`
+                      : "No upcoming matches. Create or accept a schedule to keep your momentum going."}
+                  </p>
                 </div>
               </div>
             </div>
             <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-              <h3 className="text-xl font-bold text-gray-900 mb-6">Quick Links</h3>
+              <h3 className="text-xl font-bold text-gray-900 mb-6">Action Center</h3>
               <div className="space-y-3">
-                <Link to="/Profile" className="block p-3 rounded-lg hover:bg-gray-50 transition-colors font-medium text-gray-900">
-                  View full profile →
+                <Link to="/profile" className="flex items-center justify-between p-4 rounded-xl border border-gray-200 hover:border-blue-300 hover:bg-blue-50/40 transition-all">
+                  <div>
+                    <p className="font-semibold text-gray-900">Profile Insights</p>
+                    <p className="text-xs text-gray-500">Review stats, clubs, and achievements</p>
+                  </div>
+                  <span className="text-blue-700 text-sm font-semibold">Open</span>
                 </Link>
-                <Link to="/clubs" className="block p-3 rounded-lg hover:bg-gray-50 transition-colors font-medium text-gray-900">
-                  My clubs ({clubsCount}) →
+                <Link to="/schedules" className="flex items-center justify-between p-4 rounded-xl border border-gray-200 hover:border-emerald-300 hover:bg-emerald-50/50 transition-all">
+                  <div>
+                    <p className="font-semibold text-gray-900">Schedule Board</p>
+                    <p className="text-xs text-gray-500">Track fixtures and match outcomes</p>
+                  </div>
+                  <span className="text-emerald-700 text-sm font-semibold">{upcomingSchedules.length} upcoming</span>
                 </Link>
-                <Link to="/tournaments" className="block p-3 rounded-lg hover:bg-gray-50 transition-colors font-medium text-gray-900">
-                  My tournaments ({tournamentsCount}) →
+                <Link to="/clubs" className="flex items-center justify-between p-4 rounded-xl border border-gray-200 hover:border-amber-300 hover:bg-amber-50/50 transition-all">
+                  <div>
+                    <p className="font-semibold text-gray-900">Club Hub</p>
+                    <p className="text-xs text-gray-500">Manage your clubs and lineups</p>
+                  </div>
+                  <span className="text-amber-700 text-sm font-semibold">{clubsCount} clubs</span>
+                </Link>
+                <Link to="/tournaments" className="flex items-center justify-between p-4 rounded-xl border border-gray-200 hover:border-cyan-300 hover:bg-cyan-50/50 transition-all">
+                  <div>
+                    <p className="font-semibold text-gray-900">Tournament Zone</p>
+                    <p className="text-xs text-gray-500">Join, manage, and compete</p>
+                  </div>
+                  <span className="text-cyan-700 text-sm font-semibold">{tournamentsCount} active</span>
                 </Link>
               </div>
             </div>

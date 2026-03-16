@@ -128,7 +128,13 @@ export default function Schedule() {
   const typeColor = (type) => {
     if (type === 'Knockout') return 'bg-red-100 text-red-700'
     if (type === 'League') return 'bg-blue-100 text-blue-700'
+    if (type === 'TOURNAMENT_MATCH') return 'bg-emerald-100 text-emerald-800'
     return 'bg-green-100 text-green-700'
+  }
+
+  const formatScheduleType = (type) => {
+    if (!type) return 'Match'
+    return String(type).replace(/_/g, ' ')
   }
 
   const openScheduleDetails = (schedule) => navigate(`/schedule/${schedule.scheduleId}`, { state: { schedule } })
@@ -188,16 +194,22 @@ export default function Schedule() {
                 </button>
               )}
             </div>
-            <select
-              value={typeFilter}
-              onChange={(e) => setTypeFilter(e.target.value)}
-              className="px-4 py-2.5 border border-gray-200 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="all">All Types</option>
-              <option value="knockout">Knockout</option>
-              <option value="league">League</option>
-              <option value="friendly">Friendly</option>
-            </select>
+            <div className="relative min-w-[190px]">
+              <select
+                value={typeFilter}
+                onChange={(e) => setTypeFilter(e.target.value)}
+                className="appearance-none w-full pr-10 pl-4 py-2.5 border border-gray-200 rounded-xl bg-white text-sm font-medium text-gray-700 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+              >
+                <option value="all">All Match Types</option>
+                <option value="knockout">Knockout</option>
+                <option value="league">League</option>
+                <option value="friendly">Friendly</option>
+                <option value="tournament_match">Tournament Match</option>
+              </select>
+              <svg className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-500" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </div>
           </div>
 
           {/* Tabs */}
@@ -326,9 +338,9 @@ export default function Schedule() {
               return (
                 <div key={schedule.scheduleId} className="bg-white rounded-lg shadow-sm border border-gray-100 p-5">
                   <div className="flex items-center justify-between gap-6">
-                    <div className="flex items-center gap-4 flex-1">
-                      <span className={`px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap ${typeColor(schedule.scheduleType)}`}>
-                        {schedule.scheduleType ?? 'Match'}
+                    <div className="flex items-center gap-4 flex-1 min-w-0">
+                      <span className={`px-3 py-1 rounded-full text-[11px] font-bold text-center leading-4 w-[132px] shrink-0 whitespace-normal break-words ${typeColor(schedule.scheduleType)}`}>
+                        {formatScheduleType(schedule.scheduleType)}
                       </span>
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center flex-shrink-0">
@@ -338,9 +350,9 @@ export default function Schedule() {
                             <span className="text-xs font-bold text-gray-600">{teamOne?.name?.[0] || 'T'}</span>
                           )}
                         </div>
-                        <h3 className="text-base font-bold text-gray-900">{teamOne?.name ?? 'Team 1'}</h3>
+                        <h3 className="text-base font-bold text-gray-900 max-w-[190px] truncate">{teamOne?.name ?? 'Team 1'}</h3>
                         <span className="text-gray-400 font-medium">vs</span>
-                        <h3 className="text-base font-bold text-gray-900">{teamTwo?.name ?? 'Team 2'}</h3>
+                        <h3 className="text-base font-bold text-gray-900 max-w-[190px] truncate">{teamTwo?.name ?? 'Team 2'}</h3>
                         <div className="w-8 h-8 rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center flex-shrink-0">
                           {getClubLogoUrl(teamTwo?.logo) ? (
                             <img src={getClubLogoUrl(teamTwo.logo)} alt={teamTwo?.name} className="w-full h-full object-cover" />
@@ -404,9 +416,9 @@ export default function Schedule() {
               return (
                 <div key={schedule.scheduleId} className="bg-white rounded-lg shadow-sm border border-gray-100 p-5">
                   <div className="flex items-center justify-between gap-6">
-                    <div className="flex items-center gap-4 flex-1">
-                      <span className={`px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap ${typeColor(schedule.scheduleType)}`}>
-                        {schedule.scheduleType ?? 'Match'}
+                    <div className="flex items-center gap-4 flex-1 min-w-0">
+                      <span className={`px-3 py-1 rounded-full text-[11px] font-bold text-center leading-4 w-[132px] shrink-0 whitespace-normal break-words ${typeColor(schedule.scheduleType)}`}>
+                        {formatScheduleType(schedule.scheduleType)}
                       </span>
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center flex-shrink-0">
@@ -416,9 +428,9 @@ export default function Schedule() {
                             <span className="text-xs font-bold text-gray-600">{teamOne?.name?.[0] || 'T'}</span>
                           )}
                         </div>
-                        <h3 className="text-lg font-bold text-gray-900">{teamOne?.name ?? 'Team 1'}</h3>
+                        <h3 className="text-lg font-bold text-gray-900 max-w-[190px] truncate">{teamOne?.name ?? 'Team 1'}</h3>
                         <span className="text-gray-400 font-medium">vs</span>
-                        <h3 className="text-lg font-bold text-gray-900">{teamTwo?.name ?? 'Team 2'}</h3>
+                        <h3 className="text-lg font-bold text-gray-900 max-w-[190px] truncate">{teamTwo?.name ?? 'Team 2'}</h3>
                         <div className="w-8 h-8 rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center flex-shrink-0">
                           {getClubLogoUrl(teamTwo?.logo) ? (
                             <img src={getClubLogoUrl(teamTwo.logo)} alt={teamTwo?.name} className="w-full h-full object-cover" />

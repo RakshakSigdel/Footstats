@@ -303,7 +303,20 @@ class TournamentService {
       },
     });
 
+    const clubs = await prisma.club.findMany({
+      where: {
+        clubId: {
+          in: [...new Set(goals.map((g) => g.clubId))],
+        },
+      },
+      select: {
+        clubId: true,
+        name: true,
+      },
+    });
+
     const playerMap = new Map(players.map((p) => [p.userId, p]));
+    const clubMap = new Map(clubs.map((c) => [c.clubId, c.name]));
 
     const topPlayers = goals
       .map((g) => {
@@ -311,6 +324,7 @@ class TournamentService {
         return {
           userId: g.userId,
           clubId: g.clubId,
+          clubName: clubMap.get(g.clubId) || `Club ${g.clubId}`,
           goals: g._count._all,
           assists: assistMap.get(g.userId) || 0,
           firstName: player?.firstName || "Unknown",

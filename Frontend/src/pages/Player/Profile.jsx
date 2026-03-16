@@ -169,6 +169,11 @@ export default function Profile() {
     return [...byId.values()];
   }, [player?.userClubs, myClubs]);
 
+  const achievements = useMemo(() => {
+    if (!Array.isArray(player?.achievements)) return [];
+    return player.achievements;
+  }, [player?.achievements]);
+
   const handleOpenEditModal = () => {
     if (!player?.userId) return;
     setEditFormData({
@@ -591,8 +596,28 @@ export default function Profile() {
               )}
 
               {activeTab === "achievements" && (
-                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center text-gray-500">
-                  Achievements are not available yet.
+                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                  <h2 className="text-lg font-bold text-gray-900 mb-5">Achievements</h2>
+                  {achievements.length > 0 ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {achievements.map((achievement, idx) => (
+                        <div key={achievement.id || `${achievement.title}-${idx}`} className="rounded-xl border border-gray-200 bg-gradient-to-br from-white to-slate-50 p-4">
+                          <div className="flex items-center justify-between gap-3 mb-2">
+                            <div className="text-xl" aria-hidden="true">{achievement.icon || "🏅"}</div>
+                            <span className="text-[11px] uppercase tracking-wide px-2 py-1 rounded-full bg-slate-100 text-slate-700 font-semibold">
+                              {achievement.tier || "Unlocked"}
+                            </span>
+                          </div>
+                          <h3 className="font-bold text-gray-900 mb-1">{achievement.title}</h3>
+                          <p className="text-sm text-gray-600">{achievement.description}</p>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="rounded-xl border border-gray-200 bg-gray-50 p-8 text-center text-gray-500">
+                      Play more matches to unlock achievements.
+                    </div>
+                  )}
                 </div>
               )}
             </>
