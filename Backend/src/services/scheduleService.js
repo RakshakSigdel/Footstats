@@ -7,12 +7,17 @@ class ScheduleService {
   static async createSchedule(data, UserId) {
     const teamOneId = Number(data.teamOneId);
     const teamTwoId = Number(data.teamTwoId);
+    const matchSize = data.matchSize ? Number(data.matchSize) : 11;
     const tournamentId = data.createdFromTournament
       ? Number(data.createdFromTournament)
       : null;
 
     if (teamOneId === teamTwoId) {
       throw new Error("A team cannot play against itself");
+    }
+
+    if (!Number.isInteger(matchSize) || matchSize < 5 || matchSize > 11) {
+      throw new Error("Match size must be between 5 and 11");
     }
 
     if (tournamentId) {
@@ -42,7 +47,7 @@ class ScheduleService {
         date: new Date(data.date),
         scheduleType: data.scheduleType,
         location: data.location,
-        matchSize: data.matchSize ? Number(data.matchSize) : 11,
+        matchSize,
         createdFromClub: data.createdFromClub || null,
         createdFromTournament: tournamentId,
         createdFromUser: UserId,

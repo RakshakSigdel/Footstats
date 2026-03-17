@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import Sidebar from "../../components/Global/Sidebar";
 import Topbar from "../../components/Global/Topbar";
 import EditTournament from "./Components/EditTournament";
+import CreateSchedule from "../Schedule/Components/CreateSchedule";
 import {
   getTournamentById,
   updateTournament,
@@ -12,7 +13,6 @@ import {
   updateTournamentStatus,
 } from "../../services/api.tournaments";
 import { getAdminClubs } from "../../services/api.clubs";
-import { createSchedule } from "../../services/api.schedules";
 
 const STATUS_OPTIONS = ["UPCOMING", "ONGOING", "FINISHED", "CANCELLED"];
 
@@ -30,6 +30,7 @@ export default function TournamentDetails() {
   const [success, setSuccess] = useState(null);
   const [activeTab, setActiveTab] = useState("overview");
   const [isEditTournamentOpen, setIsEditTournamentOpen] = useState(false);
+  const [isCreateScheduleOpen, setIsCreateScheduleOpen] = useState(false);
 
   const [joinForm, setJoinForm] = useState({
     clubId: "",
@@ -44,16 +45,6 @@ export default function TournamentDetails() {
     runnerUpClubId: "",
   });
   const [statusLoading, setStatusLoading] = useState(false);
-
-  const [scheduleForm, setScheduleForm] = useState({
-    teamOneId: "",
-    teamTwoId: "",
-    date: "",
-    location: "",
-    scheduleType: "TOURNAMENT_MATCH",
-    matchSize: 11,
-  });
-  const [scheduleLoading, setScheduleLoading] = useState(false);
 
   const loadTournament = async () => {
     if (!tournamentId) return;
@@ -237,43 +228,6 @@ export default function TournamentDetails() {
     }
   };
 
-  const handleCreateSchedule = async (e) => {
-    e.preventDefault();
-    if (!tournamentId) return;
-
-    setScheduleLoading(true);
-    setError(null);
-    setSuccess(null);
-
-    try {
-      await createSchedule({
-        teamOneId: Number(scheduleForm.teamOneId),
-        teamTwoId: Number(scheduleForm.teamTwoId),
-        date: new Date(scheduleForm.date).toISOString(),
-        location: scheduleForm.location,
-        scheduleType: scheduleForm.scheduleType,
-        matchSize: Number(scheduleForm.matchSize || 11),
-        createdFromTournament: Number(tournamentId),
-      });
-
-      setSuccess("Tournament schedule created.");
-      setScheduleForm({
-        teamOneId: "",
-        teamTwoId: "",
-        date: "",
-        location: "",
-        scheduleType: "TOURNAMENT_MATCH",
-        matchSize: 11,
-      });
-
-      await loadTournament();
-    } catch (err) {
-      setError(err?.error || err?.message || "Failed to create schedule");
-    } finally {
-      setScheduleLoading(false);
-    }
-  };
-
   const tabs = [
     { id: "overview", label: "Overview" },
     { id: "clubs", label: "Clubs" },
@@ -331,6 +285,14 @@ export default function TournamentDetails() {
                     className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800"
                   >
                     Edit Tournament
+                  </button>
+                )}
+                {isTournamentAdmin && (
+                  <button
+                    onClick={() => setIsCreateScheduleOpen(true)}
+                    className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+                  >
+                    Create Schedule
                   </button>
                 )}
               </div>
@@ -552,78 +514,16 @@ export default function TournamentDetails() {
               {activeTab === "schedules" && (
                 <section className="space-y-4">
                   {isTournamentAdmin && (
-                    <form className="rounded-xl border border-gray-100 bg-white p-6 grid grid-cols-1 md:grid-cols-2 gap-4" onSubmit={handleCreateSchedule}>
-                      <h2 className="md:col-span-2 text-lg font-bold text-gray-900">Create Tournament Schedule</h2>
-
-                      <select
-                        required
-                        value={scheduleForm.teamOneId}
-                        onChange={(e) => setScheduleForm((p) => ({ ...p, teamOneId: e.target.value }))}
-                        className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
-                      >
-                        <option value="">Team One</option>
-                        {acceptedRegistrations.map((r) => (
-                          <option key={r.registrationId} value={r.clubId}>
-                            {r.club?.name}
-                          </option>
-                        ))}
-                      </select>
-
-                      <select
-                        required
-                        value={scheduleForm.teamTwoId}
-                        onChange={(e) => setScheduleForm((p) => ({ ...p, teamTwoId: e.target.value }))}
-                        className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
-                      >
-                        <option value="">Team Two</option>
-                        {acceptedRegistrations.map((r) => (
-                          <option key={`${r.registrationId}-team-two`} value={r.clubId}>
-                            {r.club?.name}
-                          </option>
-                        ))}
-                      </select>
-
-                      <input
-                        required
-                        type="datetime-local"
-                        value={scheduleForm.date}
-                        onChange={(e) => setScheduleForm((p) => ({ ...p, date: e.target.value }))}
-                        className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
-                      />
-
-                      <input
-                        required
-                        type="text"
-                        value={scheduleForm.location}
-                        onChange={(e) => setScheduleForm((p) => ({ ...p, location: e.target.value }))}
-                        placeholder="Match location"
-                        className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
-                      />
-
-                      <input
-                        type="text"
-                        value={scheduleForm.scheduleType}
-                        onChange={(e) => setScheduleForm((p) => ({ ...p, scheduleType: e.target.value }))}
-                        className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
-                      />
-
-                      <input
-                        type="number"
-                        min={5}
-                        max={11}
-                        value={scheduleForm.matchSize}
-                        onChange={(e) => setScheduleForm((p) => ({ ...p, matchSize: e.target.value }))}
-                        className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
-                      />
-
+                    <div className="rounded-xl border border-gray-100 bg-white p-6">
+                      <h2 className="text-lg font-bold text-gray-900">Create Tournament Schedule</h2>
+                      <p className="mt-1 text-sm text-gray-600">Create match schedules directly from this tournament with both clubs selected from accepted registrations.</p>
                       <button
-                        type="submit"
-                        disabled={scheduleLoading}
-                        className="md:col-span-2 rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-60"
+                        onClick={() => setIsCreateScheduleOpen(true)}
+                        className="mt-4 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
                       >
-                        {scheduleLoading ? "Creating..." : "Create Schedule"}
+                        Open Create Schedule
                       </button>
-                    </form>
+                    </div>
                   )}
 
                   <div className="rounded-xl border border-gray-100 bg-white p-6">
@@ -757,6 +657,20 @@ export default function TournamentDetails() {
             entryFee: tournament.entryFee,
             status: tournament.status,
           }}
+        />
+      )}
+
+      {tournament && isTournamentAdmin && (
+        <CreateSchedule
+          isOpen={isCreateScheduleOpen}
+          onClose={() => setIsCreateScheduleOpen(false)}
+          onCreated={async () => {
+            await loadTournament();
+            setSuccess("Tournament schedule created.");
+          }}
+          defaultCreationType="tournament"
+          preselectedTournamentId={String(tournament.tournamentId)}
+          lockCreationType={true}
         />
       )}
     </div>

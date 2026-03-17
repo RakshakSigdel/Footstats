@@ -6,7 +6,8 @@ export const createScheduleRequest = async (req, res) => {
     const result = await ScheduleRequestService.createScheduleRequest(req.body, userId);
     res.status(201).json({ message: "Match request sent successfully", ...result });
   } catch (err) {
-    res.status(500).json({ message: err.message || "Failed to create schedule request" });
+    const status = err.message?.includes("must") || err.message?.includes("cannot") ? 400 : 500;
+    res.status(status).json({ message: err.message || "Failed to create schedule request" });
   }
 };
 

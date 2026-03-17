@@ -1,18 +1,26 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { getAdminClubs, searchClubs } from '../../../services/api.clubs';
-import { getMyTournaments } from '../../../services/api.tournaments';
+import { getMyTournaments, getTournamentById } from '../../../services/api.tournaments';
 import { createScheduleRequest } from '../../../services/api.scheduleRequests';
+import { createSchedule } from '../../../services/api.schedules';
 
-export default function CreateSchedule({ isOpen, onClose, onCreated }) {
+export default function CreateSchedule({
+  isOpen,
+  onClose,
+  onCreated,
+  defaultCreationType = 'club',
+  preselectedTournamentId = '',
+  lockCreationType = false,
+}) {
   const [formData, setFormData] = useState({
     scheduleType: 'Friendly',
     matchSize: 11,
     location: '',
     date: '',
     time: '',
-    creationType: 'club',
+    creationType: defaultCreationType,
     createdFromClub: '',
-    createdFromTournament: '',
+    createdFromTournament: preselectedTournamentId ? String(preselectedTournamentId) : '',
   });
 
   const [teamOneId, setTeamOneId] = useState('');
@@ -26,10 +34,23 @@ export default function CreateSchedule({ isOpen, onClose, onCreated }) {
 
   const [adminClubs, setAdminClubs] = useState([]);
   const [myTournaments, setMyTournaments] = useState([]);
+  const [tournamentClubs, setTournamentClubs] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => { if (isOpen) loadData(); }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    setFormData((prev) => ({
+      ...prev,
+      creationType: defaultCreationType,
+      createdFromClub: defaultCreationType === 'club' ? prev.createdFromClub : '',
+      createdFromTournament: defaultCreationType === 'tournament' && preselectedTournamentId
+        ? String(preselectedTournamentId)
+        : prev.createdFromTournament,
+    }));
+  }, [isOpen, defaultCreationType, preselectedTournamentId]);
 
   const loadData = async () => {
     setLoading(true);
@@ -53,8 +74,12 @@ export default function CreateSchedule({ isOpen, onClose, onCreated }) {
   };
 
   const handleCreationTypeChange = (type) => {
+    if (lockCreationType) return;
     setFormData((prev) => ({ ...prev, creationType: type, createdFromClub: '', createdFromTournament: '' }));
     setTeamOneId(''); setTeamOneName('');
+    setTeamTwoId(''); setTeamTwoName('');
+    setTeam2Query(''); setTeam2Results([]);
+    setTournamentClubs([]);
   };
 
   const handleInputChange = (e) => {
@@ -87,21 +112,63 @@ export default function CreateSchedule({ isOpen, onClose, onCreated }) {
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
+  useEffect(() => {
+    const selectedTournamentId = formData.createdFromTournament;
+    if (formData.creationType !== 'tournament' || !selectedTournamentId) {
+      setTournamentClubs([]);
+      return;
+    }
+
+    const loadTournamentClubs = async () => {
+      try {
+        const tournament = await getTournamentById(selectedTournamentId);
+        const acceptedClubs = (tournament?.registrations || [])
+          .map((reg) => reg?.club)
+          .filter((club) => club?.clubId);
+        setTournamentClubs(acceptedClubs);
+      } catch {
+        setTournamentClubs([]);
+      }
+    };
+
+    loadTournamentClubs();
+  }, [formData.creationType, formData.createdFromTournament]);
+
+  useEffect(() => {
+    if (formData.creationType !== 'tournament') return;
+    setTeamOneId('');
+    setTeamOneName('');
+    setTeamTwoId('');
+    setTeamTwoName('');
+  }, [formData.creationType, formData.createdFromTournament]);
+
   const handleSubmit = async (e) => {
     e.preventDefault(); setError('');
-    if (!teamOneId) { setError('Please select a club — it will be set as Team 1.'); return; }
-    if (!teamTwoId) { setError('Please search and select an opponent (Team 2).'); return; }
+    if (!teamOneId) {
+      setError(formData.creationType === 'tournament' ? 'Please select Team 1.' : 'Please select a club — it will be set as Team 1.');
+      return;
+    }
+    if (!teamTwoId) {
+      setError(formData.creationType === 'tournament' ? 'Please select Team 2.' : 'Please search and select an opponent (Team 2).');
+      return;
+    }
     if (teamOneId === teamTwoId) { setError('Teams must be different.'); return; }
     if (formData.creationType === 'club' && !formData.createdFromClub) { setError('Please select a club.'); return; }
     if (formData.creationType === 'tournament' && !formData.createdFromTournament) { setError('Please select a tournament.'); return; }
     if (!formData.date || !formData.time) { setError('Please select date and time.'); return; }
 
     const dateTime = new Date(`${formData.date}T${formData.time}`);
+    const parsedMatchSize = Number(formData.matchSize);
+    if (!Number.isInteger(parsedMatchSize) || parsedMatchSize < 5 || parsedMatchSize > 11) {
+      setError('Match size must be between 5v5 and 11v11.');
+      return;
+    }
+
     const payload = {
       teamOneId: parseInt(teamOneId),
       teamTwoId: parseInt(teamTwoId),
       scheduleType: formData.scheduleType,
-      matchSize: formData.matchSize,
+      matchSize: parsedMatchSize,
       location: formData.location,
       date: dateTime.toISOString(),
       createdFromClub: formData.creationType === 'club' ? parseInt(formData.createdFromClub) : null,
@@ -109,21 +176,33 @@ export default function CreateSchedule({ isOpen, onClose, onCreated }) {
     };
     setLoading(true);
     try {
-      await onCreateSchedule(scheduleData);
+      if (formData.creationType === 'tournament') {
+        await createSchedule(payload);
+      } else {
+        await createScheduleRequest(payload);
+      }
       // Reset form
       setFormData({
-        teamOneId: '',
-        teamTwoId: '',
         scheduleType: 'Friendly',
+        matchSize: 11,
         location: '',
         date: '',
         time: '',
-        creationType: 'club',
+        creationType: defaultCreationType,
         createdFromClub: '',
-        createdFromTournament: '',
+        createdFromTournament: defaultCreationType === 'tournament' && preselectedTournamentId ? String(preselectedTournamentId) : '',
       });
+      setTeamOneId('');
+      setTeamOneName('');
+      setTeamTwoId('');
+      setTeamTwoName('');
+      setTeam2Query('');
+      setTeam2Results([]);
+      onCreated?.();
       onClose();
-    } catch (err) { setError(err?.message || 'Failed to send schedule request'); }
+    } catch (err) {
+      setError(err?.message || (formData.creationType === 'tournament' ? 'Failed to create schedule' : 'Failed to send schedule request'));
+    }
     finally { setLoading(false); }
   };
 
@@ -146,17 +225,23 @@ export default function CreateSchedule({ isOpen, onClose, onCreated }) {
           {error && <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm">{error}</div>}
 
           {/* Creation Type */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Creating From</label>
-            <div className="flex gap-4">
-              {['club', 'tournament'].map((type) => (
-                <button key={type} type="button" onClick={() => handleCreationTypeChange(type)}
-                  className={`flex-1 px-4 py-3 rounded-lg border-2 font-medium transition-all capitalize ${formData.creationType === type ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'}`}>
-                  My {type === 'club' ? 'Club' : 'Tournament'}
-                </button>
-              ))}
+          {!lockCreationType ? (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Creating From</label>
+              <div className="flex gap-4">
+                {['club', 'tournament'].map((type) => (
+                  <button key={type} type="button" onClick={() => handleCreationTypeChange(type)}
+                    className={`flex-1 px-4 py-3 rounded-lg border-2 font-medium transition-all capitalize ${formData.creationType === type ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'}`}>
+                    My {type === 'club' ? 'Club' : 'Tournament'}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-700">
+              Creating from: <span className="font-semibold">My Tournament</span>
+            </div>
+          )}
 
           {/* Club/Tournament selector */}
           {formData.creationType === 'club' ? (
@@ -192,16 +277,58 @@ export default function CreateSchedule({ isOpen, onClose, onCreated }) {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">Team 1 (Your Club)</label>
-              <div className={`px-4 py-3 rounded-lg border text-sm ${teamOneName ? 'border-green-300 bg-green-50 text-green-800 font-medium' : 'border-gray-200 bg-gray-50 text-gray-400'}`}>
-                {teamOneName || 'Auto-set when you pick a club above'}
-              </div>
+              {formData.creationType === 'club' ? (
+                <div className={`px-4 py-3 rounded-lg border text-sm ${teamOneName ? 'border-green-300 bg-green-50 text-green-800 font-medium' : 'border-gray-200 bg-gray-50 text-gray-400'}`}>
+                  {teamOneName || 'Auto-set when you pick a club above'}
+                </div>
+              ) : (
+                <select
+                  value={teamOneId}
+                  onChange={(e) => {
+                    const selectedId = e.target.value;
+                    const club = tournamentClubs.find((c) => String(c.clubId) === selectedId);
+                    setTeamOneId(selectedId);
+                    setTeamOneName(club?.name || '');
+                    if (selectedId && selectedId === teamTwoId) {
+                      setTeamTwoId('');
+                      setTeamTwoName('');
+                    }
+                  }}
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  required
+                >
+                  <option value="">Choose Team 1</option>
+                  {tournamentClubs.map((club) => (
+                    <option key={club.clubId} value={club.clubId}>{club.name}</option>
+                  ))}
+                </select>
+              )}
             </div>
 
             <div ref={team2Ref} className="relative">
               <label className="block text-sm font-medium text-gray-700 mb-1.5">
                 Team 2 (Opponent) <span className="text-red-500">*</span>
               </label>
-              {teamTwoId ? (
+              {formData.creationType === 'tournament' ? (
+                <select
+                  value={teamTwoId}
+                  onChange={(e) => {
+                    const selectedId = e.target.value;
+                    const club = tournamentClubs.find((c) => String(c.clubId) === selectedId);
+                    setTeamTwoId(selectedId);
+                    setTeamTwoName(club?.name || '');
+                  }}
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  required
+                >
+                  <option value="">Choose Team 2</option>
+                  {tournamentClubs
+                    .filter((club) => String(club.clubId) !== teamOneId)
+                    .map((club) => (
+                      <option key={club.clubId} value={club.clubId}>{club.name}</option>
+                    ))}
+                </select>
+              ) : teamTwoId ? (
                 <div className="flex items-center gap-2">
                   <div className="flex-1 px-4 py-3 rounded-lg border border-blue-300 bg-blue-50 text-blue-800 font-medium text-sm">{teamTwoName}</div>
                   <button type="button" onClick={() => { setTeamTwoId(''); setTeamTwoName(''); }} className="p-2 text-gray-400 hover:text-red-500">
@@ -261,6 +388,23 @@ export default function CreateSchedule({ isOpen, onClose, onCreated }) {
             </select>
           </div>
 
+          {/* Match Size */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              Match Size
+            </label>
+            <select
+              name="matchSize"
+              value={formData.matchSize}
+              onChange={handleInputChange}
+              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              {[5, 6, 7, 8, 9, 10, 11].map((size) => (
+                <option key={size} value={size}>{size}v{size}</option>
+              ))}
+            </select>
+          </div>
+
           {/* Date/Time */}
           <div className="grid grid-cols-2 gap-4">
             <div>
@@ -288,7 +432,7 @@ export default function CreateSchedule({ isOpen, onClose, onCreated }) {
               Cancel
             </button>
             <button type="submit" disabled={loading} className="px-6 py-2.5 bg-slate-900 text-white rounded-lg hover:bg-slate-800 font-medium disabled:opacity-50 disabled:cursor-not-allowed">
-              {loading ? 'Sending...' : 'Send Match Request'}
+              {loading ? (formData.creationType === 'tournament' ? 'Creating...' : 'Sending...') : (formData.creationType === 'tournament' ? 'Create Schedule' : 'Send Match Request')}
             </button>
           </div>
         </form>
