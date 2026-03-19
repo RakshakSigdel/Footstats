@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import sidebg from "/images/sidebg.jpg";
-import { login } from "../../services/api.auth";
+import { GoogleLogin } from "@react-oauth/google";
+import { googleLogin, login } from "../../services/api.auth";
 import AuthenticationSideImage from "../../components/Design/authenticationsideimage";
 
 export default function Login() {
@@ -10,7 +11,10 @@ export default function Login() {
     password: "",
   });
   const [error, setError] = useState(null);
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
+  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+  const isGoogleEnabled = Boolean(googleClientId?.trim());
 
   const handleChange = (e) => {
     setError(null);
@@ -30,9 +34,34 @@ export default function Login() {
       }
       navigate("/dashboard");
     } catch (err) {
-      const message = "Invalid Credentials";
+      const message = err?.message || "Login failed. Please try again.";
       setError(message);
     }
+  };
+
+  const handleGoogleSuccess = async (credentialResponse) => {
+    try {
+      setError(null);
+      const idToken = credentialResponse?.credential;
+      if (!idToken) {
+        throw new Error("Google sign-in failed");
+      }
+
+      const data = await googleLogin(idToken);
+      if (!data?.token) throw new Error("Invalid response from server");
+
+      localStorage.setItem("token", data.token);
+      if (data.user) {
+        localStorage.setItem("user", JSON.stringify(data.user));
+      }
+      navigate("/dashboard");
+    } catch (err) {
+      setError(err?.message || "Google sign-in failed");
+    }
+  };
+
+  const handleGoogleError = () => {
+    setError("Google sign-in failed");
   };
 
   return (
@@ -81,15 +110,37 @@ export default function Login() {
               <label className="block text-xs font-medium text-gray-700 mb-1">
                 Password
               </label>
-              <input
-                type="password"
-                name="password"
-                placeholder="Enter your password"
-                required
-                value={formData.password}
-                onChange={handleChange}
-                className="w-full h-10 px-4 rounded-xl border-2 border-gray-200 bg-gray-50 placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-              />
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  name="password"
+                  placeholder="Enter your password"
+                  required
+                  value={formData.password}
+                  onChange={handleChange}
+                  className="w-full h-10 pl-4 pr-11 rounded-xl border-2 border-gray-200 bg-gray-50 placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  className="absolute inset-y-0 right-0 px-3 text-gray-500 hover:text-gray-700"
+                >
+                  {showPassword ? (
+                    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M3 3l18 18" />
+                      <path d="M10.58 10.58a2 2 0 0 0 2.84 2.84" />
+                      <path d="M9.88 5.09A10.94 10.94 0 0 1 12 5c5 0 9.27 3.11 11 7-1.01 2.27-2.74 4.14-4.9 5.26" />
+                      <path d="M6.61 6.61C4.62 7.82 3 9.72 2 12c1.73 3.89 6 7 10 7 1.61 0 3.15-.38 4.53-1.05" />
+                    </svg>
+                  ) : (
+                    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z" />
+                      <circle cx="12" cy="12" r="3" />
+                    </svg>
+                  )}
+                </button>
+              </div>
             </div>
 
             <div className="text-right">
@@ -108,6 +159,19 @@ export default function Login() {
               Sign In
               <span className="text-lg">→</span>
             </button>
+
+            <div className="pt-1">
+              <p className="text-center text-xs text-gray-500 mb-2">Continue with Google</p>
+              {isGoogleEnabled ? (
+                <div className="flex justify-center">
+                  <GoogleLogin onSuccess={handleGoogleSuccess} onError={handleGoogleError} />
+                </div>
+              ) : (
+                <p className="text-center text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-2">
+                  Google sign-in is not configured yet. Set VITE_GOOGLE_CLIENT_ID in Frontend/.env.
+                </p>
+              )}
+            </div>
           </form>
 
           <div className="relative my-5">

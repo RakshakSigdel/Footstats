@@ -22,6 +22,7 @@ import ClubMatches from './Components/ClubMatches';
 import ClubRequests from './Components/ClubRequests';
 import ClubChat from './Components/ClubChat';
 import ClubDetailHeader from './Components/ClubDetailHeader';
+import { getClubMessages } from '../../services/api.messages';
 
 
 // Main ClubDetails Component
@@ -46,6 +47,7 @@ export default function ClubDetails() {
   const [confirmModal, setConfirmModal] = useState(null); // { title, message, confirmLabel, confirmStyle, onConfirm }
   const [editingPositionForUser, setEditingPositionForUser] = useState(null);
   const [positionDraft, setPositionDraft] = useState("");
+  const [unreadChatCount, setUnreadChatCount] = useState(0);
   
   // Logo upload state
   const [logoFile, setLogoFile] = useState(null);
@@ -134,6 +136,115 @@ export default function ClubDetails() {
     (!tab.adminOnly || isClubAdmin) &&
     (!tab.memberOnly || isClubMember || isClubAdmin)
   );
+
+  const chatReadStorageKey = currentUser?.userId && clubId
+    ? `footstats_chat_last_read_${currentUser.userId}_${clubId}`
+    : null;
+
+  const chatThresholdStorageKey = currentUser?.userId && clubId
+    ? `footstats_chat_threshold_notified_${currentUser.userId}_${clubId}`
+    : null;
+
+  const markChatAsRead = (timestamp) => {
+    if (!chatReadStorageKey) return;
+    const readAt = timestamp || new Date().toISOString();
+    localStorage.setItem(chatReadStorageKey, readAt);
+    if (chatThresholdStorageKey) {
+      localStorage.setItem(chatThresholdStorageKey, "0");
+    }
+    setUnreadChatCount(0);
+  };
+
+  useEffect(() => {
+    if (!clubId || !currentUser?.userId || !(isClubMember || isClubAdmin)) return;
+
+    let isMounted = true;
+
+    const requestBrowserNotificationPermission = async () => {
+      if (!("Notification" in window)) return;
+      if (Notification.permission === "default") {
+        try {
+          await Notification.requestPermission();
+        } catch {
+          // Ignore permission request errors to keep chat polling resilient.
+        }
+      }
+    };
+
+    const pollUnreadChat = async () => {
+      try {
+        const data = await getClubMessages(clubId);
+        const allMessages = Array.isArray(data) ? data : [];
+        const latestMessageAt = allMessages.length > 0
+          ? allMessages.reduce((latest, message) => {
+              const messageDate = new Date(message.createdAt || 0);
+              return messageDate > latest ? messageDate : latest;
+            }, new Date(0))
+          : null;
+
+        if (activeTab === "chat") {
+          if (latestMessageAt) {
+            markChatAsRead(latestMessageAt.toISOString());
+          } else {
+            markChatAsRead();
+          }
+          return;
+        }
+
+        const lastReadRaw = chatReadStorageKey ? localStorage.getItem(chatReadStorageKey) : null;
+        const lastReadAt = lastReadRaw ? new Date(lastReadRaw) : new Date(0);
+
+        const unreadCount = allMessages.filter((message) => {
+          const messageUserId = Number(message?.userId ?? message?.user?.userId);
+          if (messageUserId === Number(currentUser.userId)) return false;
+          const createdAt = new Date(message?.createdAt || 0);
+          return createdAt > lastReadAt;
+        }).length;
+
+        if (!isMounted) return;
+        setUnreadChatCount(unreadCount);
+
+        const hasAlreadyNotified = chatThresholdStorageKey
+          ? localStorage.getItem(chatThresholdStorageKey) === "1"
+          : false;
+
+        if (unreadCount >= 10 && !hasAlreadyNotified) {
+          await requestBrowserNotificationPermission();
+          if ("Notification" in window && Notification.permission === "granted") {
+            new Notification("FootStats Chat Alert", {
+              body: `You have ${unreadCount} unread messages in club chat.`,
+              icon: "/images/NoLogo.png",
+            });
+          }
+          if (chatThresholdStorageKey) {
+            localStorage.setItem(chatThresholdStorageKey, "1");
+          }
+        }
+
+        if (unreadCount < 10 && chatThresholdStorageKey) {
+          localStorage.setItem(chatThresholdStorageKey, "0");
+        }
+      } catch {
+        // Silent fail to avoid noisy UI when chat fetch fails intermittently.
+      }
+    };
+
+    pollUnreadChat();
+    const interval = setInterval(pollUnreadChat, 8000);
+
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, [
+    clubId,
+    currentUser?.userId,
+    activeTab,
+    isClubMember,
+    isClubAdmin,
+    chatReadStorageKey,
+    chatThresholdStorageKey,
+  ]);
 
   const getProfilePhotoUrl = (photoPath) => {
     if (!photoPath) return null;
@@ -406,6 +517,11 @@ export default function ClubDetails() {
                       {clubRequests.length > 99 ? "99+" : clubRequests.length}
                     </span>
                   )}
+                  {tab.id === "chat" && unreadChatCount > 0 && (
+                    <span className="ml-1 min-w-[1.25rem] h-5 px-1.5 flex items-center justify-center rounded-full bg-blue-600 text-white text-xs font-bold leading-none shadow-sm">
+                      {unreadChatCount > 99 ? "99+" : unreadChatCount}
+                    </span>
+                  )}
                   {activeTab === tab.id && <div className="absolute bottom-0 left-0 right-0 h-1 bg-blue-600"></div>}
                 </button>
               ))}
@@ -472,6 +588,7 @@ export default function ClubDetails() {
             <ClubChat
               clubId={clubId}
               currentUser={currentUser}
+              onMarkRead={markChatAsRead}
             />
           )}
 

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import Sidebar from "../../components/Global/Sidebar";
 import Topbar from "../../components/Global/Topbar";
 import { getMyProfile, updatePlayerById } from "../../services/api.player";
+import { resendVerificationCode, verifyEmail } from "../../services/api.auth";
 import { useTheme } from "../../context/ThemeContext";
 
 export default function Settings() {
@@ -16,6 +17,9 @@ export default function Settings() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [verificationCode, setVerificationCode] = useState("");
+  const [emailActionLoading, setEmailActionLoading] = useState(false);
+  const [emailMessage, setEmailMessage] = useState(null);
 
   const [notifications, setNotifications] = useState({
     matchReminders: true,
@@ -74,6 +78,38 @@ export default function Settings() {
     } catch (err) {
       setError(err?.message || "Failed to save changes");
       throw err;
+    }
+  };
+
+  const handleSendVerificationCode = async () => {
+    if (!profile?.email) return;
+    setError(null);
+    setEmailMessage(null);
+    setEmailActionLoading(true);
+    try {
+      const response = await resendVerificationCode(profile.email);
+      setEmailMessage(response?.message || "Verification code sent.");
+    } catch (err) {
+      setError(err?.message || "Failed to send verification code");
+    } finally {
+      setEmailActionLoading(false);
+    }
+  };
+
+  const handleVerifyEmail = async () => {
+    if (!profile?.email || !verificationCode.trim()) return;
+    setError(null);
+    setEmailMessage(null);
+    setEmailActionLoading(true);
+    try {
+      const response = await verifyEmail(profile.email, verificationCode.trim());
+      setProfile((prev) => ({ ...prev, emailVerified: true }));
+      setVerificationCode("");
+      setEmailMessage(response?.message || "Email verified successfully.");
+    } catch (err) {
+      setError(err?.message || "Verification failed");
+    } finally {
+      setEmailActionLoading(false);
     }
   };
 
@@ -288,6 +324,51 @@ export default function Settings() {
                 <path d="M7 11V7a5 5 0 0 1 10 0v4" />
               </svg>
               <h2 className="text-2xl font-bold text-gray-900">Privacy & Security</h2>
+            </div>
+
+            <div className="mb-6 p-4 rounded-lg border border-gray-200 bg-gray-50">
+              <div className="flex items-center justify-between gap-3 mb-3">
+                <div>
+                  <p className="text-sm font-semibold text-gray-900">Email Verification</p>
+                  <p className="text-xs text-gray-600">{profile?.email || "No email available"}</p>
+                </div>
+                {profile?.emailVerified ? (
+                  <span className="px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">Verified</span>
+                ) : (
+                  <span className="px-3 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-700">Not Verified</span>
+                )}
+              </div>
+
+              {!profile?.emailVerified && (
+                <div className="space-y-3">
+                  <div className="flex flex-col md:flex-row gap-3">
+                    <input
+                      type="text"
+                      value={verificationCode}
+                      onChange={(e) => setVerificationCode(e.target.value)}
+                      placeholder="Enter verification code"
+                      className="flex-1 px-4 py-3 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleVerifyEmail}
+                      disabled={emailActionLoading || !verificationCode.trim()}
+                      className="px-4 py-3 rounded-lg text-sm font-medium bg-slate-900 text-white hover:bg-slate-800 disabled:opacity-50"
+                    >
+                      Verify Email
+                    </button>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleSendVerificationCode}
+                    disabled={emailActionLoading}
+                    className="px-4 py-2 rounded-lg text-sm font-medium bg-white border border-gray-300 text-gray-700 hover:bg-gray-100 disabled:opacity-50"
+                  >
+                    Send Verification Code
+                  </button>
+                  {emailMessage && <p className="text-sm text-green-700">{emailMessage}</p>}
+                </div>
+              )}
             </div>
 
             <div className="space-y-3">

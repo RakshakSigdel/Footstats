@@ -33,6 +33,7 @@ class PlayerService {
         firstName: true,
         lastName: true,
         email: true,
+        emailVerified: true,
         dateOfBirth: true,
         gender: true,
         Phone: true,

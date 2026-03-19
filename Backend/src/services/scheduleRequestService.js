@@ -4,6 +4,11 @@ const prisma = new PrismaClient();
 class ScheduleRequestService {
   // Create a pending schedule + schedule request atomically
   static async createScheduleRequest(data, requestingUserId) {
+    const matchSize = data.matchSize ? Number(data.matchSize) : 11;
+    if (!Number.isInteger(matchSize) || matchSize < 5 || matchSize > 11) {
+      throw new Error("Match size must be between 5 and 11");
+    }
+
     return prisma.$transaction(async (tx) => {
       const schedule = await tx.schedule.create({
         data: {
@@ -13,6 +18,7 @@ class ScheduleRequestService {
           date: new Date(data.date),
           scheduleType: data.scheduleType,
           location: data.location,
+          matchSize,
           createdFromClub: data.createdFromClub || null,
           createdFromTournament: data.createdFromTournament || null,
           createdFromUser: requestingUserId,

@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import NotificationService from "./notificationService.js";
+import EmailService from "./emailService.js";
 const prisma = new PrismaClient();
 
 class ScheduleService {
@@ -7,12 +8,17 @@ class ScheduleService {
   static async createSchedule(data, UserId) {
     const teamOneId = Number(data.teamOneId);
     const teamTwoId = Number(data.teamTwoId);
+    const matchSize = data.matchSize ? Number(data.matchSize) : 11;
     const tournamentId = data.createdFromTournament
       ? Number(data.createdFromTournament)
       : null;
 
     if (teamOneId === teamTwoId) {
       throw new Error("A team cannot play against itself");
+    }
+
+    if (!Number.isInteger(matchSize) || matchSize < 5 || matchSize > 11) {
+      throw new Error("Match size must be between 5 and 11");
     }
 
     if (tournamentId) {
@@ -42,7 +48,7 @@ class ScheduleService {
         date: new Date(data.date),
         scheduleType: data.scheduleType,
         location: data.location,
-        matchSize: data.matchSize ? Number(data.matchSize) : 11,
+        matchSize,
         createdFromClub: data.createdFromClub || null,
         createdFromTournament: tournamentId,
         createdFromUser: UserId,
@@ -67,7 +73,27 @@ class ScheduleService {
       NotificationService.getClubMemberUserIds(teamTwoId, true),
     ]);
 
-    const allRecipients = [...new Set([...teamOneMembers, ...teamTwoMembers])];
+    let allRecipients = [...new Set([...teamOneMembers, ...teamTwoMembers])];
+
+    if (tournamentId) {
+      const acceptedRegistrations = await prisma.tournamentRegistration.findMany({
+        where: {
+          tournamentId,
+          status: "ACCEPTED",
+        },
+        select: { clubId: true },
+      });
+
+      const tournamentClubIds = [...new Set(acceptedRegistrations.map((entry) => entry.clubId))];
+      const tournamentMemberGroups = await Promise.all(
+        tournamentClubIds.map((clubId) =>
+          NotificationService.getClubMemberUserIds(clubId, true),
+        ),
+      );
+      const tournamentMemberIds = tournamentMemberGroups.flat();
+
+      allRecipients = [...new Set([...allRecipients, ...tournamentMemberIds])];
+    }
 
     await NotificationService.createBulkNotifications(allRecipients, {
       type: "SCHEDULE_CREATED",
@@ -81,6 +107,35 @@ class ScheduleService {
         createdFromTournament: tournamentId,
       },
     });
+
+    const recipients = await prisma.user.findMany({
+      where: {
+        userId: { in: allRecipients },
+        emailVerified: true,
+      },
+      select: {
+        email: true,
+        firstName: true,
+      },
+    });
+
+    try {
+      await Promise.all(
+        recipients.map((recipient) =>
+          EmailService.sendScheduleCreatedEmail({
+            to: recipient.email,
+            recipientName: recipient.firstName,
+            teamOneName: newSchedule.teamOne?.name || "Team 1",
+            teamTwoName: newSchedule.teamTwo?.name || "Team 2",
+            date: newSchedule.date,
+            location: newSchedule.location,
+            scheduleType: newSchedule.scheduleType,
+          }),
+        ),
+      );
+    } catch (emailError) {
+      console.warn("Failed to send one or more schedule emails:", emailError.message);
+    }
 
     return newSchedule;
   }
