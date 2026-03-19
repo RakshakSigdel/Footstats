@@ -29,3 +29,30 @@ export const register = async (firstName, lastName, email, password) => {
     throw { message: getErrorMessage(error) };
   }
 };
+
+export const verifyEmail = async (email, code) => {
+  try {
+    const response = await api.post("/auth/verify-email", { email, code });
+    return response.data;
+  } catch (error) {
+    throw { message: getErrorMessage(error) };
+  }
+};
+
+export const resendVerificationCode = async (email) => {
+  try {
+    const response = await api.post("/auth/resend-verification", { email });
+    return response.data;
+  } catch (error) {
+    throw { message: getErrorMessage(error) };
+  }
+};
+
+export const googleLogin = async (idToken) => {
+  try {
+    const response = await api.post("/auth/google", { idToken });
+    return response.data;
+  } catch (error) {
+    throw { message: getErrorMessage(error) };
+  }
+};

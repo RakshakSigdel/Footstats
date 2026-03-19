@@ -1,7 +1,11 @@
 import { useState } from "react";
 import sidebg from "/images/sidebg3.jpg";
 import { Link, useNavigate } from "react-router-dom";
-import { register } from "../../services/api.auth";
+import { GoogleLogin } from "@react-oauth/google";
+import {
+  googleLogin,
+  register,
+} from "../../services/api.auth";
 import AuthenticationSideImage from "../../components/Design/authenticationsideimage";
 
 export default function Register() {
@@ -13,7 +17,10 @@ export default function Register() {
     password: "",
   });
   const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
+  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+  const isGoogleEnabled = Boolean(googleClientId?.trim());
 
   const getPasswordStrength = (password) => {
     let score = 0;
@@ -32,19 +39,45 @@ export default function Register() {
 
   const handleChange = (e) => {
     setError(null);
+    setSuccess(null);
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
+    setSuccess(null);
     try {
-      await register(formData.firstName, formData.lastName, formData.email, formData.password);
-      navigate("/login");
+      const response = await register(formData.firstName, formData.lastName, formData.email, formData.password);
+      setSuccess(response?.message || "Registered successfully. Please login.");
+      setTimeout(() => navigate("/login"), 900);
     } catch (err) {
       const message = err?.message || err?.error || "Registration failed. Please try again.";
       setError(message);
     }
+  };
+
+  const handleGoogleSuccess = async (credentialResponse) => {
+    try {
+      setError(null);
+      const idToken = credentialResponse?.credential;
+      if (!idToken) throw new Error("Google sign-in failed");
+
+      const data = await googleLogin(idToken);
+      if (!data?.token) throw new Error("Invalid response from server");
+
+      localStorage.setItem("token", data.token);
+      if (data.user) {
+        localStorage.setItem("user", JSON.stringify(data.user));
+      }
+      navigate("/dashboard");
+    } catch (err) {
+      setError(err?.message || "Google sign-in failed");
+    }
+  };
+
+  const handleGoogleError = () => {
+    setError("Google sign-in failed");
   };
 
   return (
@@ -71,6 +104,12 @@ export default function Register() {
               {error}
             </div>
           )}
+          {success && (
+            <div className="mb-4 p-3 rounded-lg bg-green-50 border border-green-200 text-green-700 text-sm">
+              {success}
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-3">
             <div>
               <label className="block text-xs font-medium text-gray-700 mb-1">
@@ -171,6 +210,19 @@ export default function Register() {
               Sign Up
               <span className="text-lg">→</span>
             </button>
+
+            <div className="pt-1">
+              <p className="text-center text-xs text-gray-500 mb-2">Continue with Google</p>
+              {isGoogleEnabled ? (
+                <div className="flex justify-center">
+                  <GoogleLogin onSuccess={handleGoogleSuccess} onError={handleGoogleError} />
+                </div>
+              ) : (
+                <p className="text-center text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-2">
+                  Google sign-up is not configured yet. Set VITE_GOOGLE_CLIENT_ID in Frontend/.env.
+                </p>
+              )}
+            </div>
           </form>
 
           <div className="relative my-5">

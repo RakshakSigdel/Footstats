@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import sidebg from "/images/sidebg.jpg";
-import { login } from "../../services/api.auth";
+import { GoogleLogin } from "@react-oauth/google";
+import { googleLogin, login } from "../../services/api.auth";
 import AuthenticationSideImage from "../../components/Design/authenticationsideimage";
 
 export default function Login() {
@@ -12,6 +13,8 @@ export default function Login() {
   const [error, setError] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
+  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+  const isGoogleEnabled = Boolean(googleClientId?.trim());
 
   const handleChange = (e) => {
     setError(null);
@@ -31,9 +34,34 @@ export default function Login() {
       }
       navigate("/dashboard");
     } catch (err) {
-      const message = "Invalid Credentials";
+      const message = err?.message || "Login failed. Please try again.";
       setError(message);
     }
+  };
+
+  const handleGoogleSuccess = async (credentialResponse) => {
+    try {
+      setError(null);
+      const idToken = credentialResponse?.credential;
+      if (!idToken) {
+        throw new Error("Google sign-in failed");
+      }
+
+      const data = await googleLogin(idToken);
+      if (!data?.token) throw new Error("Invalid response from server");
+
+      localStorage.setItem("token", data.token);
+      if (data.user) {
+        localStorage.setItem("user", JSON.stringify(data.user));
+      }
+      navigate("/dashboard");
+    } catch (err) {
+      setError(err?.message || "Google sign-in failed");
+    }
+  };
+
+  const handleGoogleError = () => {
+    setError("Google sign-in failed");
   };
 
   return (
@@ -131,6 +159,19 @@ export default function Login() {
               Sign In
               <span className="text-lg">→</span>
             </button>
+
+            <div className="pt-1">
+              <p className="text-center text-xs text-gray-500 mb-2">Continue with Google</p>
+              {isGoogleEnabled ? (
+                <div className="flex justify-center">
+                  <GoogleLogin onSuccess={handleGoogleSuccess} onError={handleGoogleError} />
+                </div>
+              ) : (
+                <p className="text-center text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-2">
+                  Google sign-in is not configured yet. Set VITE_GOOGLE_CLIENT_ID in Frontend/.env.
+                </p>
+              )}
+            </div>
           </form>
 
           <div className="relative my-5">
