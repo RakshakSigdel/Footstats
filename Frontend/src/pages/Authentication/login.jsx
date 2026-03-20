@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import sidebg from "/images/sidebg.jpg";
 import { GoogleLogin } from "@react-oauth/google";
 import { googleLogin, login } from "../../services/api.auth";
-import AuthenticationSideImage from "../../components/Design/authenticationsideimage";
+import AuthenticationSideImage from "./components/Authenticationsideimage";
 
 export default function Login() {
   const [formData, setFormData] = useState({

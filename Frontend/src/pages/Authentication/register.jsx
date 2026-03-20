@@ -6,7 +6,7 @@ import {
   googleLogin,
   register,
 } from "../../services/api.auth";
-import AuthenticationSideImage from "../../components/Design/authenticationsideimage";
+import AuthenticationSideImage from "./components/Authenticationsideimage";
 
 export default function Register() {
   const navigate = useNavigate();
