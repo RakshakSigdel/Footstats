@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import sidebg from "/images/sidebg1.jpg";
-import AuthenticationSideImage from "../../components/Design/authenticationsideimage";
+import AuthenticationSideImage from "./components/Authenticationsideimage";
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");

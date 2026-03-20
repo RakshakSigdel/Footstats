@@ -6,3 +6,5 @@
 /Backend/.env
 /Frontend/.env
 /Backend/src/generated/prisma
+#Build Files
+/dist/
