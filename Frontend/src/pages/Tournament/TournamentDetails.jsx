@@ -12,6 +12,7 @@ import {
   reviewTournamentRegistration,
   updateTournamentStatus,
 } from "../../services/api.tournaments";
+import { initiatePayment } from "../../services/api.payments";
 import { getAdminClubs } from "../../services/api.clubs";
 
 const STATUS_OPTIONS = ["UPCOMING", "ONGOING", "FINISHED", "CANCELLED"];
@@ -36,6 +37,7 @@ export default function TournamentDetails() {
     clubId: "",
     notes: "",
     paymentReference: "",
+    paymentGateway: "esewa",
   });
   const [joinLoading, setJoinLoading] = useState(false);
 
@@ -175,13 +177,54 @@ export default function TournamentDetails() {
     setSuccess(null);
 
     try {
+      const entryFee = Number(tournament?.entryFee || 0);
+
+      if (entryFee > 0) {
+        const productId = `tour-${tournamentId}-club-${joinForm.clubId}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+
+        sessionStorage.setItem(
+          "pending_tournament_join",
+          JSON.stringify({
+            tournamentId: Number(tournamentId),
+            clubId: Number(joinForm.clubId),
+            notes: joinForm.notes,
+            paymentReference: productId,
+          }),
+        );
+
+        const customerName = `${currentUser?.firstName || ""} ${currentUser?.lastName || ""}`.trim() ||
+          "Club Admin";
+
+        const paymentResponse = await initiatePayment({
+          amount: entryFee,
+          productId,
+          paymentGateway: joinForm.paymentGateway,
+          customerEmail: currentUser?.email,
+          customerName,
+          customerPhone: currentUser?.phone || currentUser?.Phone || "9800000000",
+          productName: `Tournament Registration - ${tournament?.name || `Tournament ${tournamentId}`}`,
+        });
+
+        if (!paymentResponse?.paymentUrl) {
+          throw new Error("Payment URL is invalid. Please try again.");
+        }
+
+        window.location.href = paymentResponse.paymentUrl;
+        return;
+      }
+
       await joinTournament(tournamentId, {
         clubId: Number(joinForm.clubId),
         notes: joinForm.notes,
-        paymentReference: joinForm.paymentReference,
+        paymentReference: joinForm.paymentReference || null,
       });
       setSuccess("Join request submitted. Tournament admin will review it.");
-      setJoinForm({ clubId: "", notes: "", paymentReference: "" });
+      setJoinForm({
+        clubId: "",
+        notes: "",
+        paymentReference: "",
+        paymentGateway: "esewa",
+      });
       await loadTournament();
     } catch (err) {
       setError(err?.error || err?.message || "Failed to submit join request");
@@ -342,7 +385,7 @@ export default function TournamentDetails() {
                       Any club where you are a creator/admin can request to join this tournament.
                     </p>
                     <p className="mt-2 rounded-lg bg-amber-50 border border-amber-200 p-3 text-sm text-amber-800">
-                      Payment is not integrated yet. Use payment reference field as placeholder for now.
+                      Paid tournaments require payment before your club join request is submitted.
                     </p>
 
                     {canSubmitJoinRequest ? (
@@ -362,11 +405,26 @@ export default function TournamentDetails() {
                               </option>
                             ))}
                         </select>
+                        {Number(tournament.entryFee || 0) > 0 && (
+                          <select
+                            value={joinForm.paymentGateway}
+                            onChange={(e) =>
+                              setJoinForm((p) => ({
+                                ...p,
+                                paymentGateway: e.target.value,
+                              }))
+                            }
+                            className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                          >
+                            <option value="esewa">eSewa</option>
+                            <option value="khalti">Khalti</option>
+                          </select>
+                        )}
                         <input
                           type="text"
                           value={joinForm.paymentReference}
                           onChange={(e) => setJoinForm((p) => ({ ...p, paymentReference: e.target.value }))}
-                          placeholder="Payment reference (placeholder)"
+                          placeholder="Payment reference (only for free/manual override)"
                           className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
                         />
                         <textarea
@@ -381,7 +439,11 @@ export default function TournamentDetails() {
                           disabled={joinLoading}
                           className="md:col-span-2 rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-60"
                         >
-                          {joinLoading ? "Submitting..." : "Submit Join Request"}
+                          {joinLoading
+                            ? "Processing..."
+                            : Number(tournament.entryFee || 0) > 0
+                              ? "Proceed to Payment"
+                              : "Submit Join Request"}
                         </button>
                       </form>
                     ) : (
