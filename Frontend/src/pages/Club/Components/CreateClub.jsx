@@ -67,8 +67,8 @@ const CreateClub = ({ isOpen, onClose, onCreateClub }) => {
   if (!isOpen) return null;
 
   return (
-  <div className="fixed inset-0 flex justify-center items-center z-50 bg-black/30 backdrop-blur-md p-4">
-  <div className="bg-white rounded-xl w-full max-w-md shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4 backdrop-blur-md">
+  <div className="app-card flex max-h-[90vh] w-full max-w-md flex-col overflow-hidden rounded-xl">
         {/* Modal Header - Fixed */}
         <div className="p-6 relative border-b border-gray-200 flex-shrink-0">
           <h2 className="text-2xl font-bold text-gray-900">Create New Club</h2>
@@ -94,7 +94,7 @@ const CreateClub = ({ isOpen, onClose, onCreateClub }) => {
               value={formData.clubName}
               onChange={handleInputChange}
               required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-2"
             />
           </div>
 
@@ -140,7 +140,7 @@ const CreateClub = ({ isOpen, onClose, onCreateClub }) => {
               value={formData.description}
               onChange={handleInputChange}
               rows="4"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+              className="w-full resize-none px-4 py-2"
             />
           </div>
 
@@ -154,7 +154,7 @@ const CreateClub = ({ isOpen, onClose, onCreateClub }) => {
                 placeholder="e.g., Kathmandu"
                 value={formData.location}
                 onChange={handleInputChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2"
               />
             </div>
 
@@ -164,7 +164,7 @@ const CreateClub = ({ isOpen, onClose, onCreateClub }) => {
                 name="skillLevel"
                 value={formData.skillLevel}
                 onChange={handleInputChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white cursor-pointer"
+                className="w-full cursor-pointer px-4 py-2"
               >
                 <option value="All Levels">All Levels</option>
                 <option value="Beginner">Beginner</option>
@@ -194,13 +194,13 @@ const CreateClub = ({ isOpen, onClose, onCreateClub }) => {
             <button
               type="button"
               onClick={onClose}
-              className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors"
+              className="btn-secondary px-6 py-2 text-gray-700 font-medium"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-6 py-2 bg-slate-900 text-white rounded-lg font-medium hover:bg-slate-800 transition-colors"
+              className="btn-primary px-6 py-2 font-medium"
             >
               Create Club
             </button>

@@ -51,7 +51,7 @@ const PaymentComponent = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 px-4 py-10">
-      <div className="mx-auto w-full max-w-2xl rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+      <div className="app-card mx-auto w-full max-w-2xl p-6 sm:p-8">
         <h1 className="text-2xl font-bold text-slate-900">Payment Integration</h1>
         <p className="mt-2 text-sm text-slate-600">
           Please fill in all the details to proceed with payment
@@ -73,7 +73,7 @@ const PaymentComponent = () => {
               onChange={handleChange}
               required
               placeholder="Enter your full name"
-              className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+              className="w-full rounded-lg px-3 py-2 text-sm text-slate-900"
             />
           </div>
 
@@ -92,7 +92,7 @@ const PaymentComponent = () => {
               onChange={handleChange}
               required
               placeholder="Enter your email"
-              className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+              className="w-full rounded-lg px-3 py-2 text-sm text-slate-900"
             />
           </div>
 
@@ -111,7 +111,7 @@ const PaymentComponent = () => {
               onChange={handleChange}
               required
               placeholder="Enter your phone number"
-              className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+              className="w-full rounded-lg px-3 py-2 text-sm text-slate-900"
             />
           </div>
 
@@ -130,7 +130,7 @@ const PaymentComponent = () => {
               onChange={handleChange}
               required
               placeholder="Enter product/service name"
-              className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+              className="w-full rounded-lg px-3 py-2 text-sm text-slate-900"
             />
           </div>
 
@@ -150,7 +150,7 @@ const PaymentComponent = () => {
               required
               min="1"
               placeholder="Enter amount"
-              className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+              className="w-full rounded-lg px-3 py-2 text-sm text-slate-900"
             />
           </div>
 
@@ -167,7 +167,7 @@ const PaymentComponent = () => {
               value={formData.paymentGateway}
               onChange={handleChange}
               required
-              className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+              className="w-full rounded-lg px-3 py-2 text-sm text-slate-900"
             >
               <option value="esewa">eSewa</option>
               <option value="khalti">Khalti</option>
@@ -176,7 +176,7 @@ const PaymentComponent = () => {
 
           <button
             type="submit"
-            className="w-full rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-indigo-300"
+            className="btn-primary w-full px-4 py-2.5 text-sm font-semibold disabled:cursor-not-allowed disabled:bg-indigo-300"
             disabled={isSubmitting}
           >
             {isSubmitting ? "Processing..." : "Proceed to Payment"}

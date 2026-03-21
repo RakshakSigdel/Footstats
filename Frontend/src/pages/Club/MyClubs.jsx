@@ -1,11 +1,13 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import { AnimatePresence, motion } from "framer-motion";
 import Sidebar from "../../components/Global/Sidebar";
 import Topbar from "../../components/Global/Topbar";
 import ClubListCard from "../../components/Club/ClubListCard";
 import CreateClub from "./Components/CreateClub";
 import { getMyClubs, getAllClubs, createClub } from "../../services/api.clubs";
 import { toMediaUrl } from "../../services/media";
+import { itemVariants, listVariants } from "../../components/ui/motion";
 
 const getClubLogoUrl = (logoPath) => toMediaUrl(logoPath);
 
@@ -160,19 +162,26 @@ export default function MyClubs() {
 
           {/* Tabs */}
           <div className="mb-8">
-            <div className="inline-flex bg-gray-100 rounded-full p-1 border border-gray-200">
+            <div className="relative inline-flex rounded-full border border-gray-200 bg-gray-100 p-1">
+              <motion.div
+                layoutId="clubs-tab-pill"
+                transition={{ type: "spring", stiffness: 360, damping: 28 }}
+                className={`absolute top-1 bottom-1 rounded-full bg-white shadow-sm ${
+                  activeTab === "myClubs" ? "left-1 right-[50%]" : "left-[50%] right-1"
+                }`}
+              />
               <button 
                 onClick={() => setActiveTab("myClubs")}
-                className={`px-5 py-1.5 text-sm font-semibold rounded-full transition-all ${
-                  activeTab === "myClubs" ? "bg-white shadow-sm" : "text-gray-500 hover:text-gray-700"
+                className={`relative z-10 px-5 py-1.5 text-sm font-semibold rounded-full transition-colors ${
+                  activeTab === "myClubs" ? "text-gray-900" : "text-gray-500 hover:text-gray-700"
                 }`}
               >
                 My Clubs
               </button>
               <button 
                 onClick={() => setActiveTab("browseClubs")}
-                className={`px-5 py-1.5 text-sm font-semibold rounded-full transition-all ${
-                  activeTab === "browseClubs" ? "bg-white shadow-sm" : "text-gray-500 hover:text-gray-700"
+                className={`relative z-10 px-5 py-1.5 text-sm font-semibold rounded-full transition-colors ${
+                  activeTab === "browseClubs" ? "text-gray-900" : "text-gray-500 hover:text-gray-700"
                 }`}
               >
                 Browse Clubs
@@ -180,73 +189,88 @@ export default function MyClubs() {
             </div>
           </div>
 
-          {/* My Clubs Tab Content */}
-          {activeTab === "myClubs" && (
-            <div className="space-y-5">
-              {filteredMyClubs.length === 0 && !loading && (
-                <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-100 text-center text-gray-500">
-                  {searchQuery ? `No clubs found matching "${searchQuery}"` : "You have not created any clubs yet. Create one above."}
-                </div>
-              )}
-              {filteredMyClubs.map((club) => (
-                <ClubListCard
-                  key={club.clubId}
-                  club={club}
-                  onClick={() => handleViewDetails(club.clubId)}
-                />
-              ))}
-            </div>
-          )}
+          <AnimatePresence mode="wait">
+            {activeTab === "myClubs" && (
+              <motion.div
+                key="my-clubs-tab"
+                variants={listVariants}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                className="space-y-5"
+              >
+                {filteredMyClubs.length === 0 && !loading && (
+                  <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-100 text-center text-gray-500">
+                    {searchQuery ? `No clubs found matching "${searchQuery}"` : "You have not created any clubs yet. Create one above."}
+                  </div>
+                )}
+                {filteredMyClubs.map((club) => (
+                  <motion.div key={club.clubId} variants={itemVariants}>
+                    <ClubListCard
+                      club={club}
+                      onClick={() => handleViewDetails(club.clubId)}
+                    />
+                  </motion.div>
+                ))}
+              </motion.div>
+            )}
 
-          {/* Browse Clubs Tab Content */}
-          {activeTab === "browseClubs" && (
-            <div className="grid grid-cols-2 gap-6">
-              {filteredBrowseClubs.length === 0 && !loading && (
-                <div className="col-span-2 text-center py-8 text-gray-500">
-                  {searchQuery ? `No clubs found matching "${searchQuery}"` : "No clubs to browse yet."}
-                </div>
-              )}
-              {filteredBrowseClubs.map((club) => (
-                <div key={club.clubId} className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                  <div className="flex items-start gap-4 mb-6">
-                    <div className="w-14 h-14 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
-                      {getClubLogoUrl(club.logo) ? (
-                        <img src={getClubLogoUrl(club.logo)} alt={club.name} className="w-full h-full object-cover" />
-                      ) : (
-                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
-                          <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
-                          <path d="M4 22h16" />
-                          <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
-                          <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
-                          <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
-                        </svg>
-                      )}
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="text-xl font-bold text-gray-900 mb-2">{club.name}</h3>
-                      <div className="flex items-center gap-1.5 text-sm text-gray-600">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-                          <circle cx="12" cy="10" r="3" />
-                        </svg>
-                        <span>{club.location ?? "—"}</span>
+            {activeTab === "browseClubs" && (
+              <motion.div
+                key="browse-clubs-tab"
+                variants={listVariants}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                className="grid grid-cols-1 md:grid-cols-2 gap-6"
+              >
+                {filteredBrowseClubs.length === 0 && !loading && (
+                  <div className="md:col-span-2 text-center py-8 text-gray-500">
+                    {searchQuery ? `No clubs found matching "${searchQuery}"` : "No clubs to browse yet."}
+                  </div>
+                )}
+                {filteredBrowseClubs.map((club) => (
+                  <motion.div key={club.clubId} variants={itemVariants} className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                    <div className="flex items-start gap-4 mb-6">
+                      <div className="w-14 h-14 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
+                        {getClubLogoUrl(club.logo) ? (
+                          <img src={getClubLogoUrl(club.logo)} alt={club.name} className="w-full h-full object-cover" />
+                        ) : (
+                          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
+                            <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
+                            <path d="M4 22h16" />
+                            <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
+                            <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
+                            <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
+                          </svg>
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="text-xl font-bold text-gray-900 mb-2">{club.name}</h3>
+                        <div className="flex items-center gap-1.5 text-sm text-gray-600">
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                            <circle cx="12" cy="10" r="3" />
+                          </svg>
+                          <span>{club.location ?? "—"}</span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  {club.description && <p className="text-sm text-gray-600 mb-4 line-clamp-2">{club.description}</p>}
-                  <div className="flex justify-end">
-                    <button
-                      onClick={() => handleJoinClub(club.clubId)}
-                      className="bg-slate-900 text-white px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-slate-800 transition-colors"
-                    >
-                      View Details
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+                    {club.description && <p className="text-sm text-gray-600 mb-4 line-clamp-2">{club.description}</p>}
+                    <div className="flex justify-end">
+                      <button
+                        onClick={() => handleJoinClub(club.clubId)}
+                        className="bg-slate-900 text-white px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-slate-800 transition-colors"
+                      >
+                        View Details
+                      </button>
+                    </div>
+                  </motion.div>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </main>
       </div>
 

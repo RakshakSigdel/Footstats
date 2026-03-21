@@ -89,7 +89,7 @@ export default function Register() {
       />
 
       <div className="flex-1 flex items-center justify-center p-6">
-        <div className="bg-white rounded-3xl p-8 w-full max-w-md shadow-xl border border-blue-100">
+        <div className="app-card w-full max-w-md rounded-3xl p-8">
           <div className="text-center mb-6">
             <h2 className="text-2xl font-bold font-serif text-gray-800">
               Register Your Account
@@ -122,7 +122,7 @@ export default function Register() {
                 required
                 value={formData.firstName}
                 onChange={handleChange}
-                className="w-full h-10 px-4 rounded-xl border-2 border-gray-200 bg-gray-50 placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                className="w-full h-10 rounded-xl px-4 text-sm"
               />
             </div>
 
@@ -137,7 +137,7 @@ export default function Register() {
                 required
                 value={formData.lastName}
                 onChange={handleChange}
-                className="w-full h-10 px-4 rounded-xl border-2 border-gray-200 bg-gray-50 placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                className="w-full h-10 rounded-xl px-4 text-sm"
               />
             </div>
 
@@ -152,7 +152,7 @@ export default function Register() {
                 required
                 value={formData.email}
                 onChange={handleChange}
-                className="w-full h-10 px-4 rounded-xl border-2 border-gray-200 bg-gray-50 placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                className="w-full h-10 rounded-xl px-4 text-sm"
               />
             </div>
 
@@ -168,7 +168,7 @@ export default function Register() {
                   required
                   value={formData.password}
                   onChange={handleChange}
-                  className="w-full h-10 pl-4 pr-11 rounded-xl border-2 border-gray-200 bg-gray-50 placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  className="w-full h-10 rounded-xl pl-4 pr-11 text-sm"
                 />
                 <button
                   type="button"
@@ -205,7 +205,7 @@ export default function Register() {
 
             <button
               type="submit"
-              className="w-full h-10 bg-gradient-to-r from-slate-900 to-slate-700 text-white rounded-xl font-semibold flex items-center justify-center gap-2 hover:from-slate-800 hover:to-slate-600 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 text-sm mt-4"
+              className="btn-primary mt-4 flex h-10 w-full items-center justify-center gap-2 rounded-xl text-sm font-semibold"
             >
               Sign Up
               <span className="text-lg">→</span>
