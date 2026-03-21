@@ -6,6 +6,9 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
+    "prisma:generate": "npx prisma generate",
+    "prestart": "npm run prisma:generate",
+    "predev": "npm run prisma:generate",
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
     "seed": "npx prisma db seed",

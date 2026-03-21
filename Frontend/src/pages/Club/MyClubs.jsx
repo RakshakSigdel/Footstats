@@ -5,6 +5,9 @@ import Topbar from "../../components/Global/Topbar";
 import ClubListCard from "../../components/Club/ClubListCard";
 import CreateClub from "./Components/CreateClub";
 import { getMyClubs, getAllClubs, createClub } from "../../services/api.clubs";
+import { toMediaUrl } from "../../services/media";
+
+const getClubLogoUrl = (logoPath) => toMediaUrl(logoPath);
 
 export default function MyClubs() {
   const navigate = useNavigate();
