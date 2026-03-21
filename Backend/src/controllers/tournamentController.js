@@ -128,8 +128,13 @@ export const requestTournamentJoin = async (req, res) => {
       req.body,
     );
 
+    const message =
+      registration?.status === "ACCEPTED"
+        ? "Payment confirmed. Club enrolled in tournament."
+        : "Tournament join request submitted";
+
     res.status(201).json({
-      message: "Tournament join request submitted",
+      message,
       registration,
     });
   } catch (error) {

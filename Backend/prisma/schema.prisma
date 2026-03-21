@@ -206,6 +206,7 @@ model Tournament {
   winnerClubId Int?
   runnerUpClubId Int?
   paymentInstructions String?
+  enrollmentStatus EnrollmentStatus @default(OPEN)
 
   // Relations
   creator        User                     @relation("TournamentCreator", fields: [createdBy], references: [userId])
@@ -228,6 +229,11 @@ enum Status {
   ONGOING
   FINISHED
   CANCELLED
+}
+
+enum EnrollmentStatus {
+  OPEN
+  CLOSED
 }
 
 enum Format {

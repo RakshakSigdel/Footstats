@@ -18,6 +18,11 @@ const FORMAT_MAP = {
   LEAGUE: "LEAGUE",
 };
 
+const ENROLLMENT_MAP = {
+  OPEN: "OPEN",
+  CLOSED: "CLOSED",
+};
+
 const normalizeEnumValue = (value, map, fallback) => {
   if (!value) return fallback;
   const key = String(value).trim().toUpperCase();
@@ -67,6 +72,11 @@ class TournamentService {
           createdBy: userId,
           status: normalizeEnumValue(data.status, STATUS_MAP, "UPCOMING"),
           paymentInstructions: data.paymentInstructions || null,
+          enrollmentStatus: normalizeEnumValue(
+            data.enrollmentStatus,
+            ENROLLMENT_MAP,
+            "OPEN",
+          ),
         },
       });
 
@@ -397,6 +407,13 @@ class TournamentService {
         ...(data.paymentInstructions !== undefined && {
           paymentInstructions: data.paymentInstructions,
         }),
+        ...(data.enrollmentStatus && {
+          enrollmentStatus: normalizeEnumValue(
+            data.enrollmentStatus,
+            ENROLLMENT_MAP,
+            "OPEN",
+          ),
+        }),
         updatedAt: new Date(),
       },
     });
@@ -406,9 +423,12 @@ class TournamentService {
   static async updateTournamentStatus(tournamentId, data) {
     const id = Number(tournamentId);
     const status = normalizeEnumValue(data.status, STATUS_MAP, null);
+    const enrollmentStatus = data.enrollmentStatus
+      ? normalizeEnumValue(data.enrollmentStatus, ENROLLMENT_MAP, null)
+      : undefined;
 
-    if (!status) {
-      throw new Error("Invalid tournament status");
+    if (!status && enrollmentStatus === undefined) {
+      throw new Error("Invalid tournament status or enrollment status");
     }
 
     const acceptedRegistrations = await prisma.tournamentRegistration.findMany({
@@ -440,7 +460,8 @@ class TournamentService {
     const updatedTournament = await prisma.tournament.update({
       where: { tournamentId: id },
       data: {
-        status,
+        ...(status && { status }),
+        ...(enrollmentStatus && { enrollmentStatus }),
         ...(data.winnerClubId !== undefined && {
           winnerClubId: data.winnerClubId ? Number(data.winnerClubId) : null,
         }),
@@ -467,11 +488,25 @@ class TournamentService {
 
     const tournament = await prisma.tournament.findUnique({
       where: { tournamentId: id },
-      select: { tournamentId: true, entryFee: true, createdBy: true },
+      select: {
+        tournamentId: true,
+        entryFee: true,
+        createdBy: true,
+        status: true,
+        enrollmentStatus: true,
+      },
     });
 
     if (!tournament) {
       throw new Error("Tournament not found");
+    }
+
+    if (tournament.enrollmentStatus === "CLOSED") {
+      throw new Error("Tournament enrollment is currently closed");
+    }
+
+    if (["FINISHED", "CANCELLED"].includes(tournament.status)) {
+      throw new Error("This tournament is not accepting new clubs");
     }
 
     const adminAccess = await isClubAdmin(userId, clubId);
@@ -482,36 +517,36 @@ class TournamentService {
     const entryFee = Number(tournament.entryFee || 0);
     const paymentReference = data.paymentReference || null;
     let registrationPaymentStatus = entryFee > 0 ? "PENDING" : "WAIVED";
+    let registrationStatus = "PENDING";
 
     if (entryFee > 0) {
-      if (!paymentReference) {
-        throw new Error("Payment is required for this tournament");
+      if (paymentReference) {
+        const payment = await prisma.payment.findFirst({
+          where: {
+            productId: paymentReference,
+            status: "COMPLETED",
+          },
+        });
+
+        if (!payment) {
+          throw new Error("Verified payment not found for this reference");
+        }
+
+        if (Number(payment.amount) !== entryFee) {
+          throw new Error("Payment amount does not match tournament entry fee");
+        }
+
+        await prisma.payment.update({
+          where: { paymentId: payment.paymentId },
+          data: {
+            userId,
+            tournamentId: id,
+          },
+        });
+
+        registrationPaymentStatus = "PAID";
+        registrationStatus = "ACCEPTED";
       }
-
-      const payment = await prisma.payment.findFirst({
-        where: {
-          productId: paymentReference,
-          status: "COMPLETED",
-        },
-      });
-
-      if (!payment) {
-        throw new Error("Verified payment not found for this reference");
-      }
-
-      if (Number(payment.amount) !== entryFee) {
-        throw new Error("Payment amount does not match tournament entry fee");
-      }
-
-      await prisma.payment.update({
-        where: { paymentId: payment.paymentId },
-        data: {
-          userId,
-          tournamentId: id,
-        },
-      });
-
-      registrationPaymentStatus = "PAID";
     }
 
     const registration = await prisma.tournamentRegistration.upsert({
@@ -522,24 +557,28 @@ class TournamentService {
         },
       },
       update: {
-        status: "PENDING",
+        status: registrationStatus,
         notes: data.notes || null,
         paymentStatus: registrationPaymentStatus,
         paymentReference,
         paymentAmount: entryFee,
-        reviewedAt: null,
-        reviewedBy: null,
+        reviewedAt: registrationStatus === "ACCEPTED" ? new Date() : null,
+        reviewedBy: registrationStatus === "ACCEPTED" ? userId : null,
         registeredBy: userId,
       },
       create: {
         tournamentId: id,
         clubId,
         registeredBy: userId,
-        status: "PENDING",
+        status: registrationStatus,
         notes: data.notes || null,
         paymentStatus: registrationPaymentStatus,
         paymentReference,
         paymentAmount: entryFee,
+        ...(registrationStatus === "ACCEPTED" && {
+          reviewedAt: new Date(),
+          reviewedBy: userId,
+        }),
       },
       include: {
         club: {
@@ -552,21 +591,40 @@ class TournamentService {
       },
     });
 
-    const adminIds = await NotificationService.getTournamentAdminUserIds(id);
-    await NotificationService.createBulkNotifications(
-      adminIds.filter((adminId) => Number(adminId) !== Number(userId)),
-      {
-        type: "TOURNAMENT_JOIN_REQUEST",
-        title: "New tournament join request",
-        message: `${registration.club?.name || "A club"} requested to join your tournament.`,
+    if (registrationStatus === "PENDING") {
+      const adminIds = await NotificationService.getTournamentAdminUserIds(id);
+      await NotificationService.createBulkNotifications(
+        adminIds.filter((adminId) => Number(adminId) !== Number(userId)),
+        {
+          type: "TOURNAMENT_JOIN_REQUEST",
+          title: "New tournament join request",
+          message: `${registration.club?.name || "A club"} requested to join your tournament.`,
+          link: `/tournament/${id}`,
+          data: {
+            tournamentId: id,
+            clubId,
+            registrationId: registration.registrationId,
+          },
+        },
+      );
+    } else {
+      const clubMemberIds = await NotificationService.getClubMemberUserIds(
+        registration.club.clubId,
+        true,
+      );
+
+      await NotificationService.createBulkNotifications(clubMemberIds, {
+        type: "TOURNAMENT_JOIN_APPROVED",
+        title: "Tournament enrollment confirmed",
+        message: `${registration.club.name} has been enrolled in this tournament after payment confirmation.`,
         link: `/tournament/${id}`,
         data: {
           tournamentId: id,
           clubId,
           registrationId: registration.registrationId,
         },
-      },
-    );
+      });
+    }
 
     return registration;
   }

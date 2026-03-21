@@ -53,7 +53,7 @@ const Success = () => {
       return;
     }
 
-    await joinTournament(pendingJoin.tournamentId, {
+    const response = await joinTournament(pendingJoin.tournamentId, {
       clubId: Number(pendingJoin.clubId),
       notes: pendingJoin.notes || "",
       paymentReference: pendingJoin.paymentReference,
@@ -61,7 +61,11 @@ const Success = () => {
 
     sessionStorage.removeItem("pending_tournament_join");
     setRedirectTournamentId(Number(pendingJoin.tournamentId));
-    setRegistrationMessage("Club registration request submitted successfully.");
+    setRegistrationMessage(
+      response?.registration?.status === "ACCEPTED"
+        ? "Payment confirmed. Your club has been enrolled in the tournament."
+        : "Club registration request submitted successfully.",
+    );
   };
 
   const verifyPaymentAndUpdateStatus = async () => {

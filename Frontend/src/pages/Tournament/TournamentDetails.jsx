@@ -2,7 +2,9 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Sidebar from "../../components/Global/Sidebar";
 import Topbar from "../../components/Global/Topbar";
+import ClubListCard from "../../components/Club/ClubListCard";
 import EditTournament from "./Components/EditTournament";
+import JoinTournamentForm from "./Components/JoinTournamentForm";
 import CreateSchedule from "../Schedule/Components/CreateSchedule";
 import {
   getTournamentById,
@@ -16,6 +18,7 @@ import { initiatePayment } from "../../services/api.payments";
 import { getAdminClubs } from "../../services/api.clubs";
 
 const STATUS_OPTIONS = ["UPCOMING", "ONGOING", "FINISHED", "CANCELLED"];
+const ENROLLMENT_OPTIONS = ["OPEN", "CLOSED"];
 
 export default function TournamentDetails() {
   const { tournamentId } = useParams();
@@ -38,11 +41,13 @@ export default function TournamentDetails() {
     notes: "",
     paymentReference: "",
     paymentGateway: "esewa",
+    paymentMode: "PAY_NOW",
   });
   const [joinLoading, setJoinLoading] = useState(false);
 
   const [statusForm, setStatusForm] = useState({
     status: "UPCOMING",
+    enrollmentStatus: "OPEN",
     winnerClubId: "",
     runnerUpClubId: "",
   });
@@ -72,6 +77,7 @@ export default function TournamentDetails() {
 
     setStatusForm({
       status: tournamentDetails?.status || "UPCOMING",
+      enrollmentStatus: tournamentDetails?.enrollmentStatus || "OPEN",
       winnerClubId: tournamentDetails?.winnerClubId ? String(tournamentDetails.winnerClubId) : "",
       runnerUpClubId: tournamentDetails?.runnerUpClubId ? String(tournamentDetails.runnerUpClubId) : "",
     });
@@ -124,7 +130,13 @@ export default function TournamentDetails() {
     [acceptedRegistrations],
   );
 
-  const canSubmitJoinRequest = adminClubs.some((club) => !joinedClubIds.has(club.clubId));
+  const canJoinByTournamentState =
+    tournament?.enrollmentStatus !== "CLOSED" &&
+    !["FINISHED", "CANCELLED"].includes(tournament?.status);
+
+  const canSubmitJoinRequest =
+    canJoinByTournamentState &&
+    adminClubs.some((club) => !joinedClubIds.has(club.clubId));
 
   const tournamentSchedules = useMemo(
     () => (Array.isArray(tournament?.schedules) ? tournament.schedules : []),
@@ -180,50 +192,59 @@ export default function TournamentDetails() {
       const entryFee = Number(tournament?.entryFee || 0);
 
       if (entryFee > 0) {
-        const productId = `tour-${tournamentId}-club-${joinForm.clubId}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+        if (joinForm.paymentMode === "PAY_NOW") {
+          const productId = `tour-${tournamentId}-club-${joinForm.clubId}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
-        sessionStorage.setItem(
-          "pending_tournament_join",
-          JSON.stringify({
-            tournamentId: Number(tournamentId),
-            clubId: Number(joinForm.clubId),
-            notes: joinForm.notes,
-            paymentReference: productId,
-          }),
-        );
+          sessionStorage.setItem(
+            "pending_tournament_join",
+            JSON.stringify({
+              tournamentId: Number(tournamentId),
+              clubId: Number(joinForm.clubId),
+              notes: joinForm.notes,
+              paymentReference: productId,
+            }),
+          );
 
-        const customerName = `${currentUser?.firstName || ""} ${currentUser?.lastName || ""}`.trim() ||
-          "Club Admin";
+          const customerName = `${currentUser?.firstName || ""} ${currentUser?.lastName || ""}`.trim() ||
+            "Club Admin";
 
-        const paymentResponse = await initiatePayment({
-          amount: entryFee,
-          productId,
-          paymentGateway: joinForm.paymentGateway,
-          customerEmail: currentUser?.email,
-          customerName,
-          customerPhone: currentUser?.phone || currentUser?.Phone || "9800000000",
-          productName: `Tournament Registration - ${tournament?.name || `Tournament ${tournamentId}`}`,
-        });
+          const paymentResponse = await initiatePayment({
+            amount: entryFee,
+            productId,
+            paymentGateway: joinForm.paymentGateway,
+            customerEmail: currentUser?.email,
+            customerName,
+            customerPhone: currentUser?.phone || currentUser?.Phone || "9800000000",
+            productName: `Tournament Registration - ${tournament?.name || `Tournament ${tournamentId}`}`,
+          });
 
-        if (!paymentResponse?.paymentUrl) {
-          throw new Error("Payment URL is invalid. Please try again.");
+          if (!paymentResponse?.paymentUrl) {
+            throw new Error("Payment URL is invalid. Please try again.");
+          }
+
+          window.location.href = paymentResponse.paymentUrl;
+          return;
         }
-
-        window.location.href = paymentResponse.paymentUrl;
-        return;
       }
 
-      await joinTournament(tournamentId, {
+      const response = await joinTournament(tournamentId, {
         clubId: Number(joinForm.clubId),
         notes: joinForm.notes,
         paymentReference: joinForm.paymentReference || null,
       });
-      setSuccess("Join request submitted. Tournament admin will review it.");
+
+      setSuccess(
+        response?.registration?.status === "ACCEPTED"
+          ? "Payment confirmed. Your club is enrolled in this tournament."
+          : "Join request submitted. Tournament admin will review it.",
+      );
+
       setJoinForm({
         clubId: "",
         notes: "",
         paymentReference: "",
         paymentGateway: "esewa",
+        paymentMode: "PAY_NOW",
       });
       await loadTournament();
     } catch (err) {
@@ -258,6 +279,7 @@ export default function TournamentDetails() {
     try {
       await updateTournamentStatus(tournamentId, {
         status: statusForm.status,
+        enrollmentStatus: statusForm.enrollmentStatus,
         winnerClubId: statusForm.winnerClubId ? Number(statusForm.winnerClubId) : null,
         runnerUpClubId: statusForm.runnerUpClubId ? Number(statusForm.runnerUpClubId) : null,
       });
@@ -273,12 +295,13 @@ export default function TournamentDetails() {
 
   const tabs = [
     { id: "overview", label: "Overview" },
+    { id: "join", label: "Join Tournament", hide: !canSubmitJoinRequest },
     { id: "clubs", label: "Clubs" },
     { id: "requests", label: "Join Requests", adminOnly: true },
     { id: "schedules", label: "Schedules" },
     { id: "topPlayers", label: "Top Players" },
     { id: "topClubs", label: "Top Clubs" },
-  ].filter((tab) => !tab.adminOnly || isTournamentAdmin);
+  ].filter((tab) => (!tab.adminOnly || isTournamentAdmin) && !tab.hide);
 
   return (
     <div className="flex min-h-screen bg-gray-50">
@@ -317,27 +340,38 @@ export default function TournamentDetails() {
                   <p className="mt-2 max-w-3xl text-sm text-gray-600">{tournament.description || "No description."}</p>
                   <div className="mt-3 flex flex-wrap gap-2 text-xs font-semibold uppercase tracking-wide text-gray-600">
                     <span className="rounded-full bg-white px-3 py-1 border border-gray-200">{tournament.status}</span>
+                    <span className="rounded-full bg-white px-3 py-1 border border-gray-200">Enrollment {tournament.enrollmentStatus || "OPEN"}</span>
                     <span className="rounded-full bg-white px-3 py-1 border border-gray-200">{tournament.format}</span>
                     <span className="rounded-full bg-white px-3 py-1 border border-gray-200">{tournament.location}</span>
                   </div>
                 </div>
 
-                {isTournamentOwner && (
-                  <button
-                    onClick={() => setIsEditTournamentOpen(true)}
-                    className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800"
-                  >
-                    Edit Tournament
-                  </button>
-                )}
-                {isTournamentAdmin && (
-                  <button
-                    onClick={() => setIsCreateScheduleOpen(true)}
-                    className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
-                  >
-                    Create Schedule
-                  </button>
-                )}
+                <div className="flex flex-wrap gap-2">
+                  {canSubmitJoinRequest && (
+                    <button
+                      onClick={() => setActiveTab("join")}
+                      className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700"
+                    >
+                      Join Tournament
+                    </button>
+                  )}
+                  {isTournamentOwner && (
+                    <button
+                      onClick={() => setIsEditTournamentOpen(true)}
+                      className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800"
+                    >
+                      Edit Tournament
+                    </button>
+                  )}
+                  {isTournamentAdmin && (
+                    <button
+                      onClick={() => setIsCreateScheduleOpen(true)}
+                      className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+                    >
+                      Create Schedule
+                    </button>
+                  )}
+                </div>
               </div>
 
               <div className="mb-6 grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -380,76 +414,51 @@ export default function TournamentDetails() {
               {activeTab === "overview" && (
                 <div className="space-y-6">
                   <section className="rounded-xl border border-gray-100 bg-white p-6">
-                    <h2 className="text-lg font-bold text-gray-900">Register Your Club</h2>
+                    <h2 className="text-lg font-bold text-gray-900">Tournament Overview</h2>
                     <p className="mt-1 text-sm text-gray-600">
-                      Any club where you are a creator/admin can request to join this tournament.
-                    </p>
-                    <p className="mt-2 rounded-lg bg-amber-50 border border-amber-200 p-3 text-sm text-amber-800">
-                      Paid tournaments require payment before your club join request is submitted.
+                      Snapshot of the competition details, timeline, and participation status.
                     </p>
 
-                    {canSubmitJoinRequest ? (
-                      <form className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4" onSubmit={handleJoinTournament}>
-                        <select
-                          required
-                          value={joinForm.clubId}
-                          onChange={(e) => setJoinForm((p) => ({ ...p, clubId: e.target.value }))}
-                          className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
-                        >
-                          <option value="">Select your club</option>
-                          {adminClubs
-                            .filter((club) => !joinedClubIds.has(club.clubId))
-                            .map((club) => (
-                              <option key={club.clubId} value={club.clubId}>
-                                {club.name}
-                              </option>
-                            ))}
-                        </select>
-                        {Number(tournament.entryFee || 0) > 0 && (
-                          <select
-                            value={joinForm.paymentGateway}
-                            onChange={(e) =>
-                              setJoinForm((p) => ({
-                                ...p,
-                                paymentGateway: e.target.value,
-                              }))
-                            }
-                            className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
-                          >
-                            <option value="esewa">eSewa</option>
-                            <option value="khalti">Khalti</option>
-                          </select>
-                        )}
-                        <input
-                          type="text"
-                          value={joinForm.paymentReference}
-                          onChange={(e) => setJoinForm((p) => ({ ...p, paymentReference: e.target.value }))}
-                          placeholder="Payment reference (only for free/manual override)"
-                          className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
-                        />
-                        <textarea
-                          value={joinForm.notes}
-                          onChange={(e) => setJoinForm((p) => ({ ...p, notes: e.target.value }))}
-                          placeholder="Message to tournament admin"
-                          className="md:col-span-2 rounded-lg border border-gray-300 px-3 py-2 text-sm"
-                          rows={3}
-                        />
+                    <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+                        <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Start Date</p>
+                        <p className="mt-1 text-sm font-semibold text-gray-900">
+                          {tournament.startDate ? new Date(tournament.startDate).toLocaleString() : "TBD"}
+                        </p>
+                      </div>
+                      <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+                        <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">End Date</p>
+                        <p className="mt-1 text-sm font-semibold text-gray-900">
+                          {tournament.endDate ? new Date(tournament.endDate).toLocaleString() : "TBD"}
+                        </p>
+                      </div>
+                    </div>
+
+                    {tournament.paymentInstructions && (
+                      <div className="mt-4 rounded-lg border border-blue-200 bg-blue-50 p-4">
+                        <p className="text-xs font-semibold uppercase tracking-wide text-blue-700">Payment Instructions</p>
+                        <p className="mt-2 text-sm text-blue-900 whitespace-pre-wrap">{tournament.paymentInstructions}</p>
+                      </div>
+                    )}
+
+                    {canSubmitJoinRequest && (
+                      <div className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                        <p className="text-sm text-emerald-900 font-medium">
+                          Ready to participate? Open the Join Tournament tab to submit your club.
+                        </p>
                         <button
-                          type="submit"
-                          disabled={joinLoading}
-                          className="md:col-span-2 rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-60"
+                          onClick={() => setActiveTab("join")}
+                          className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700"
                         >
-                          {joinLoading
-                            ? "Processing..."
-                            : Number(tournament.entryFee || 0) > 0
-                              ? "Proceed to Payment"
-                              : "Submit Join Request"}
+                          Open Join Form
                         </button>
-                      </form>
-                    ) : (
-                      <p className="mt-4 text-sm text-gray-600">
-                        You do not have any eligible club for this tournament or all your admin clubs are already enrolled/requested.
-                      </p>
+                      </div>
+                    )}
+
+                    {!canJoinByTournamentState && (
+                      <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+                        Tournament enrollment is currently unavailable because this tournament is {tournament?.status?.toLowerCase() || "not open"} or enrollment is closed by the admin.
+                      </div>
                     )}
                   </section>
 
@@ -460,7 +469,7 @@ export default function TournamentDetails() {
                         Manage tournament status and winner details.
                       </p>
 
-                      <form className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4" onSubmit={handleUpdateStatus}>
+                      <form className="mt-4 grid grid-cols-1 md:grid-cols-4 gap-4" onSubmit={handleUpdateStatus}>
                         <select
                           value={statusForm.status}
                           onChange={(e) => setStatusForm((p) => ({ ...p, status: e.target.value }))}
@@ -469,6 +478,18 @@ export default function TournamentDetails() {
                           {STATUS_OPTIONS.map((status) => (
                             <option key={status} value={status}>
                               {status}
+                            </option>
+                          ))}
+                        </select>
+
+                        <select
+                          value={statusForm.enrollmentStatus}
+                          onChange={(e) => setStatusForm((p) => ({ ...p, enrollmentStatus: e.target.value }))}
+                          className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                        >
+                          {ENROLLMENT_OPTIONS.map((state) => (
+                            <option key={state} value={state}>
+                              Enrollment {state}
                             </option>
                           ))}
                         </select>
@@ -502,7 +523,7 @@ export default function TournamentDetails() {
                         <button
                           type="submit"
                           disabled={statusLoading}
-                          className="md:col-span-3 rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-60"
+                          className="md:col-span-4 rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-60"
                         >
                           {statusLoading ? "Updating..." : "Update Tournament Status"}
                         </button>
@@ -512,19 +533,46 @@ export default function TournamentDetails() {
                 </div>
               )}
 
+              {activeTab === "join" && (
+                <JoinTournamentForm
+                  tournament={tournament}
+                  adminClubs={adminClubs}
+                  joinedClubIds={joinedClubIds}
+                  joinForm={joinForm}
+                  setJoinForm={setJoinForm}
+                  joinLoading={joinLoading}
+                  onSubmit={handleJoinTournament}
+                  canSubmitJoinRequest={canSubmitJoinRequest}
+                  canJoinByTournamentState={canJoinByTournamentState}
+                />
+              )}
+
               {activeTab === "clubs" && (
                 <section className="rounded-xl border border-gray-100 bg-white p-6">
                   <h2 className="text-lg font-bold text-gray-900">Joined Clubs</h2>
                   {acceptedRegistrations.length === 0 ? (
                     <p className="mt-3 text-sm text-gray-600">No clubs have been approved yet.</p>
                   ) : (
-                    <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="mt-4 space-y-4">
                       {acceptedRegistrations.map((r) => (
-                        <div key={r.registrationId} className="rounded-lg border border-gray-200 p-4">
-                          <div className="font-semibold text-gray-900">{r.club?.name || `Club ${r.clubId}`}</div>
-                          <div className="mt-1 text-xs text-gray-500">Payment: {r.paymentStatus}</div>
-                          {r.notes && <p className="mt-2 text-xs text-gray-600">{r.notes}</p>}
-                        </div>
+                        <ClubListCard
+                          key={r.registrationId}
+                          club={{
+                            ...r.club,
+                            foundedDate: r.club?.foundedDate,
+                          }}
+                          showRole={false}
+                          showFounded={false}
+                          onClick={() => navigate(`/club/${r.clubId}`)}
+                          metaLines={[
+                            ...(isTournamentAdmin
+                              ? [{ label: "Payment", value: r.paymentStatus || "PENDING" }]
+                              : []),
+                            ...(r.notes
+                              ? [{ label: "Note", value: r.notes }]
+                              : []),
+                          ]}
+                        />
                       ))}
                     </div>
                   )}
@@ -614,6 +662,7 @@ export default function TournamentDetails() {
                                 Score: {schedule.match.teamOneGoals} - {schedule.match.teamTwoGoals}
                               </div>
                             )}
+                            <p className="mt-2 text-xs font-semibold text-blue-700">Open Schedule Details</p>
                           </div>
                         ))}
                       </div>
@@ -643,9 +692,23 @@ export default function TournamentDetails() {
                           {topPlayers.map((player) => (
                             <tr key={`${player.userId}-${player.clubId}`} className="border-b border-gray-100">
                               <td className="py-3 font-semibold text-gray-900">
-                                {player.firstName} {player.lastName}
+                                <button
+                                  type="button"
+                                  onClick={() => navigate(`/player/${player.userId}`)}
+                                  className="text-left text-blue-700 hover:text-blue-800 hover:underline"
+                                >
+                                  {player.firstName} {player.lastName}
+                                </button>
                               </td>
-                              <td className="py-3 text-gray-600">{player.clubName || `Club ${player.clubId}`}</td>
+                              <td className="py-3 text-gray-600">
+                                <button
+                                  type="button"
+                                  onClick={() => navigate(`/club/${player.clubId}`)}
+                                  className="text-left text-blue-700 hover:text-blue-800 hover:underline"
+                                >
+                                  {player.clubName || `Club ${player.clubId}`}
+                                </button>
+                              </td>
                               <td className="py-3 text-gray-900">{player.goals}</td>
                               <td className="py-3 text-gray-900">{player.assists}</td>
                             </tr>
@@ -680,7 +743,11 @@ export default function TournamentDetails() {
                         </thead>
                         <tbody>
                           {topClubs.map((club) => (
-                            <tr key={club.clubId} className="border-b border-gray-100">
+                            <tr
+                              key={club.clubId}
+                              onClick={() => navigate(`/club/${club.clubId}`)}
+                              className="border-b border-gray-100 cursor-pointer hover:bg-gray-50"
+                            >
                               <td className="py-3 font-semibold text-gray-900">{club.clubName}</td>
                               <td className="py-3 text-gray-700">{club.played}</td>
                               <td className="py-3 text-gray-700">{club.wins}</td>
