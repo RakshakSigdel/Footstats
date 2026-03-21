@@ -3,8 +3,16 @@ import ClubService from "../services/clubService.js";
 export const createClub = async (req, res) => {
   try {
     const userId = req.user.userId;
-    const { name, description, location, foundedDate } = req.body;
-    if (!name || !description || !location || !foundedDate) {
+    const {
+      name,
+      description,
+      location,
+      foundedDate,
+      locationLatitude,
+      locationLongitude,
+      locationPlaceId,
+    } = req.body;
+    if (!name || !description || !location || !foundedDate || !locationPlaceId || locationLatitude === undefined || locationLongitude === undefined) {
       return res.status(400).json({ message: "All fields are required" });
     }
 
@@ -19,6 +27,9 @@ export const createClub = async (req, res) => {
   } catch (error) {
     if (error.code === "P2002") {
       return res.status(409).json({ message: `A club named "${req.body.name}" already exists. Please choose a different name.` });
+    }
+    if (error.message?.includes("valid location")) {
+      return res.status(400).json({ message: error.message });
     }
     res.status(500).json({ message: "Error creating club", error: error.message });
   }
@@ -95,6 +106,9 @@ export const updateClub = async (req, res) => {
     );
     res.status(200).json({ updatedClub });
   } catch (error) {
+    if (error.message?.includes("valid location")) {
+      return res.status(400).json({ message: error.message });
+    }
     res
       .status(500)
       .json({ message: "Error updating club", error: error.message });

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import PlaceAutocompleteInput from "../../../components/Location/PlaceAutocompleteInput";
 
 const EditTournament = ({ isOpen, onClose, onEditTournament, tournamentData }) => {
   const [formData, setFormData] = useState(tournamentData || {
@@ -14,6 +15,17 @@ const EditTournament = ({ isOpen, onClose, onEditTournament, tournamentData }) =
     skillLevel: 'All Levels',
     maxTeams: ''
   });
+  const [selectedPlace, setSelectedPlace] = useState(
+    tournamentData?.locationPlaceId && tournamentData?.locationLatitude != null && tournamentData?.locationLongitude != null
+      ? {
+          placeId: tournamentData.locationPlaceId,
+          displayName: tournamentData.location,
+          latitude: Number(tournamentData.locationLatitude),
+          longitude: Number(tournamentData.locationLongitude),
+        }
+      : null,
+  );
+  const [locationError, setLocationError] = useState(null);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -21,11 +33,27 @@ const EditTournament = ({ isOpen, onClose, onEditTournament, tournamentData }) =
       ...prevData,
       [name]: value
     }));
+    if (name === "location") {
+      setSelectedPlace(null);
+      setLocationError(null);
+    }
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onEditTournament(formData);
+    const locationChanged = formData.location.trim() !== String(tournamentData?.location || "").trim();
+    if (locationChanged && !selectedPlace) {
+      setLocationError("Choose a real place from suggestions before saving");
+      return;
+    }
+    onEditTournament({
+      ...formData,
+      ...(selectedPlace && {
+        locationLatitude: selectedPlace.latitude,
+        locationLongitude: selectedPlace.longitude,
+        locationPlaceId: selectedPlace.placeId,
+      }),
+    });
   };
 
   return (
@@ -82,14 +110,20 @@ const EditTournament = ({ isOpen, onClose, onEditTournament, tournamentData }) =
           <div className="grid grid-cols-2 gap-5">
             <div>
               <label className="block text-sm font-semibold text-gray-900 mb-2">Location</label>
-              <input
-                type="text"
-                name="location"
-                placeholder="eg: Kathmandu"
+              <PlaceAutocompleteInput
                 value={formData.location}
-                onChange={handleInputChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+                onChange={(nextLocation) => {
+                  setFormData((prevData) => ({ ...prevData, location: nextLocation }));
+                  setSelectedPlace(null);
+                  setLocationError(null);
+                }}
+                onSelect={(place) => {
+                  setSelectedPlace(place);
+                  setLocationError(null);
+                }}
+                placeholder="Search exact location"
               />
+              {locationError && <p className="mt-1 text-xs text-red-600">{locationError}</p>}
             </div>
 
             <div>

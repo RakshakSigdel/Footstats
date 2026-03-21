@@ -1,14 +1,33 @@
 import { PrismaClient } from "@prisma/client";
+import { hasValidCoordinates, parseCoordinate } from "../utils/geo.js";
 const prisma = new PrismaClient();
+
+const buildVerifiedLocationData = (data) => {
+  const latitude = parseCoordinate(data.locationLatitude);
+  const longitude = parseCoordinate(data.locationLongitude);
+  const locationPlaceId = String(data.locationPlaceId || "").trim();
+
+  if (!hasValidCoordinates(latitude, longitude) || !locationPlaceId) {
+    throw new Error("Please choose a valid location from the suggestions");
+  }
+
+  return {
+    locationLatitude: latitude,
+    locationLongitude: longitude,
+    locationPlaceId,
+  };
+};
 
 class ClubService {
   static async createClub(data, userId) {
+    const verifiedLocation = buildVerifiedLocationData(data);
     const newClub = await prisma.club.create({
       data: {
         name: data.name,
         description: data.description,
         logo: data.logo,
-        location: data.location,
+        location: String(data.location || "").trim(),
+        ...verifiedLocation,
         foundedDate: data.foundedDate,
         createdBy: userId,
         createdAt: new Date(),
@@ -67,16 +86,48 @@ class ClubService {
   }
 
   static async updateClub(clubId, data, userId) {
+    const existingClub = await prisma.club.findUnique({
+      where: { clubId: Number(clubId) },
+      select: {
+        location: true,
+        locationLatitude: true,
+        locationLongitude: true,
+        locationPlaceId: true,
+      },
+    });
+
+    if (!existingClub) {
+      throw new Error("Club not found");
+    }
+
+    const nextLocation =
+      data.location !== undefined ? String(data.location || "").trim() : undefined;
+    const locationChanged =
+      nextLocation !== undefined && nextLocation !== String(existingClub.location || "").trim();
+
+    const hasIncomingCoordinates =
+      data.locationLatitude !== undefined ||
+      data.locationLongitude !== undefined ||
+      data.locationPlaceId !== undefined;
+
+    const verifiedLocation =
+      locationChanged || hasIncomingCoordinates
+        ? buildVerifiedLocationData(data)
+        : {
+            locationLatitude: existingClub.locationLatitude,
+            locationLongitude: existingClub.locationLongitude,
+            locationPlaceId: existingClub.locationPlaceId,
+          };
+
     const updatedClub = await prisma.club.update({
-      where: { clubId: Number(clubId), createdBy: userId },
+      where: { clubId: Number(clubId) },
       data: {
         name: data.name,
         description: data.description,
-        location: data.location,
+        ...(nextLocation !== undefined && { location: nextLocation }),
+        ...verifiedLocation,
         logo: data.logo,
         foundedDate: data.foundedDate,
-        createdBy: userId,
-        createdAt: data.createdAt,
         updatedAt: new Date(),
       },
     });

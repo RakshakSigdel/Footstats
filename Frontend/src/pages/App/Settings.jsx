@@ -4,6 +4,7 @@ import Topbar from "../../components/Global/Topbar";
 import { getMyProfile, updatePlayerById } from "../../services/api.player";
 import { resendVerificationCode, verifyEmail } from "../../services/api.auth";
 import { useTheme } from "../../context/ThemeContext";
+import PlaceAutocompleteInput from "../../components/Location/PlaceAutocompleteInput";
 
 export default function Settings() {
   const { isDarkMode, toggleDarkMode } = useTheme();
@@ -17,6 +18,8 @@ export default function Settings() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [selectedPlace, setSelectedPlace] = useState(null);
+  const [locationError, setLocationError] = useState(null);
   const [verificationCode, setVerificationCode] = useState("");
   const [emailActionLoading, setEmailActionLoading] = useState(false);
   const [emailMessage, setEmailMessage] = useState(null);
@@ -44,6 +47,14 @@ export default function Settings() {
           phone: data?.Phone ?? "",
           location: data?.location ?? ""
         });
+        if (data?.locationPlaceId && data?.locationLatitude != null && data?.locationLongitude != null) {
+          setSelectedPlace({
+            placeId: data.locationPlaceId,
+            displayName: data.location,
+            latitude: Number(data.locationLatitude),
+            longitude: Number(data.locationLongitude),
+          });
+        }
       } catch (err) {
         setError(err?.message || "Failed to load profile");
         throw err;
@@ -57,6 +68,10 @@ export default function Settings() {
   const handleInputChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
     setSaveSuccess(false);
+    if (e.target.name === "location") {
+      setSelectedPlace(null);
+      setLocationError(null);
+    }
   };
 
   const handleToggle = (key) => {
@@ -65,15 +80,50 @@ export default function Settings() {
 
   const handleSaveChanges = async () => {
     if (!profile?.userId) return;
+
+    const locationChanged = formData.location.trim() !== String(profile?.location || "").trim();
+    if (locationChanged && !selectedPlace) {
+      setLocationError("Please select a real location from suggestions");
+      return;
+    }
+
     setError(null);
     setSaveSuccess(false);
     try {
-      await updatePlayerById(profile.userId, {
+      const response = await updatePlayerById(profile.userId, {
         firstName: formData.firstName,
         lastName: formData.lastName,
         Phone: formData.phone,
-        location: formData.location
+        location: formData.location,
+        ...(selectedPlace && {
+          locationLatitude: selectedPlace.latitude,
+          locationLongitude: selectedPlace.longitude,
+          locationPlaceId: selectedPlace.placeId,
+        }),
       });
+
+      const updatedProfile = response?.updatedPlayer;
+      if (updatedProfile) {
+        setProfile((prev) => ({
+          ...prev,
+          ...updatedProfile,
+        }));
+
+        if (
+          updatedProfile.locationPlaceId &&
+          updatedProfile.locationLatitude != null &&
+          updatedProfile.locationLongitude != null
+        ) {
+          setSelectedPlace({
+            placeId: updatedProfile.locationPlaceId,
+            displayName: updatedProfile.location,
+            latitude: Number(updatedProfile.locationLatitude),
+            longitude: Number(updatedProfile.locationLongitude),
+          });
+        }
+      }
+
+      setLocationError(null);
       setSaveSuccess(true);
     } catch (err) {
       setError(err?.message || "Failed to save changes");
@@ -180,17 +230,25 @@ export default function Settings() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-900 mb-2">Location</label>
-                <input
-                  type="text"
-                  name="location"
+                <PlaceAutocompleteInput
                   value={formData.location}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  onChange={(nextLocation) => {
+                    setFormData((prev) => ({ ...prev, location: nextLocation }));
+                    setSelectedPlace(null);
+                    setLocationError(null);
+                  }}
+                  onSelect={(place) => {
+                    setSelectedPlace(place);
+                    setLocationError(null);
+                  }}
+                  placeholder="Search exact location"
+                  className="bg-gray-50"
                 />
+                {locationError && <p className="mt-1 text-xs text-red-600">{locationError}</p>}
               </div>
               <button
                 onClick={handleSaveChanges}
-                disabled={loading || !profile?.id}
+                disabled={loading || !profile?.userId}
                 className="bg-slate-900 text-white px-6 py-3 rounded-lg text-sm font-medium hover:bg-slate-800 disabled:opacity-50"
               >
                 Save Changes

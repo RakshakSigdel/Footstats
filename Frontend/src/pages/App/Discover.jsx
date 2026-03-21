@@ -4,6 +4,7 @@ import Sidebar from "../../components/Global/Sidebar";
 import Topbar from "../../components/Global/Topbar";
 import { getAllClubs, getMyClubs } from "../../services/api.clubs";
 import { getAllTournaments } from "../../services/api.tournaments";
+import { getLocationRecommendations } from "../../services/api.locations";
 
 export default function Discover() {
   const navigate = useNavigate();
@@ -14,6 +15,7 @@ export default function Discover() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [recommendationMode, setRecommendationMode] = useState(false);
 
   const filters = ["All", "Clubs", "Tournaments", "Upcoming", "Free Entry"];
 
@@ -22,21 +24,30 @@ export default function Discover() {
       setLoading(true);
       setError(null);
       try {
+        const [recommendations, myClubsData] = await Promise.all([
+          getLocationRecommendations({ radiusKm: 2000, limit: 10 }),
+          getMyClubs().catch(() => []),
+        ]);
+
+        setRecommendationMode(true);
+        setClubs(Array.isArray(recommendations?.clubs) ? recommendations.clubs : []);
+        setTournaments(Array.isArray(recommendations?.tournaments) ? recommendations.tournaments : []);
+        setMyClubIds(new Set((Array.isArray(myClubsData) ? myClubsData : []).map((c) => c.clubId)));
+      } catch (err) {
         const [clubsData, tournamentsData, myClubsData] = await Promise.all([
           getAllClubs().catch(() => []),
           getAllTournaments().catch(() => []),
           getMyClubs().catch(() => []),
         ]);
+
+        setRecommendationMode(false);
         setClubs(Array.isArray(clubsData) ? clubsData : []);
         const tournamentItems = Array.isArray(tournamentsData)
           ? tournamentsData
           : tournamentsData?.tournaments || [];
         setTournaments(tournamentItems);
-        const ids = new Set((Array.isArray(myClubsData) ? myClubsData : []).map(c => c.clubId));
-        setMyClubIds(ids);
-      } catch (err) {
-        setError(err?.message || "Failed to load discover data");
-        throw err;
+        setMyClubIds(new Set((Array.isArray(myClubsData) ? myClubsData : []).map((c) => c.clubId)));
+        setError(err?.message || "Set your profile location to see nearby recommendations");
       } finally {
         setLoading(false);
       }
@@ -84,7 +95,11 @@ export default function Discover() {
           {loading && <div className="mb-6 text-gray-500">Loading...</div>}
           <div className="mb-8">
             <h1 className="text-4xl font-bold text-gray-900 mb-2">Discover</h1>
-            <p className="text-gray-600">Find clubs and tournaments near you</p>
+            <p className="text-gray-600">
+              {recommendationMode
+                ? "Nearest clubs and tournaments based on your location"
+                : "Find clubs and tournaments near you"}
+            </p>
           </div>
 
           {/* Search and Filter Section */}
@@ -164,6 +179,11 @@ export default function Discover() {
                       <circle cx="12" cy="10" r="3" />
                     </svg>
                     <span>{club.location ?? "—"}</span>
+                    {club.distanceKm != null && (
+                      <span className="rounded-full bg-blue-50 px-2 py-0.5 text-xs font-semibold text-blue-700">
+                        {club.distanceKm} km away
+                      </span>
+                    )}
                   </div>
                   <div className="flex items-center justify-between">
                     {club.description && <span className="text-sm text-gray-600 line-clamp-1 flex-1 mr-2">{club.description}</span>}
@@ -204,6 +224,11 @@ export default function Discover() {
                         <circle cx="12" cy="10" r="3" />
                       </svg>
                       <span>{tournament.location ?? "—"}</span>
+                      {tournament.distanceKm != null && (
+                        <span className="rounded-full bg-blue-50 px-2 py-0.5 text-xs font-semibold text-blue-700">
+                          {tournament.distanceKm} km away
+                        </span>
+                      )}
                     </div>
                     <div className="text-sm text-gray-900 font-medium">
                       {tournament.startDate ? `Starts ${new Date(tournament.startDate).toLocaleDateString()}` : "—"}

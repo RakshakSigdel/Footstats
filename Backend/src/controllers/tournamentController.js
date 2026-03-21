@@ -13,11 +13,17 @@ export const createTournament = async (req, res) => {
       format,
       status,
       paymentInstructions,
+      locationLatitude,
+      locationLongitude,
+      locationPlaceId,
     } = req.body;
     if (
       !name ||
       !description ||
       !location ||
+      !locationPlaceId ||
+      locationLatitude === undefined ||
+      locationLongitude === undefined ||
       !startDate ||
       !endDate ||
       entryFee === undefined ||
@@ -36,11 +42,17 @@ export const createTournament = async (req, res) => {
         format,
         status,
         paymentInstructions,
+        locationLatitude,
+        locationLongitude,
+        locationPlaceId,
       },
       userId,
     );
     res.status(201).json({ tournament });
   } catch (error) {
+    if (error.message?.includes("valid location")) {
+      return res.status(400).json({ message: error.message });
+    }
     res
       .status(500)
       .json({ message: "Error creating tournament", error: error.message });
@@ -110,6 +122,9 @@ export const updateTournament = async (req, res) => {
     );
     res.status(200).json({ updatedTournament });
   } catch (error) {
+    if (error.message?.includes("valid location")) {
+      return res.status(400).json({ message: error.message });
+    }
     const status =
       error.message?.includes("not found")
         ? 404

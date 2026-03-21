@@ -596,7 +596,14 @@ export default function ClubDetails() {
             isOpen={isEditModalOpen}
             onClose={() => setIsEditModalOpen(false)}
             onEditClub={handleEditClub}
-            clubData={{ name: clubData.name, description: clubData.description, location: clubData.location }}
+            clubData={{
+              name: clubData.name,
+              description: clubData.description,
+              location: clubData.location,
+              locationLatitude: clubData.locationLatitude,
+              locationLongitude: clubData.locationLongitude,
+              locationPlaceId: clubData.locationPlaceId,
+            }}
           />
           <JoinClubRequest
             isOpen={isJoinModalOpen}

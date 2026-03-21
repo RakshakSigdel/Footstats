@@ -1,6 +1,7 @@
 //Imported in - src/pages/Club/clubDetails.jsx
 
 import { useState, useEffect } from "react";
+import PlaceAutocompleteInput from "../../../components/Location/PlaceAutocompleteInput";
 
 const EditClub = ({ isOpen, onClose, onEditClub, clubData }) => {
   const [formData, setFormData] = useState({
@@ -8,6 +9,8 @@ const EditClub = ({ isOpen, onClose, onEditClub, clubData }) => {
     description: "",
     location: "",
   });
+  const [selectedPlace, setSelectedPlace] = useState(null);
+  const [locationError, setLocationError] = useState(null);
 
   useEffect(() => {
     if (clubData) {
@@ -16,6 +19,17 @@ const EditClub = ({ isOpen, onClose, onEditClub, clubData }) => {
         description: clubData.description ?? "",
         location: clubData.location ?? "",
       });
+      if (clubData.locationLatitude != null && clubData.locationLongitude != null && clubData.locationPlaceId) {
+        setSelectedPlace({
+          placeId: clubData.locationPlaceId,
+          displayName: clubData.location,
+          latitude: Number(clubData.locationLatitude),
+          longitude: Number(clubData.locationLongitude),
+        });
+      } else {
+        setSelectedPlace(null);
+      }
+      setLocationError(null);
     }
   }, [clubData]);
 
@@ -26,10 +40,22 @@ const EditClub = ({ isOpen, onClose, onEditClub, clubData }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    const locationChanged = formData.location.trim() !== String(clubData?.location || "").trim();
+    if (locationChanged && !selectedPlace) {
+      setLocationError("Choose a real place from suggestions before saving");
+      return;
+    }
+
     onEditClub({
       name: formData.clubName,
       description: formData.description,
       location: formData.location,
+      ...(selectedPlace && {
+        locationLatitude: selectedPlace.latitude,
+        locationLongitude: selectedPlace.longitude,
+        locationPlaceId: selectedPlace.placeId,
+      }),
     });
     onClose();
   };
@@ -94,13 +120,20 @@ const EditClub = ({ isOpen, onClose, onEditClub, clubData }) => {
             <label className="block text-sm font-medium text-gray-700 mb-1.5">
               Location
             </label>
-            <input
-              type="text"
-              name="location"
+            <PlaceAutocompleteInput
               value={formData.location}
-              onChange={handleInputChange}
-              className="w-full px-4 py-3"
+              onChange={(nextLocation) => {
+                setFormData((prev) => ({ ...prev, location: nextLocation }));
+                setSelectedPlace(null);
+                setLocationError(null);
+              }}
+              onSelect={(place) => {
+                setSelectedPlace(place);
+                setLocationError(null);
+              }}
+              placeholder="Search exact location"
             />
+            {locationError && <p className="mt-1 text-xs text-red-600">{locationError}</p>}
           </div>
 
           <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">

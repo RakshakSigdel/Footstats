@@ -1,5 +1,6 @@
 import {PrismaClient} from "@prisma/client";
 import { hashPassword } from "../utils/hashPassword.js";
+import { hasValidCoordinates, parseCoordinate } from "../utils/geo.js";
 
 const prisma = new PrismaClient();
 
@@ -19,6 +20,9 @@ class PlayerService {
         gender: true,
         Phone: true,
         location: true,
+        locationLatitude: true,
+        locationLongitude: true,
+        locationPlaceId: true,
         profilePhoto: true,
         // position: true,
         createdAt: true,
@@ -46,6 +50,9 @@ class PlayerService {
         gender: true,
         Phone: true,
         location: true,
+        locationLatitude: true,
+        locationLongitude: true,
+        locationPlaceId: true,
         profilePhoto: true,
         // position: true,
         // matchesPlayed: true,
@@ -68,6 +75,9 @@ class PlayerService {
         lastName: true,
         gender: true,
         location: true,
+        locationLatitude: true,
+        locationLongitude: true,
+        locationPlaceId: true,
         profilePhoto: true,
         preferredFoot: true,
         dateOfBirth: true,
@@ -314,15 +324,57 @@ class PlayerService {
   }
 
   static async updatePlayer(id, data) {
+    const userId = Number(id);
+    const existing = await prisma.user.findUnique({
+      where: { userId },
+      select: {
+        location: true,
+        locationLatitude: true,
+        locationLongitude: true,
+        locationPlaceId: true,
+      },
+    });
+
+    if (!existing) throw { status: 404, message: "Player not found" };
+
+    const nextLocation = data.location !== undefined ? String(data.location || "").trim() : undefined;
+    const locationChanged =
+      nextLocation !== undefined && nextLocation !== String(existing.location || "").trim();
+    const hasIncomingCoordinates =
+      data.locationLatitude !== undefined ||
+      data.locationLongitude !== undefined ||
+      data.locationPlaceId !== undefined;
+
+    let locationData = {};
+    if (locationChanged || hasIncomingCoordinates) {
+      const latitude = parseCoordinate(data.locationLatitude);
+      const longitude = parseCoordinate(data.locationLongitude);
+      const locationPlaceId = String(data.locationPlaceId || "").trim();
+
+      if (!hasValidCoordinates(latitude, longitude) || !locationPlaceId) {
+        throw {
+          status: 400,
+          message: "Please choose a valid location from the suggestions",
+        };
+      }
+
+      locationData = {
+        locationLatitude: latitude,
+        locationLongitude: longitude,
+        locationPlaceId,
+      };
+    }
+
     const updatedPlayer = await prisma.user.update({
-      where: { userId: Number(id) },
+      where: { userId },
       data: {
         firstName: data.firstName,
         lastName: data.lastName,
         dateOfBirth: data.dateOfBirth,
         gender: data.gender,
         Phone: data.Phone,
-        location: data.location,
+        ...(nextLocation !== undefined && { location: nextLocation }),
+        ...locationData,
         profilePhoto: data.profilePhoto,
         // position: data.position,
       },

@@ -57,6 +57,9 @@ export const updatePlayerById = async (req, res) => {
       gender,
       Phone,
       location,
+      locationLatitude,
+      locationLongitude,
+      locationPlaceId,
       profilePhoto,
       position,
     } = req.body;
@@ -68,6 +71,9 @@ export const updatePlayerById = async (req, res) => {
     if (gender !== undefined) updateData.gender = gender;
     if (Phone !== undefined) updateData.Phone = Phone;
     if (location !== undefined) updateData.location = location;
+    if (locationLatitude !== undefined) updateData.locationLatitude = locationLatitude;
+    if (locationLongitude !== undefined) updateData.locationLongitude = locationLongitude;
+    if (locationPlaceId !== undefined) updateData.locationPlaceId = locationPlaceId;
     if (profilePhoto !== undefined) updateData.profilePhoto = profilePhoto;
     if (position !== undefined) updateData.position = position;
 
@@ -75,9 +81,8 @@ export const updatePlayerById = async (req, res) => {
 
     res.status(200).json({ updatedPlayer });
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Error updating player", error: error.message });
+    const status = error.status || 500;
+    res.status(status).json({ message: error.message || "Error updating player" });
   }
 };
 

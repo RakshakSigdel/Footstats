@@ -31,6 +31,9 @@ model User {
   gender        String?
   Phone         String?
   location      String?
+  locationLatitude  Float?
+  locationLongitude Float?
+  locationPlaceId   String?
   profilePhoto  String?
   preferredFoot preferredFoot?
 
@@ -110,6 +113,9 @@ model Club {
   description String
   logo        String?
   location    String
+  locationLatitude  Float?
+  locationLongitude Float?
+  locationPlaceId   String?
   foundedDate DateTime
   createdBy   Int
 
@@ -197,6 +203,9 @@ model Tournament {
   description  String
   logo         String?
   location     String
+  locationLatitude  Float?
+  locationLongitude Float?
+  locationPlaceId   String?
   entryFee     Decimal @db.Decimal(10, 2)
   startDate    DateTime
   endDate      DateTime
