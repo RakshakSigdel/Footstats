@@ -99,6 +99,35 @@ class EmailService {
 
     return EmailService.sendEmail({ to, subject, text, html });
   }
+
+  static async sendScheduleChallengeEmail({
+    to,
+    recipientName,
+    challengerClubName,
+    challengedClubName,
+    date,
+    location,
+    scheduleType,
+  }) {
+    const prettyDate = new Date(date).toLocaleString();
+    const subject = `${challengerClubName} has challenged your club`;
+    const text = `Hi ${recipientName || "Admin"}, ${challengerClubName} has challenged ${challengedClubName} for a ${scheduleType || "match"}. Proposed date: ${prettyDate}. Location: ${location}. Please review and respond from your schedule requests.`;
+    const html = `
+      <div style="font-family: Arial, sans-serif; line-height:1.5; color:#111;">
+        <h2 style="margin-bottom: 8px;">New match challenge received</h2>
+        <p>Hi ${recipientName || "Admin"},</p>
+        <p><b>${challengerClubName}</b> has challenged your club <b>${challengedClubName}</b>.</p>
+        <ul>
+          <li><b>Type:</b> ${scheduleType || "Match"}</li>
+          <li><b>Location:</b> ${location}</li>
+          <li><b>Proposed Date:</b> ${prettyDate}</li>
+        </ul>
+        <p>Please open Footstat and review the schedule request.</p>
+      </div>
+    `;
+
+    return EmailService.sendEmail({ to, subject, text, html });
+  }
 }
 
 export default EmailService;

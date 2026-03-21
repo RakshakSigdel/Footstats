@@ -108,9 +108,27 @@ class ScheduleService {
       },
     });
 
+    const involvedClubIds = [
+      teamOneId,
+      teamTwoId,
+      data.createdFromClub ? Number(data.createdFromClub) : null,
+    ].filter(Boolean);
+
+    const clubRecipientGroups = await Promise.all(
+      [...new Set(involvedClubIds)].map(async (clubId) => {
+        const [memberIds, adminIds] = await Promise.all([
+          NotificationService.getClubMemberUserIds(clubId, true),
+          NotificationService.getClubAdminUserIds(clubId),
+        ]);
+        return [...memberIds, ...adminIds];
+      }),
+    );
+
+    const emailRecipientUserIds = [...new Set(clubRecipientGroups.flat())];
+
     const recipients = await prisma.user.findMany({
       where: {
-        userId: { in: allRecipients },
+        userId: { in: emailRecipientUserIds },
         emailVerified: true,
       },
       select: {

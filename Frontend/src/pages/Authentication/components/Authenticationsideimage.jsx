@@ -1,10 +1,10 @@
 export default function AuthenticationSideImage({ image, title, subtitle }) {
   return (
-    <div className="hidden md:flex w-[40%] flex-shrink-0 items-center justify-center relative shadow-2xl">
+    <div className="hidden md:block w-[40%] flex-shrink-0 self-stretch relative overflow-hidden shadow-2xl">
       <img
         src={image}
         alt="Background"
-        className="h-screen w-full object-cover"
+        className="absolute inset-0 h-full w-full object-cover"
       />
       {/* Dark overlay for better text contrast */}
       <div className="absolute inset-0 bg-black/40"></div>

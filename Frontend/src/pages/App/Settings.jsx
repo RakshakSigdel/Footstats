@@ -104,6 +104,13 @@ export default function Settings() {
     try {
       const response = await verifyEmail(profile.email, verificationCode.trim());
       setProfile((prev) => ({ ...prev, emailVerified: true }));
+      try {
+        const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+        localStorage.setItem("user", JSON.stringify({ ...storedUser, emailVerified: true }));
+        window.dispatchEvent(new Event("user-updated"));
+      } catch {
+        // Ignore local storage parse errors and keep UI state updated.
+      }
       setVerificationCode("");
       setEmailMessage(response?.message || "Email verified successfully.");
     } catch (err) {
@@ -325,6 +332,22 @@ export default function Settings() {
               </svg>
               <h2 className="text-2xl font-bold text-gray-900">Privacy & Security</h2>
             </div>
+
+            {!profile?.emailVerified && (
+              <div className="mb-6 p-4 rounded-lg border border-amber-200 bg-amber-50">
+                <div className="flex items-start gap-3">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-amber-600 mt-0.5">
+                    <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                    <line x1="12" y1="9" x2="12" y2="13" />
+                    <line x1="12" y1="17" x2="12.01" y2="17" />
+                  </svg>
+                  <div>
+                    <p className="text-sm font-semibold text-amber-900">Verify your email to stay updated</p>
+                    <p className="text-sm text-amber-800">Your account can miss important updates such as match reminders, schedule changes, invitations, and security alerts until your email is verified.</p>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div className="mb-6 p-4 rounded-lg border border-gray-200 bg-gray-50">
               <div className="flex items-center justify-between gap-3 mb-3">

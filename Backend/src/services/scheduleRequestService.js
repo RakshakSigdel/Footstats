@@ -1,4 +1,6 @@
 import { PrismaClient } from "@prisma/client";
+import NotificationService from "./notificationService.js";
+import EmailService from "./emailService.js";
 const prisma = new PrismaClient();
 
 class ScheduleRequestService {
@@ -9,7 +11,7 @@ class ScheduleRequestService {
       throw new Error("Match size must be between 5 and 11");
     }
 
-    return prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx) => {
       const schedule = await tx.schedule.create({
         data: {
           teamOneId: data.teamOneId,
@@ -23,6 +25,20 @@ class ScheduleRequestService {
           createdFromTournament: data.createdFromTournament || null,
           createdFromUser: requestingUserId,
         },
+        include: {
+          teamOne: {
+            select: {
+              clubId: true,
+              name: true,
+            },
+          },
+          teamTwo: {
+            select: {
+              clubId: true,
+              name: true,
+            },
+          },
+        },
       });
 
       const request = await tx.scheduleRequest.create({
@@ -35,6 +51,43 @@ class ScheduleRequestService {
 
       return { schedule, request };
     });
+
+    const targetAdminIds = [
+      ...new Set(await NotificationService.getClubAdminUserIds(result.schedule.teamTwoId)),
+    ];
+
+    if (targetAdminIds.length > 0) {
+      const adminRecipients = await prisma.user.findMany({
+        where: {
+          userId: { in: targetAdminIds },
+          emailVerified: true,
+        },
+        select: {
+          email: true,
+          firstName: true,
+        },
+      });
+
+      try {
+        await Promise.all(
+          adminRecipients.map((recipient) =>
+            EmailService.sendScheduleChallengeEmail({
+              to: recipient.email,
+              recipientName: recipient.firstName,
+              challengerClubName: result.schedule.teamOne?.name || "Club 1",
+              challengedClubName: result.schedule.teamTwo?.name || "Club 2",
+              date: result.schedule.date,
+              location: result.schedule.location,
+              scheduleType: result.schedule.scheduleType,
+            }),
+          ),
+        );
+      } catch (emailError) {
+        console.warn("Failed to send one or more schedule challenge emails:", emailError.message);
+      }
+    }
+
+    return result;
   }
 
   // Get all pending requests where userId is admin of team2
@@ -77,7 +130,7 @@ class ScheduleRequestService {
 
   // Approve — set schedule to UPCOMING, request to APPROVED
   static async approveRequest(requestId) {
-    return prisma.$transaction(async (tx) => {
+    const approvedSchedule = await prisma.$transaction(async (tx) => {
       const req = await tx.scheduleRequest.findUnique({ where: { requestId: Number(requestId) } });
       if (!req) throw new Error("Request not found");
 
@@ -86,13 +139,89 @@ class ScheduleRequestService {
         data: { status: "APPROVED", reviewedAt: new Date() },
       });
 
-      await tx.schedule.update({
+      const updatedSchedule = await tx.schedule.update({
         where: { scheduleId: req.scheduleId },
         data: { scheduleStatus: "UPCOMING" },
+        include: {
+          teamOne: {
+            select: {
+              clubId: true,
+              name: true,
+            },
+          },
+          teamTwo: {
+            select: {
+              clubId: true,
+              name: true,
+            },
+          },
+        },
       });
 
-      return { success: true };
+      return updatedSchedule;
     });
+
+    const involvedClubIds = [
+      approvedSchedule.teamOneId,
+      approvedSchedule.teamTwoId,
+      approvedSchedule.createdFromClub ? Number(approvedSchedule.createdFromClub) : null,
+    ].filter(Boolean);
+
+    const clubRecipientGroups = await Promise.all(
+      [...new Set(involvedClubIds)].map(async (clubId) => {
+        const [memberIds, adminIds] = await Promise.all([
+          NotificationService.getClubMemberUserIds(clubId, true),
+          NotificationService.getClubAdminUserIds(clubId),
+        ]);
+        return [...memberIds, ...adminIds];
+      }),
+    );
+
+    const recipientUserIds = [...new Set(clubRecipientGroups.flat())];
+
+    await NotificationService.createBulkNotifications(recipientUserIds, {
+      type: "SCHEDULE_CREATED",
+      title: "New schedule created",
+      message: `${approvedSchedule.teamOne?.name || "Team 1"} vs ${approvedSchedule.teamTwo?.name || "Team 2"} has been scheduled.`,
+      link: `/schedule/${approvedSchedule.scheduleId}`,
+      data: {
+        scheduleId: approvedSchedule.scheduleId,
+        teamOneId: approvedSchedule.teamOneId,
+        teamTwoId: approvedSchedule.teamTwoId,
+        createdFromTournament: approvedSchedule.createdFromTournament,
+      },
+    });
+
+    const recipients = await prisma.user.findMany({
+      where: {
+        userId: { in: recipientUserIds },
+        emailVerified: true,
+      },
+      select: {
+        email: true,
+        firstName: true,
+      },
+    });
+
+    try {
+      await Promise.all(
+        recipients.map((recipient) =>
+          EmailService.sendScheduleCreatedEmail({
+            to: recipient.email,
+            recipientName: recipient.firstName,
+            teamOneName: approvedSchedule.teamOne?.name || "Team 1",
+            teamTwoName: approvedSchedule.teamTwo?.name || "Team 2",
+            date: approvedSchedule.date,
+            location: approvedSchedule.location,
+            scheduleType: approvedSchedule.scheduleType,
+          }),
+        ),
+      );
+    } catch (emailError) {
+      console.warn("Failed to send one or more schedule emails:", emailError.message);
+    }
+
+    return { success: true };
   }
 
   // Reject — mark REJECTED then delete the schedule (cascades to request)

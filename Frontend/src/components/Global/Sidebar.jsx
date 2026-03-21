@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useSidebar } from "../../context/SidebarContext";
 
@@ -5,6 +6,27 @@ export default function Sidebar() {
   const location = useLocation();
   const navigate = useNavigate();
   const { isOpen, isMobile, closeSidebar } = useSidebar();
+  const [isEmailVerified, setIsEmailVerified] = useState(true);
+
+  useEffect(() => {
+    const syncEmailVerificationStatus = () => {
+      try {
+        const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+        setIsEmailVerified(storedUser?.emailVerified !== false);
+      } catch {
+        setIsEmailVerified(true);
+      }
+    };
+
+    syncEmailVerificationStatus();
+    window.addEventListener("storage", syncEmailVerificationStatus);
+    window.addEventListener("user-updated", syncEmailVerificationStatus);
+
+    return () => {
+      window.removeEventListener("storage", syncEmailVerificationStatus);
+      window.removeEventListener("user-updated", syncEmailVerificationStatus);
+    };
+  }, []);
   
   const isActive = (path) => {
     return location.pathname === path;
@@ -187,7 +209,18 @@ export default function Sidebar() {
               <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
               <circle cx="12" cy="12" r="3" />
             </svg>
-            <span className="text-sm">Settings</span>
+            <span className="text-sm flex items-center gap-2">
+              Settings
+              {!isEmailVerified && (
+                <span className="inline-flex items-center" title="Email not verified">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-amber-400">
+                    <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                    <line x1="12" y1="9" x2="12" y2="13" />
+                    <line x1="12" y1="17" x2="12.01" y2="17" />
+                  </svg>
+                </span>
+              )}
+            </span>
           </Link>
 
           {/* Third Horizontal Divider with Left Gap */}
