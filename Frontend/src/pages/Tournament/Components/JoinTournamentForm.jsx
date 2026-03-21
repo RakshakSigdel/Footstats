@@ -1,3 +1,5 @@
+import { motion } from "framer-motion";
+
 export default function JoinTournamentForm({
   tournament,
   adminClubs,
@@ -12,7 +14,7 @@ export default function JoinTournamentForm({
   const isPaidTournament = Number(tournament?.entryFee || 0) > 0;
 
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm md:p-8">
+    <section className="app-card p-6 md:p-8">
       <div className="mb-5">
         <h2 className="text-2xl font-bold text-slate-900">Join Tournament</h2>
         <p className="mt-1 text-sm text-slate-600">
@@ -101,10 +103,12 @@ export default function JoinTournamentForm({
             />
           </div>
 
-          <button
+          <motion.button
+            whileHover={{ scale: 1.03, y: -1 }}
+            whileTap={{ scale: 0.97 }}
             type="submit"
             disabled={joinLoading}
-            className="md:col-span-2 rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-60"
+            className="btn-primary md:col-span-2 px-4 py-2.5 text-sm font-semibold disabled:opacity-60"
           >
             {joinLoading
               ? "Processing..."
@@ -113,7 +117,7 @@ export default function JoinTournamentForm({
                   ? "Proceed to Payment"
                   : "Submit Pending Request"
                 : "Submit Join Request"}
-          </button>
+          </motion.button>
         </form>
       ) : (
         <p className="mt-5 rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">

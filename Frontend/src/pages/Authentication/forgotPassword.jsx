@@ -25,7 +25,7 @@ export default function ForgotPassword() {
       />
 
       <div className="flex-1 flex items-center justify-center p-12">
-        <div className="bg-white rounded-3xl p-12 w-full max-w-md shadow-xl border border-blue-100">
+        <div className="app-card w-full max-w-md rounded-3xl p-12">
           <div className="text-center mb-8">
             <h2 className="text-3xl font-bold font-serif text-gray-800">
               Forgot Password?
@@ -46,13 +46,13 @@ export default function ForgotPassword() {
                 required
                 value={email}
                 onChange={handleChange}
-                className="w-full h-12 px-4 rounded-xl border-2 border-gray-200 bg-gray-50 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                className="h-12 w-full rounded-xl px-4"
               />
             </div>
 
             <button
               type="submit"
-              className="w-full h-12 bg-gradient-to-r from-slate-900 to-slate-700 text-white rounded-xl font-semibold flex items-center justify-center gap-2 hover:from-slate-800 hover:to-slate-600 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+              className="btn-primary flex h-12 w-full items-center justify-center gap-2 rounded-xl font-semibold"
             >
               Send Email
               <span className="text-lg">→</span>

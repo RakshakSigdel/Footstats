@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-/* Dark mode theme variables */
+/* Dark mode theme variables (restored behavior) */
 @theme {
   --color-dark-bg: #1a1a2e;
   --color-dark-surface: #16213e;
@@ -10,7 +10,21 @@
   --color-dark-text-muted: #9ca3af;
 }
 
-/* Dark mode base styles */
+* {
+  border-color: #e2e8f0;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  background: #eef1f6;
+  color: #0f172a;
+}
+
 .dark {
   color-scheme: dark;
 }
@@ -20,7 +34,6 @@
   color: var(--color-dark-text);
 }
 
-/* Dark mode utility classes for components */
 .dark .bg-white {
   background-color: var(--color-dark-card);
 }
@@ -46,7 +59,8 @@
 
 .dark .border-gray-100,
 .dark .border-gray-200,
-.dark .border-gray-300 {
+.dark .border-gray-300,
+.dark .border-slate-200 {
   border-color: var(--color-dark-border);
 }
 
@@ -63,12 +77,101 @@
   color: var(--color-dark-text-muted);
 }
 
-/* Global link hover pointer */
 a:hover {
   cursor: pointer;
 }
 
-/* Exclude MyClubs and ClubDetails pages */
 .exclude-link-pointer a:hover {
   cursor: auto;
+}
+
+button,
+[role="button"],
+.interactive {
+  transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease;
+}
+
+button:hover,
+[role="button"]:hover,
+.interactive:hover {
+  transform: translateY(-1px) scale(1.02);
+}
+
+button:active,
+[role="button"]:active,
+.interactive:active {
+  transform: scale(0.98);
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+a:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+input,
+select,
+textarea {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  color: #0f172a;
+  border-radius: 10px;
+}
+
+.app-shell {
+  background: #eef1f6;
+  color: #0f172a;
+}
+
+.app-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  box-shadow: 0 10px 30px -15px rgb(15 23 42 / 0.22);
+}
+
+.dark .app-card {
+  background-color: var(--color-dark-card);
+  border-color: var(--color-dark-border);
+}
+
+.app-muted-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+}
+
+.btn-primary {
+  background: #0f172a;
+  color: #f8fafc;
+  border-radius: 10px;
+}
+
+.btn-secondary {
+  background: #ffffff;
+  color: #0f172a;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+}
+
+.dark .btn-secondary {
+  background-color: var(--color-dark-surface);
+  color: var(--color-dark-text);
+  border-color: var(--color-dark-border);
+}
+
+.table-premium thead tr {
+  border-bottom: 1px solid #e2e8f0;
+  color: #64748b;
+}
+
+.table-premium tbody tr {
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.table-premium tbody tr:hover {
+  background: rgb(100 116 139 / 0.08);
 }

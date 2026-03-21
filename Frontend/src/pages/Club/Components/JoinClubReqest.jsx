@@ -53,7 +53,7 @@ const JoinClubRequest = ({ isOpen, onClose, onSubmit }) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl w-full max-w-lg mx-4 shadow-2xl overflow-hidden">
+      <div className="app-card mx-4 w-full max-w-lg overflow-hidden rounded-2xl">
         <div className="relative px-6 pt-6 pb-4 border-b border-gray-200">
           <h2 className="text-2xl font-bold text-gray-900">Request to Join Club</h2>
           <p className="text-sm text-gray-500 mt-1">Fill in the form below to send your join request</p>
@@ -74,7 +74,7 @@ const JoinClubRequest = ({ isOpen, onClose, onSubmit }) => {
               value={formData.preferredPosition}
               onChange={handleChange}
               required
-              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-3"
             >
               <option value="">Select your position</option>
               {positions.map((pos) => (
@@ -92,7 +92,7 @@ const JoinClubRequest = ({ isOpen, onClose, onSubmit }) => {
               onChange={handleChange}
               rows={3}
               placeholder="Tell the club why you'd be a great fit..."
-              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 resize-none"
+              className="w-full resize-none px-4 py-3"
             />
           </div>
           <div>
@@ -105,17 +105,17 @@ const JoinClubRequest = ({ isOpen, onClose, onSubmit }) => {
               onChange={handleChange}
               rows={2}
               placeholder="Anything else you'd like us to know..."
-              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 resize-none"
+              className="w-full resize-none px-4 py-3"
             />
           </div>
           <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
-            <button type="button" onClick={onClose} className="px-6 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">
+            <button type="button" onClick={onClose} className="btn-secondary px-6 py-2.5 text-gray-700">
               Cancel
             </button>
             <button
               type="submit"
               disabled={submitting}
-              className="px-6 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-60"
+              className="rounded-lg bg-green-600 px-6 py-2.5 text-white hover:bg-green-700 disabled:opacity-60"
             >
               {submitting ? "Sending..." : "Send Request"}
             </button>

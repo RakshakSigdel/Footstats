@@ -100,8 +100,17 @@ class TournamentService {
     return tournament;
   }
 
-  static async getAllTournaments() {
+  static async getAllTournaments(filters = {}) {
+    const limit = Math.min(Math.max(Number(filters.limit) || 12, 1), 50);
+    const cursor = Number(filters.cursor) || null;
+    const where = {};
+
+    if (filters.status) {
+      where.status = normalizeEnumValue(filters.status, STATUS_MAP, undefined);
+    }
+
     const tournaments = await prisma.tournament.findMany({
+      where,
       include: {
         creator: {
           select: {
@@ -115,13 +124,19 @@ class TournamentService {
           select: { clubId: true },
         },
       },
-      orderBy: { createdAt: "desc" },
+      orderBy: { tournamentId: "desc" },
+      take: limit + 1,
+      ...(cursor ? { cursor: { tournamentId: cursor }, skip: 1 } : {}),
     });
-
-    return tournaments.map((t) => ({
+    const hasMore = tournaments.length > limit;
+    const slice = hasMore ? tournaments.slice(0, limit) : tournaments;
+    const items = slice.map((t) => ({
       ...t,
       acceptedClubCount: t.registrations.length,
     }));
+    const nextCursor = hasMore ? slice[slice.length - 1].tournamentId : null;
+
+    return { tournaments: items, meta: { hasMore, nextCursor, limit } };
   }
 
   static async getTournamentById(tournamentId) {
@@ -356,7 +371,9 @@ class TournamentService {
     };
   }
 
-  static async getTournamentsByUserId(userId) {
+  static async getTournamentsByUserId(userId, filters = {}) {
+    const limit = Math.min(Math.max(Number(filters.limit) || 12, 1), 50);
+    const cursor = Number(filters.cursor) || null;
     const tournaments = await prisma.tournament.findMany({
       where: { createdBy: userId },
       include: {
@@ -365,13 +382,69 @@ class TournamentService {
           select: { registrationId: true },
         },
       },
-      orderBy: { createdAt: "desc" },
+      orderBy: { tournamentId: "desc" },
+      take: limit + 1,
+      ...(cursor ? { cursor: { tournamentId: cursor }, skip: 1 } : {}),
     });
-
-    return tournaments.map((t) => ({
+    const hasMore = tournaments.length > limit;
+    const slice = hasMore ? tournaments.slice(0, limit) : tournaments;
+    const items = slice.map((t) => ({
       ...t,
       acceptedClubCount: t.registrations.length,
     }));
+    const nextCursor = hasMore ? slice[slice.length - 1].tournamentId : null;
+    return { tournaments: items, meta: { hasMore, nextCursor, limit } };
+  }
+
+  static async getEnrolledTournamentsByUserId(userId, filters = {}) {
+    const limit = Math.min(Math.max(Number(filters.limit) || 12, 1), 50);
+    const cursor = Number(filters.cursor) || null;
+    const where = {
+      registrations: {
+        some: {
+          status: "ACCEPTED",
+          club: {
+            OR: [
+              { createdBy: userId },
+              {
+                userClubs: {
+                  some: {
+                    userId,
+                  },
+                },
+              },
+            ],
+          },
+        },
+      },
+    };
+
+    if (filters.status) {
+      where.status = normalizeEnumValue(filters.status, STATUS_MAP, undefined);
+    }
+
+    const tournaments = await prisma.tournament.findMany({
+      where,
+      include: {
+        registrations: {
+          where: { status: "ACCEPTED" },
+          select: { registrationId: true },
+        },
+      },
+      orderBy: { tournamentId: "desc" },
+      take: limit + 1,
+      ...(cursor ? { cursor: { tournamentId: cursor }, skip: 1 } : {}),
+    });
+
+    const hasMore = tournaments.length > limit;
+    const slice = hasMore ? tournaments.slice(0, limit) : tournaments;
+    const items = slice.map((t) => ({
+      ...t,
+      acceptedClubCount: t.registrations.length,
+    }));
+    const nextCursor = hasMore ? slice[slice.length - 1].tournamentId : null;
+
+    return { tournaments: items, meta: { hasMore, nextCursor, limit } };
   }
 
   static async updateTournament(tournamentId, data, userId) {

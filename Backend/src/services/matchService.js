@@ -58,8 +58,10 @@ class MatchService {
     return match;
   }
 
-  static async getAllMatches() {
-    const matches = prisma.match.findMany({
+  static async getAllMatches(filters = {}) {
+    const limit = Math.min(Math.max(Number(filters.limit) || 20, 1), 100);
+    const cursor = Number(filters.cursor) || null;
+    const matches = await prisma.match.findMany({
       include: {
         schedule: {
           include: {
@@ -87,8 +89,14 @@ class MatchService {
           },
         },
       },
+      orderBy: { matchId: "desc" },
+      take: limit + 1,
+      ...(cursor ? { cursor: { matchId: cursor }, skip: 1 } : {}),
     });
-    return matches;
+    const hasMore = matches.length > limit;
+    const items = hasMore ? matches.slice(0, limit) : matches;
+    const nextCursor = hasMore ? items[items.length - 1].matchId : null;
+    return { matches: items, meta: { hasMore, nextCursor, limit } };
   }
 
   static async getMatchById(matchId) {

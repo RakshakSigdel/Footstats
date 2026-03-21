@@ -50,8 +50,23 @@ export const createTournament = async (req, res) => {
 export const getMyTournaments = async (req, res) => {
   try {
     const userId = req.user.userId;
-    const tournaments = await TournamentService.getTournamentsByUserId(userId);
-    res.status(200).json({ tournaments });
+    const result = await TournamentService.getTournamentsByUserId(userId, req.query);
+    res.status(200).json(result);
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Error fetching tournaments", error: error.message });
+  }
+};
+
+export const getEnrolledTournaments = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const result = await TournamentService.getEnrolledTournamentsByUserId(
+      userId,
+      req.query,
+    );
+    res.status(200).json(result);
   } catch (error) {
     res
       .status(500)
@@ -61,8 +76,8 @@ export const getMyTournaments = async (req, res) => {
 
 export const getAllTournaments = async (req, res) => {
   try {
-    const tournaments = await TournamentService.getAllTournaments();
-    res.status(200).json({ tournaments });
+    const result = await TournamentService.getAllTournaments(req.query);
+    res.status(200).json(result);
   } catch (error) {
     res
       .status(500)

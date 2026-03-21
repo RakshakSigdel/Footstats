@@ -38,7 +38,7 @@ const EditClub = ({ isOpen, onClose, onEditClub, clubData }) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl w-full max-w-lg mx-4 shadow-2xl overflow-hidden">
+      <div className="app-card mx-4 w-full max-w-lg overflow-hidden rounded-2xl">
         <div className="relative px-6 pt-6 pb-4 border-b border-gray-200">
           <h2 className="text-2xl font-bold text-gray-900">Edit Club</h2>
           <p className="text-sm text-gray-500 mt-1">Update club information</p>
@@ -72,7 +72,7 @@ const EditClub = ({ isOpen, onClose, onEditClub, clubData }) => {
               name="clubName"
               value={formData.clubName}
               onChange={handleInputChange}
-              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-3"
               required
             />
           </div>
@@ -86,7 +86,7 @@ const EditClub = ({ isOpen, onClose, onEditClub, clubData }) => {
               value={formData.description}
               onChange={handleInputChange}
               rows={4}
-              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 resize-none"
+              className="w-full resize-none px-4 py-3"
             />
           </div>
 
@@ -99,7 +99,7 @@ const EditClub = ({ isOpen, onClose, onEditClub, clubData }) => {
               name="location"
               value={formData.location}
               onChange={handleInputChange}
-              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-3"
             />
           </div>
 
@@ -107,13 +107,13 @@ const EditClub = ({ isOpen, onClose, onEditClub, clubData }) => {
             <button
               type="button"
               onClick={onClose}
-              className="px-6 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+              className="btn-secondary px-6 py-2.5 text-gray-700"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-6 py-2.5 bg-slate-900 text-white rounded-lg hover:bg-slate-800"
+              className="btn-primary px-6 py-2.5"
             >
               Save Changes
             </button>

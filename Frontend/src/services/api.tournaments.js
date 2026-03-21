@@ -9,19 +9,37 @@ export const createTournament = async (body) => {
   }
 };
 
-export const getMyTournaments = async () => {
+const toQuery = (params = {}) => {
+  const query = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== "") query.set(key, String(value));
+  });
+  const built = query.toString();
+  return built ? `?${built}` : "";
+};
+
+export const getMyTournaments = async (params = {}) => {
   try {
-    const response = await api.get("/tournaments/me");
-    return response.data.tournaments;
+    const response = await api.get(`/tournaments/me${toQuery(params)}`);
+    return response.data;
   } catch (error) {
     throw error.response?.data || { message: "Failed to fetch my tournaments" };
   }
 };
 
-export const getAllTournaments = async () => {
+export const getEnrolledTournaments = async (params = {}) => {
   try {
-    const response = await api.get("/tournaments");
-    return response.data.tournaments;
+    const response = await api.get(`/tournaments/enrolled/me${toQuery(params)}`);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { message: "Failed to fetch enrolled tournaments" };
+  }
+};
+
+export const getAllTournaments = async (params = {}) => {
+  try {
+    const response = await api.get(`/tournaments${toQuery(params)}`);
+    return response.data;
   } catch (error) {
     throw error.response?.data || { message: "Failed to fetch tournaments" };
   }

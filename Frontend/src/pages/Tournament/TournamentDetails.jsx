@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { AnimatePresence, motion } from "framer-motion";
+import { toast } from "sonner";
 import Sidebar from "../../components/Global/Sidebar";
 import Topbar from "../../components/Global/Topbar";
 import ClubListCard from "../../components/Club/ClubListCard";
@@ -16,6 +18,7 @@ import {
 } from "../../services/api.tournaments";
 import { initiatePayment } from "../../services/api.payments";
 import { getAdminClubs } from "../../services/api.clubs";
+import { MotionButton } from "../../components/ui/motion";
 
 const STATUS_OPTIONS = ["UPCOMING", "ONGOING", "FINISHED", "CANCELLED"];
 const ENROLLMENT_OPTIONS = ["OPEN", "CLOSED"];
@@ -175,8 +178,10 @@ export default function TournamentDetails() {
       await loadTournament();
       setIsEditTournamentOpen(false);
       setSuccess("Tournament updated successfully.");
+      toast.success("Tournament updated successfully");
     } catch (err) {
       setError(err?.message || "Failed to update tournament");
+      toast.error(err?.message || "Failed to update tournament");
     }
   };
 
@@ -238,6 +243,7 @@ export default function TournamentDetails() {
           ? "Payment confirmed. Your club is enrolled in this tournament."
           : "Join request submitted. Tournament admin will review it.",
       );
+      toast.success("Join request submitted");
 
       setJoinForm({
         clubId: "",
@@ -249,6 +255,7 @@ export default function TournamentDetails() {
       await loadTournament();
     } catch (err) {
       setError(err?.error || err?.message || "Failed to submit join request");
+      toast.error(err?.error || err?.message || "Failed to submit join request");
     } finally {
       setJoinLoading(false);
     }
@@ -261,10 +268,12 @@ export default function TournamentDetails() {
     try {
       await reviewTournamentRegistration(registrationId, { action });
       setSuccess(`Request ${action === "APPROVE" ? "approved" : "declined"}.`);
+      toast.success(`Request ${action === "APPROVE" ? "approved" : "declined"}.`);
       await refreshRegistrations();
       await loadTournament();
     } catch (err) {
       setError(err?.error || err?.message || "Failed to review request");
+      toast.error(err?.error || err?.message || "Failed to review request");
     }
   };
 
@@ -285,22 +294,24 @@ export default function TournamentDetails() {
       });
 
       setSuccess("Tournament status updated.");
+      toast.success("Tournament status updated");
       await loadTournament();
     } catch (err) {
       setError(err?.error || err?.message || "Failed to update status");
+      toast.error(err?.error || err?.message || "Failed to update status");
     } finally {
       setStatusLoading(false);
     }
   };
 
   const tabs = [
-    { id: "overview", label: "Overview" },
-    { id: "join", label: "Join Tournament", hide: !canSubmitJoinRequest },
-    { id: "clubs", label: "Clubs" },
-    { id: "requests", label: "Join Requests", adminOnly: true },
-    { id: "schedules", label: "Schedules" },
-    { id: "topPlayers", label: "Top Players" },
-    { id: "topClubs", label: "Top Clubs" },
+    { id: "overview", label: "Overview", icon: "📊" },
+    { id: "join", label: "Join Tournament", icon: "🤝", hide: !canSubmitJoinRequest },
+    { id: "clubs", label: "Clubs", icon: "👥" },
+    { id: "requests", label: "Join Requests", icon: "📬", adminOnly: true },
+    { id: "schedules", label: "Schedules", icon: "🗓️" },
+    { id: "topPlayers", label: "Top Players", icon: "🏆" },
+    { id: "topClubs", label: "Top Clubs", icon: "🥇" },
   ].filter((tab) => (!tab.adminOnly || isTournamentAdmin) && !tab.hide);
 
   return (
@@ -313,7 +324,7 @@ export default function TournamentDetails() {
         <main className="flex-1 p-6 md:p-8 overflow-auto bg-[#eef1f6]">
           <button
             onClick={() => navigate(-1)}
-            className="mb-6 inline-flex items-center gap-2 text-sm font-semibold text-slate-700 hover:text-slate-900"
+            className="flex items-center gap-2 text-blue-600 hover:text-blue-700 mb-6 font-medium"
           >
             Back
           </button>
@@ -334,60 +345,74 @@ export default function TournamentDetails() {
 
           {tournament && (
             <>
-              <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
-                <div>
-                  <h1 className="text-3xl font-bold text-gray-900">{tournament.name}</h1>
-                  <p className="mt-2 max-w-3xl text-sm text-gray-600">{tournament.description || "No description."}</p>
-                  <div className="mt-3 flex flex-wrap gap-2 text-xs font-semibold uppercase tracking-wide text-gray-600">
-                    <span className="rounded-full bg-white px-3 py-1 border border-gray-200">{tournament.status}</span>
-                    <span className="rounded-full bg-white px-3 py-1 border border-gray-200">Enrollment {tournament.enrollmentStatus || "OPEN"}</span>
-                    <span className="rounded-full bg-white px-3 py-1 border border-gray-200">{tournament.format}</span>
-                    <span className="rounded-full bg-white px-3 py-1 border border-gray-200">{tournament.location}</span>
+              <motion.div
+                layoutId={`tournament-card-${tournament.tournamentId}`}
+                className="mb-6 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm"
+              >
+                <div className="flex flex-wrap items-start justify-between gap-5">
+                  <div className="flex items-start gap-4 md:gap-5">
+                    <div className="h-14 w-14 md:h-16 md:w-16 rounded-xl bg-green-600 flex items-center justify-center text-white">
+                      <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M8 4h8l4 4v8l-4 4H8l-4-4V8z" />
+                        <path d="M12 8v8" />
+                        <path d="M8 12h8" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h1 className="text-2xl md:text-3xl font-bold text-gray-900">{tournament.name}</h1>
+                      <p className="mt-2 max-w-3xl text-sm text-gray-600">{tournament.description || "No description."}</p>
+                      <div className="mt-3 flex flex-wrap gap-2 text-xs font-semibold uppercase tracking-wide text-gray-600">
+                        <span className="rounded-full bg-white px-3 py-1 border border-gray-200">{tournament.status}</span>
+                        <span className="rounded-full bg-white px-3 py-1 border border-gray-200">Enrollment {tournament.enrollmentStatus || "OPEN"}</span>
+                        <span className="rounded-full bg-white px-3 py-1 border border-gray-200">{tournament.format}</span>
+                        <span className="rounded-full bg-white px-3 py-1 border border-gray-200">{tournament.location}</span>
+                      </div>
+                    </div>
                   </div>
-                </div>
 
-                <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-2">
                   {canSubmitJoinRequest && (
-                    <button
+                    <MotionButton
                       onClick={() => setActiveTab("join")}
-                      className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700"
+                      className="rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700"
                     >
                       Join Tournament
-                    </button>
+                    </MotionButton>
                   )}
                   {isTournamentOwner && (
-                    <button
+                    <MotionButton
                       onClick={() => setIsEditTournamentOpen(true)}
-                      className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800"
-                    >
-                      Edit Tournament
-                    </button>
-                  )}
-                  {isTournamentAdmin && (
-                    <button
-                      onClick={() => setIsCreateScheduleOpen(true)}
                       className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
                     >
+                      Edit Tournament
+                    </MotionButton>
+                  )}
+                  {isTournamentAdmin && (
+                    <MotionButton
+                      onClick={() => setIsCreateScheduleOpen(true)}
+                      className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800"
+                    >
                       Create Schedule
-                    </button>
+                    </MotionButton>
                   )}
                 </div>
-              </div>
+                </div>
+              </motion.div>
 
               <div className="mb-6 grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div className="rounded-xl border border-gray-100 bg-white p-4">
+                  <div className="rounded-xl border border-gray-100 bg-gray-50 p-4">
                   <div className="text-xs text-gray-500">Joined Clubs</div>
                   <div className="mt-1 text-2xl font-bold text-gray-900">{acceptedRegistrations.length}</div>
                 </div>
-                <div className="rounded-xl border border-gray-100 bg-white p-4">
+                <div className="rounded-xl border border-gray-100 bg-gray-50 p-4">
                   <div className="text-xs text-gray-500">Pending Requests</div>
                   <div className="mt-1 text-2xl font-bold text-gray-900">{pendingRegistrations.length}</div>
                 </div>
-                <div className="rounded-xl border border-gray-100 bg-white p-4">
+                <div className="rounded-xl border border-gray-100 bg-gray-50 p-4">
                   <div className="text-xs text-gray-500">Schedules</div>
                   <div className="mt-1 text-2xl font-bold text-gray-900">{tournamentSchedules.length}</div>
                 </div>
-                <div className="rounded-xl border border-gray-100 bg-white p-4">
+                <div className="rounded-xl border border-gray-100 bg-gray-50 p-4">
                   <div className="text-xs text-gray-500">Entry Fee</div>
                   <div className="mt-1 text-2xl font-bold text-gray-900">
                     {Number(tournament.entryFee || 0) > 0 ? `NPR ${tournament.entryFee}` : "Free"}
@@ -395,25 +420,43 @@ export default function TournamentDetails() {
                 </div>
               </div>
 
-              <div className="mb-6 flex flex-wrap gap-2 rounded-xl border border-gray-200 bg-white p-2">
+              <div className="mb-6">
+                <div className="inline-flex flex-wrap gap-1 rounded-2xl border border-gray-200 bg-gray-100 p-1">
                 {tabs.map((tab) => (
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`rounded-lg px-4 py-2 text-sm font-semibold transition-colors ${
-                      activeTab === tab.id
-                        ? "bg-slate-900 text-white"
-                        : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                    className={`relative rounded-xl px-4 py-2 text-sm font-semibold transition-colors ${
+                      activeTab === tab.id ? "text-blue-700" : "text-gray-600 hover:text-gray-900"
                     }`}
                   >
-                    {tab.label}
+                    {activeTab === tab.id && (
+                      <motion.span
+                        layoutId="tournament-details-tab-pill"
+                        transition={{ type: "spring", stiffness: 360, damping: 30 }}
+                        className="absolute inset-0 rounded-xl bg-white shadow-sm"
+                      />
+                    )}
+                    <span className="relative z-10 flex items-center gap-2">
+                      <span>{tab.icon}</span>
+                      <span>{tab.label}</span>
+                    </span>
                   </button>
                 ))}
+                </div>
               </div>
 
+              <AnimatePresence mode="wait">
+              <motion.div
+                key={activeTab}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.2 }}
+              >
               {activeTab === "overview" && (
                 <div className="space-y-6">
-                  <section className="rounded-xl border border-gray-100 bg-white p-6">
+                  <section className="rounded-xl border border-blue-100 bg-white p-6 shadow-sm">
                     <h2 className="text-lg font-bold text-gray-900">Tournament Overview</h2>
                     <p className="mt-1 text-sm text-gray-600">
                       Snapshot of the competition details, timeline, and participation status.
@@ -463,7 +506,7 @@ export default function TournamentDetails() {
                   </section>
 
                   {isTournamentAdmin && (
-                    <section className="rounded-xl border border-gray-100 bg-white p-6">
+                    <section className="rounded-xl border border-blue-100 bg-white p-6 shadow-sm">
                       <h2 className="text-lg font-bold text-gray-900">Tournament Controls</h2>
                       <p className="mt-1 text-sm text-gray-600">
                         Manage tournament status and winner details.
@@ -548,7 +591,7 @@ export default function TournamentDetails() {
               )}
 
               {activeTab === "clubs" && (
-                <section className="rounded-xl border border-gray-100 bg-white p-6">
+                <section className="rounded-xl border border-blue-100 bg-white p-6 shadow-sm">
                   <h2 className="text-lg font-bold text-gray-900">Joined Clubs</h2>
                   {acceptedRegistrations.length === 0 ? (
                     <p className="mt-3 text-sm text-gray-600">No clubs have been approved yet.</p>
@@ -580,7 +623,7 @@ export default function TournamentDetails() {
               )}
 
               {activeTab === "requests" && isTournamentAdmin && (
-                <section className="rounded-xl border border-gray-100 bg-white p-6">
+                <section className="rounded-xl border border-blue-100 bg-white p-6 shadow-sm">
                   <h2 className="text-lg font-bold text-gray-900">Join Requests</h2>
                   <p className="mt-1 text-sm text-gray-600">Review club requests and approve or decline.</p>
 
@@ -624,7 +667,7 @@ export default function TournamentDetails() {
               {activeTab === "schedules" && (
                 <section className="space-y-4">
                   {isTournamentAdmin && (
-                    <div className="rounded-xl border border-gray-100 bg-white p-6">
+                    <div className="rounded-xl border border-blue-100 bg-white p-6 shadow-sm">
                       <h2 className="text-lg font-bold text-gray-900">Create Tournament Schedule</h2>
                       <p className="mt-1 text-sm text-gray-600">Create match schedules directly from this tournament with both clubs selected from accepted registrations.</p>
                       <button
@@ -636,7 +679,7 @@ export default function TournamentDetails() {
                     </div>
                   )}
 
-                  <div className="rounded-xl border border-gray-100 bg-white p-6">
+                  <div className="rounded-xl border border-blue-100 bg-white p-6 shadow-sm">
                     <h2 className="text-lg font-bold text-gray-900">Tournament Matches</h2>
                     {tournamentSchedules.length === 0 ? (
                       <p className="mt-3 text-sm text-gray-600">No schedules created yet.</p>
@@ -672,7 +715,7 @@ export default function TournamentDetails() {
               )}
 
               {activeTab === "topPlayers" && (
-                <section className="rounded-xl border border-gray-100 bg-white p-6">
+                <section className="rounded-xl border border-blue-100 bg-white p-6 shadow-sm">
                   <h2 className="text-lg font-bold text-gray-900">Top Players</h2>
                   <p className="mt-1 text-sm text-gray-600">Tournament-specific leaderboard by goals and assists.</p>
                   {topPlayers.length === 0 ? (
@@ -721,7 +764,7 @@ export default function TournamentDetails() {
               )}
 
               {activeTab === "topClubs" && (
-                <section className="rounded-xl border border-gray-100 bg-white p-6">
+                <section className="rounded-xl border border-blue-100 bg-white p-6 shadow-sm">
                   <h2 className="text-lg font-bold text-gray-900">Top Clubs</h2>
                   <p className="mt-1 text-sm text-gray-600">Tournament table generated from completed match scores.</p>
                   {topClubs.length === 0 ? (
@@ -764,6 +807,8 @@ export default function TournamentDetails() {
                   )}
                 </section>
               )}
+              </motion.div>
+              </AnimatePresence>
             </>
           )}
         </main>

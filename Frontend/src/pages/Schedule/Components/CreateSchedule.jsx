@@ -60,7 +60,10 @@ export default function CreateSchedule({
         getMyTournaments().catch(() => []),
       ]);
       setAdminClubs(Array.isArray(clubs) ? clubs : []);
-      setMyTournaments(Array.isArray(tournaments) ? tournaments : []);
+      const tournamentItems = Array.isArray(tournaments)
+        ? tournaments
+        : tournaments?.tournaments || [];
+      setMyTournaments(tournamentItems);
     } finally { setLoading(false); }
   };
 
@@ -210,7 +213,7 @@ export default function CreateSchedule({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl w-full max-w-2xl mx-4 shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto">
+      <div className="app-card mx-4 max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl">
         <div className="sticky top-0 bg-white px-6 pt-6 pb-4 border-b border-gray-200 z-10">
           <h2 className="text-2xl font-bold text-gray-900">Request a Match</h2>
           <p className="text-sm text-gray-500 mt-1">Send a match request to another club's admin for approval</p>
@@ -251,7 +254,7 @@ export default function CreateSchedule({
                 <span className="text-gray-400 font-normal ml-1 text-xs">(only clubs you admin)</span>
               </label>
               <select value={formData.createdFromClub} onChange={handleCreatedFromClubChange}
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500" required>
+                className="w-full px-4 py-3" required>
                 <option value="">Choose a club</option>
                 {adminClubs.map((club) => (
                   <option key={club.clubId} value={club.clubId}>{club.name}</option>
@@ -264,7 +267,7 @@ export default function CreateSchedule({
                 Select Your Tournament <span className="text-red-500">*</span>
               </label>
               <select name="createdFromTournament" value={formData.createdFromTournament} onChange={handleInputChange}
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500" required>
+                className="w-full px-4 py-3" required>
                 <option value="">Choose a tournament</option>
                 {myTournaments.map((t) => (
                   <option key={t.tournamentId} value={t.tournamentId}>{t.name}</option>
@@ -294,7 +297,7 @@ export default function CreateSchedule({
                       setTeamTwoName('');
                     }
                   }}
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3"
                   required
                 >
                   <option value="">Choose Team 1</option>
@@ -318,7 +321,7 @@ export default function CreateSchedule({
                     setTeamTwoId(selectedId);
                     setTeamTwoName(club?.name || '');
                   }}
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3"
                   required
                 >
                   <option value="">Choose Team 2</option>
@@ -342,7 +345,7 @@ export default function CreateSchedule({
                   <div className="relative">
                     <input type="text" value={team2Query} onChange={(e) => setTeam2Query(e.target.value)}
                       placeholder="Search club name..."
-                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm" />
+                      className="w-full px-4 py-3 text-sm" />
                     {team2Loading && (
                       <div className="absolute right-3 top-1/2 -translate-y-1/2">
                         <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
@@ -379,7 +382,7 @@ export default function CreateSchedule({
               name="scheduleType"
               value={formData.scheduleType}
               onChange={handleInputChange}
-              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-3"
             >
               <option value="Friendly">Friendly</option>
               <option value="League">League</option>
@@ -397,7 +400,7 @@ export default function CreateSchedule({
               name="matchSize"
               value={formData.matchSize}
               onChange={handleInputChange}
-              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-3"
             >
               {[5, 6, 7, 8, 9, 10, 11].map((size) => (
                 <option key={size} value={size}>{size}v{size}</option>
@@ -410,12 +413,12 @@ export default function CreateSchedule({
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">Date <span className="text-red-500">*</span></label>
               <input type="date" name="date" value={formData.date} onChange={handleInputChange}
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500" required />
+                className="w-full px-4 py-3" required />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">Time <span className="text-red-500">*</span></label>
               <input type="time" name="time" value={formData.time} onChange={handleInputChange}
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500" required />
+                className="w-full px-4 py-3" required />
             </div>
           </div>
 
@@ -424,14 +427,14 @@ export default function CreateSchedule({
             <label className="block text-sm font-medium text-gray-700 mb-1.5">Location <span className="text-red-500">*</span></label>
             <input type="text" name="location" value={formData.location} onChange={handleInputChange}
               placeholder="e.g., Stadium Name, City"
-              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500" required />
+              className="w-full px-4 py-3" required />
           </div>
 
           <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
-            <button type="button" onClick={onClose} className="px-6 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium">
+            <button type="button" onClick={onClose} className="btn-secondary px-6 py-2.5 text-gray-700 font-medium">
               Cancel
             </button>
-            <button type="submit" disabled={loading} className="px-6 py-2.5 bg-slate-900 text-white rounded-lg hover:bg-slate-800 font-medium disabled:opacity-50 disabled:cursor-not-allowed">
+            <button type="submit" disabled={loading} className="btn-primary px-6 py-2.5 font-medium disabled:cursor-not-allowed disabled:opacity-50">
               {loading ? (formData.creationType === 'tournament' ? 'Creating...' : 'Sending...') : (formData.creationType === 'tournament' ? 'Create Schedule' : 'Send Match Request')}
             </button>
           </div>

@@ -1,55 +1,48 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-//Authentication
-import Register from "./pages/Authentication/register";
-import Login from "./pages/Authentication/login";
-import ForgotPassword from "./pages/Authentication/forgotPassword";
-import ResetPassword from "./pages/Authentication/resetPassword";
-//Club Routes
-import MyClubs from "./pages/Club/MyClubs";
-import ClubDetails from "./pages/Club/ClubDetails";
-//Tournament Routes
-import Tournaments from "./pages/Tournament/MyTournaments";
-import TournamentDetails from "./pages/Tournament/TournamentDetails";
-//Other Pages
-import Dashboard from "./pages/Player/Dashboard";
-import Discover from "./pages/App/Discover";
-import Schedule from "./pages/Schedule/Schedule";
-import ScheduleDetails from "./pages/Schedule/ScheduleDetails";
-import Profile from "./pages/Player/Profile";
-import Settings from "./pages/App/Settings";
-import PaymentComponent from "./components/payment/paymentForm";
-import Success from "./components/payment/success";
-import Failure from "./components/payment/failure";
-//Components
-import ProtectedRoute from "./components/Global/ProtectedRoute";
-//Context
+import { lazy, Suspense } from "react";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { AnimatePresence } from "framer-motion";
 import { SidebarProvider } from "./context/SidebarContext";
 import { ThemeProvider } from "./context/ThemeContext";
+import ProtectedRoute from "./components/Global/ProtectedRoute";
+import AppSkeleton from "./components/ui/AppSkeleton";
+import PageTransition from "./components/ui/PageTransition";
 
-function App() {
+const Register = lazy(() => import("./pages/Authentication/register"));
+const Login = lazy(() => import("./pages/Authentication/login"));
+const ForgotPassword = lazy(() => import("./pages/Authentication/forgotPassword"));
+const ResetPassword = lazy(() => import("./pages/Authentication/resetPassword"));
+const MyClubs = lazy(() => import("./pages/Club/MyClubs"));
+const ClubDetails = lazy(() => import("./pages/Club/ClubDetails"));
+const Tournaments = lazy(() => import("./pages/Tournament/MyTournaments"));
+const TournamentDetails = lazy(() => import("./pages/Tournament/TournamentDetails"));
+const Dashboard = lazy(() => import("./pages/Player/Dashboard"));
+const Discover = lazy(() => import("./pages/App/Discover"));
+const Schedule = lazy(() => import("./pages/Schedule/Schedule"));
+const ScheduleDetails = lazy(() => import("./pages/Schedule/ScheduleDetails"));
+const Profile = lazy(() => import("./pages/Player/Profile"));
+const Settings = lazy(() => import("./pages/App/Settings"));
+const PaymentComponent = lazy(() => import("./components/payment/paymentForm"));
+const Success = lazy(() => import("./components/payment/success"));
+const Failure = lazy(() => import("./components/payment/failure"));
+
+function AnimatedRoutes() {
+  const location = useLocation();
   return (
-    <BrowserRouter>
-      <ThemeProvider>
-        <SidebarProvider>
-        <Routes>
-          {/* Public Authentication Routes */}
+    <Suspense fallback={<AppSkeleton />}>
+      <AnimatePresence mode="wait">
+        <Routes location={location} key={location.pathname}>
           <Route path="/" element={<Navigate to="/login" replace />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
-          <Route path="/payment" element={<PaymentComponent />} />
-          <Route path="/payment-success" element={<Success />} />
-          <Route path="/payment-failure" element={<Failure />} />
-          
-          {/* Protected Routes - Require Authentication */}
-          {/* Clubs Routes */}
+          <Route path="/register" element={<PageTransition><Register /></PageTransition>} />
+          <Route path="/login" element={<PageTransition><Login /></PageTransition>} />
+          <Route path="/forgot-password" element={<PageTransition><ForgotPassword /></PageTransition>} />
+          <Route path="/reset-password" element={<PageTransition><ResetPassword /></PageTransition>} />
+          <Route path="/payment" element={<PageTransition><PaymentComponent /></PageTransition>} />
+          <Route path="/payment-success" element={<PageTransition><Success /></PageTransition>} />
+          <Route path="/payment-failure" element={<PageTransition><Failure /></PageTransition>} />
           <Route path="/clubs" element={<ProtectedRoute><MyClubs /></ProtectedRoute>} />
           <Route path="/club/:clubId" element={<ProtectedRoute><ClubDetails /></ProtectedRoute>} />
-          {/* Tournament Routes */}
           <Route path="/tournaments" element={<ProtectedRoute><Tournaments /></ProtectedRoute>} />
           <Route path="/tournament/:tournamentId" element={<ProtectedRoute><TournamentDetails /></ProtectedRoute>} />
-          {/* Other Protected Pages */}
           <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
           <Route path="/discover" element={<ProtectedRoute><Discover /></ProtectedRoute>} />
           <Route path="/schedules" element={<ProtectedRoute><Schedule /></ProtectedRoute>} />
@@ -59,7 +52,18 @@ function App() {
           <Route path="/player/:playerId" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
           <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
         </Routes>
-      </SidebarProvider>
+      </AnimatePresence>
+    </Suspense>
+  );
+}
+
+function App() {
+  return (
+    <BrowserRouter>
+      <ThemeProvider>
+        <SidebarProvider>
+          <AnimatedRoutes />
+        </SidebarProvider>
       </ThemeProvider>
     </BrowserRouter>
   );
