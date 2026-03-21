@@ -4,7 +4,9 @@ import { hashPassword } from "../utils/hashPassword.js";
 const prisma = new PrismaClient();
 
 class PlayerService {
-  static async getAllPlayers() {
+  static async getAllPlayers(filters = {}) {
+    const limit = Math.min(Math.max(Number(filters.limit) || 24, 1), 100);
+    const cursor = Number(filters.cursor) || null;
     const players = await prisma.user.findMany({
       where: { role: "PLAYER" },
       select: {
@@ -21,8 +23,14 @@ class PlayerService {
         // position: true,
         createdAt: true,
       },
+      orderBy: { userId: "desc" },
+      take: limit + 1,
+      ...(cursor ? { cursor: { userId: cursor }, skip: 1 } : {}),
     });
-    return players;
+    const hasMore = players.length > limit;
+    const items = hasMore ? players.slice(0, limit) : players;
+    const nextCursor = hasMore ? items[items.length - 1].userId : null;
+    return { players: items, meta: { hasMore, nextCursor, limit } };
   }
 
   static async getPlayerByUserId(userId) {

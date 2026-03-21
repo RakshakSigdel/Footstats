@@ -13,8 +13,8 @@ import  PlayerService  from "../services/playerService.js";
 
 export const getAllPlayers = async (req, res) => {
   try {
-    const players = await PlayerService.getAllPlayers();
-    res.status(200).json({ players });
+    const result = await PlayerService.getAllPlayers(req.query);
+    res.status(200).json(result);
   } catch (error) {
     res
       .status(500)

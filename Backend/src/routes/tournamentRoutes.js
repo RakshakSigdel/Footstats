@@ -13,6 +13,7 @@ import {
   deleteTournament,
   getTournamentById,
   getMyTournaments,
+  getEnrolledTournaments,
   requestTournamentJoin,
   getTournamentRegistrations,
   reviewTournamentRegistration,
@@ -20,6 +21,7 @@ import {
 } from "../controllers/tournamentController.js";
 
 router.get("/me", verifyToken, getMyTournaments);
+router.get("/enrolled/me", verifyToken, getEnrolledTournaments);
 router.get("/", getAllTournaments);
 router.get("/:id", getTournamentById);
 router.post("/", verifyToken, createTournament);
