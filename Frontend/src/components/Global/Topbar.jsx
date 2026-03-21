@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 import { useSidebar } from "../../context/SidebarContext";
 import { useTheme } from "../../context/ThemeContext";
 import {
@@ -104,7 +105,7 @@ export default function Topbar() {
   }, []);
 
   return (
-    <div className="bg-white px-4 py-4 md:px-8 md:py-4 border-b border-gray-200 sticky top-0 z-10">
+    <div className="sticky top-0 z-40 isolate border-b border-slate-200 bg-white/90 px-4 py-4 backdrop-blur md:px-8 md:py-4 dark:bg-slate-900/90">
       <div className="flex items-center justify-between">
         {/* Left side - Hamburger menu (mobile only) */}
         <div className="flex items-center">
@@ -138,7 +139,7 @@ export default function Topbar() {
         {/* Right side - Dark Mode, Notifications and Avatar */}
         <div className="flex items-center gap-3 md:gap-4">
           {/* Dark Mode Toggle */}
-          <button 
+          <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
             onClick={toggleDarkMode}
             className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-gray-300"
             aria-label="Toggle dark mode"
@@ -161,11 +162,11 @@ export default function Topbar() {
                 <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
               </svg>
             )}
-          </button>
+          </motion.button>
 
           {/* Notification Bell */}
           <div className="relative" ref={panelRef}>
-            <button 
+            <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
               onClick={openNotifications}
               className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-gray-300"
               aria-label="Notifications"
@@ -188,7 +189,7 @@ export default function Topbar() {
                   {unreadCount > 99 ? "99+" : unreadCount}
                 </span>
               )}
-            </button>
+            </motion.button>
 
             {isNotificationOpen && (
               <div className="absolute right-0 mt-2 w-[340px] max-w-[90vw] bg-white rounded-xl border border-gray-200 shadow-xl z-50 overflow-hidden">

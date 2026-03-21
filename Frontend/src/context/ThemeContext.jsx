@@ -12,8 +12,9 @@ export function ThemeProvider({ children }) {
   });
 
   useEffect(() => {
-    // Update localStorage and document class
+    // Sync persisted and DOM theme attributes for global tokens
     localStorage.setItem("theme", isDarkMode ? "dark" : "light");
+    document.documentElement.setAttribute("data-theme", isDarkMode ? "dark" : "light");
     if (isDarkMode) {
       document.documentElement.classList.add("dark");
     } else {
