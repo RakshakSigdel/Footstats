@@ -479,6 +479,41 @@ class TournamentService {
       throw new Error("Only club admins can register a club for tournament");
     }
 
+    const entryFee = Number(tournament.entryFee || 0);
+    const paymentReference = data.paymentReference || null;
+    let registrationPaymentStatus = entryFee > 0 ? "PENDING" : "WAIVED";
+
+    if (entryFee > 0) {
+      if (!paymentReference) {
+        throw new Error("Payment is required for this tournament");
+      }
+
+      const payment = await prisma.payment.findFirst({
+        where: {
+          productId: paymentReference,
+          status: "COMPLETED",
+        },
+      });
+
+      if (!payment) {
+        throw new Error("Verified payment not found for this reference");
+      }
+
+      if (Number(payment.amount) !== entryFee) {
+        throw new Error("Payment amount does not match tournament entry fee");
+      }
+
+      await prisma.payment.update({
+        where: { paymentId: payment.paymentId },
+        data: {
+          userId,
+          tournamentId: id,
+        },
+      });
+
+      registrationPaymentStatus = "PAID";
+    }
+
     const registration = await prisma.tournamentRegistration.upsert({
       where: {
         tournamentId_clubId: {
@@ -489,9 +524,9 @@ class TournamentService {
       update: {
         status: "PENDING",
         notes: data.notes || null,
-        paymentStatus: "PENDING",
-        paymentReference: data.paymentReference || null,
-        paymentAmount: Number(tournament.entryFee || 0),
+        paymentStatus: registrationPaymentStatus,
+        paymentReference,
+        paymentAmount: entryFee,
         reviewedAt: null,
         reviewedBy: null,
         registeredBy: userId,
@@ -502,9 +537,9 @@ class TournamentService {
         registeredBy: userId,
         status: "PENDING",
         notes: data.notes || null,
-        paymentStatus: "PENDING",
-        paymentReference: data.paymentReference || null,
-        paymentAmount: Number(tournament.entryFee || 0),
+        paymentStatus: registrationPaymentStatus,
+        paymentReference,
+        paymentAmount: entryFee,
       },
       include: {
         club: {

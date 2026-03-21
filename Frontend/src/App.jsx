@@ -17,6 +17,9 @@ import Schedule from "./pages/Schedule/Schedule";
 import ScheduleDetails from "./pages/Schedule/ScheduleDetails";
 import Profile from "./pages/Player/Profile";
 import Settings from "./pages/App/Settings";
+import PaymentComponent from "./components/payment/paymentForm";
+import Success from "./components/payment/success";
+import Failure from "./components/payment/failure";
 //Components
 import ProtectedRoute from "./components/Global/ProtectedRoute";
 //Context
@@ -35,6 +38,9 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/payment" element={<PaymentComponent />} />
+          <Route path="/payment-success" element={<Success />} />
+          <Route path="/payment-failure" element={<Failure />} />
           
           {/* Protected Routes - Require Authentication */}
           {/* Clubs Routes */}

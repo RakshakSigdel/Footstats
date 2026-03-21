@@ -45,6 +45,7 @@ model User {
   createdSchedules Schedule[]     @relation("CreatedByUser")
   messages    Message[]
   notifications Notification[]
+  payments      Payment[]       
 
 
   createdAt DateTime @default(now())
@@ -125,7 +126,6 @@ model Club {
   tournamentsWon         Tournament[]             @relation("TournamentWinner")
   tournamentsRunnerUp    Tournament[]             @relation("TournamentRunnerUp")
   messages    Message[]
-
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -214,6 +214,8 @@ model Tournament {
   admins         TournamentAdmin[]
   winnerClub     Club?                    @relation("TournamentWinner", fields: [winnerClubId], references: [clubId])
   runnerUpClub   Club?                    @relation("TournamentRunnerUp", fields: [runnerUpClubId], references: [clubId])
+  payments    Payment[]
+
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -461,3 +463,56 @@ enum MessageType {
   FILE
 }
 
+
+// =========================
+// PAYMENT MODEL
+// =========================
+model Payment {
+  paymentId          Int            @id @default(autoincrement())
+ // Customer Details
+  customerName  String
+  customerEmail String
+  customerPhone String
+  
+  // Product Details
+  productName   String
+  productId     String
+  amount        Decimal  @db.Decimal(10, 2)
+  
+  // Payment Gateway
+  paymentGateway PaymentGatewayType
+  
+  // Status
+  status        TransactionStatus @default(PENDING)
+  
+  // Relations (Optional - link to existing models)
+  userId        Int?
+  user          User?    @relation(fields: [userId], references: [userId], onDelete: SetNull)
+  
+  tournamentId  Int?
+  tournament    Tournament? @relation(fields: [tournamentId], references: [tournamentId], onDelete: SetNull)
+  
+  // Gateway Response Data
+  gatewayTransactionId String? @unique
+  gatewayResponse      Json?   // Store raw gateway response
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  @@index([customerEmail])
+  @@index([productId])
+  @@index([gatewayTransactionId])
+  @@map("payments")
+}
+
+enum PaymentGatewayType {
+  ESEWA
+  KHALTI
+}
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}

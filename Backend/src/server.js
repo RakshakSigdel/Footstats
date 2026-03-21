@@ -22,6 +22,7 @@ import matchEventRoutes from "./routes/matchEvent.js";
 import matchLineupRoutes from "./routes/matchLineupRoute.js";
 import messageRoutes from "./routes/messageRoutes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
+import paymentRoutes from "./routes/paymentRoutes.js";
 
 const app = express();
 app.use(cors());
@@ -43,6 +44,7 @@ app.use("/api/match-events", matchEventRoutes);
 app.use("/api/match-lineups", matchLineupRoutes);
 app.use("/api/messages", messageRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api", paymentRoutes);
 app.get("/", (req, res) => {
   res.send("Welcome to Footstat API");
 });
