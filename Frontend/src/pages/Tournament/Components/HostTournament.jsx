@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import PlaceAutocompleteInput from "../../../components/Location/PlaceAutocompleteInput";
 
 const defaultData = {
   tournamentName: "",
@@ -16,16 +17,33 @@ const defaultData = {
 
 const CreateTournament = ({ isOpen, onClose, onCreateTournament }) => {
   const [formData, setFormData] = useState(defaultData);
+  const [selectedPlace, setSelectedPlace] = useState(null);
+  const [locationError, setLocationError] = useState(null);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prevData) => ({ ...prevData, [name]: value }));
+    if (name === "location") {
+      setSelectedPlace(null);
+      setLocationError(null);
+    }
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onCreateTournament(formData);
+    if (!selectedPlace) {
+      setLocationError("Please select a real place from suggestions");
+      return;
+    }
+    onCreateTournament({
+      ...formData,
+      locationLatitude: selectedPlace.latitude,
+      locationLongitude: selectedPlace.longitude,
+      locationPlaceId: selectedPlace.placeId,
+    });
     setFormData(defaultData);
+    setSelectedPlace(null);
+    setLocationError(null);
   };
 
   return (
@@ -42,7 +60,19 @@ const CreateTournament = ({ isOpen, onClose, onCreateTournament }) => {
               <input type="text" name="tournamentName" placeholder="Tournament Name" value={formData.tournamentName} onChange={handleInputChange} required className="w-full px-4 py-2" />
               <textarea name="description" placeholder="Description" value={formData.description} onChange={handleInputChange} rows="3" className="w-full resize-none px-4 py-2" />
               <div className="grid grid-cols-2 gap-4">
-                <input type="text" name="location" placeholder="Location" value={formData.location} onChange={handleInputChange} className="w-full px-4 py-2" />
+                <div>
+                  <PlaceAutocompleteInput
+                    value={formData.location}
+                    onChange={(nextLocation) => setFormData((prev) => ({ ...prev, location: nextLocation }))}
+                    onSelect={(place) => {
+                      setSelectedPlace(place);
+                      setLocationError(null);
+                    }}
+                    placeholder="Search exact location"
+                    required
+                  />
+                  {locationError && <p className="mt-1 text-xs text-red-600">{locationError}</p>}
+                </div>
                 <select name="format" value={formData.format} onChange={handleInputChange} className="w-full cursor-pointer px-4 py-2">
                   <option value="KNOCKOUT">Knockout</option><option value="LEAGUE">League / Round Robin</option>
                 </select>

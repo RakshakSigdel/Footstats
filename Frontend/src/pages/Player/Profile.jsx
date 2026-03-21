@@ -10,6 +10,7 @@ import {
 } from "../../services/api.player";
 import { getMyClubs } from "../../services/api.clubs";
 import { toMediaUrl } from "../../services/media";
+import PlaceAutocompleteInput from "../../components/Location/PlaceAutocompleteInput";
 
 function StatCard({ label, value, color = "text-gray-900" }) {
   return (
@@ -40,6 +41,8 @@ export default function Profile() {
   });
   const [editLoading, setEditLoading] = useState(false);
   const [editError, setEditError] = useState(null);
+  const [editSelectedPlace, setEditSelectedPlace] = useState(null);
+  const [editLocationError, setEditLocationError] = useState(null);
 
   const [photoFile, setPhotoFile] = useState(null);
   const [photoPreview, setPhotoPreview] = useState(null);
@@ -184,17 +187,39 @@ export default function Profile() {
       gender: player.gender || "",
       dateOfBirth: player.dateOfBirth ? new Date(player.dateOfBirth).toISOString().split("T")[0] : "",
     });
+    if (player.locationPlaceId && player.locationLatitude != null && player.locationLongitude != null) {
+      setEditSelectedPlace({
+        placeId: player.locationPlaceId,
+        displayName: player.location,
+        latitude: Number(player.locationLatitude),
+        longitude: Number(player.locationLongitude),
+      });
+    } else {
+      setEditSelectedPlace(null);
+    }
     setEditError(null);
+    setEditLocationError(null);
     setShowEditModal(true);
   };
 
   const handleEditInputChange = (e) => {
     setEditFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
     setEditError(null);
+    if (e.target.name === "location") {
+      setEditSelectedPlace(null);
+      setEditLocationError(null);
+    }
   };
 
   const handleSaveProfile = async () => {
     if (!player?.userId) return;
+
+    const locationChanged = editFormData.location.trim() !== String(player.location || "").trim();
+    if (locationChanged && !editSelectedPlace) {
+      setEditLocationError("Please select a real location from suggestions");
+      return;
+    }
+
     setEditLoading(true);
     setEditError(null);
 
@@ -204,6 +229,11 @@ export default function Profile() {
         lastName: editFormData.lastName.trim(),
         Phone: editFormData.Phone.trim(),
         location: editFormData.location.trim(),
+        ...(editSelectedPlace && {
+          locationLatitude: editSelectedPlace.latitude,
+          locationLongitude: editSelectedPlace.longitude,
+          locationPlaceId: editSelectedPlace.placeId,
+        }),
         gender: editFormData.gender || null,
         dateOfBirth: editFormData.dateOfBirth
           ? new Date(editFormData.dateOfBirth).toISOString()
@@ -681,13 +711,20 @@ export default function Profile() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
-                <input
-                  type="text"
-                  name="location"
+                <PlaceAutocompleteInput
                   value={editFormData.location}
-                  onChange={handleEditInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  onChange={(nextLocation) => {
+                    setEditFormData((prev) => ({ ...prev, location: nextLocation }));
+                    setEditSelectedPlace(null);
+                    setEditLocationError(null);
+                  }}
+                  onSelect={(place) => {
+                    setEditSelectedPlace(place);
+                    setEditLocationError(null);
+                  }}
+                  placeholder="Search exact location"
                 />
+                {editLocationError && <p className="mt-1 text-xs text-red-600">{editLocationError}</p>}
               </div>
 
               <div>

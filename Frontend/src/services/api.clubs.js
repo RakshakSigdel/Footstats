@@ -11,6 +11,9 @@ export const createClub = async (body, logoFile = null) => {
       formData.append('name', body.name);
       formData.append('description', body.description);
       formData.append('location', body.location);
+      formData.append('locationLatitude', body.locationLatitude);
+      formData.append('locationLongitude', body.locationLongitude);
+      formData.append('locationPlaceId', body.locationPlaceId);
       formData.append('foundedDate', body.foundedDate);
       formData.append('logo', logoFile);
       

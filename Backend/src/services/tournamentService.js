@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import NotificationService from "./notificationService.js";
+import { hasValidCoordinates, parseCoordinate } from "../utils/geo.js";
 
 const prisma = new PrismaClient();
 
@@ -21,6 +22,22 @@ const FORMAT_MAP = {
 const ENROLLMENT_MAP = {
   OPEN: "OPEN",
   CLOSED: "CLOSED",
+};
+
+const buildVerifiedLocationData = (data) => {
+  const latitude = parseCoordinate(data.locationLatitude);
+  const longitude = parseCoordinate(data.locationLongitude);
+  const locationPlaceId = String(data.locationPlaceId || "").trim();
+
+  if (!hasValidCoordinates(latitude, longitude) || !locationPlaceId) {
+    throw new Error("Please choose a valid location from the suggestions");
+  }
+
+  return {
+    locationLatitude: latitude,
+    locationLongitude: longitude,
+    locationPlaceId,
+  };
 };
 
 const normalizeEnumValue = (value, map, fallback) => {
@@ -58,12 +75,14 @@ const isClubAdmin = async (userId, clubId) => {
 
 class TournamentService {
   static async createTournament(data, userId) {
+    const verifiedLocation = buildVerifiedLocationData(data);
     const tournament = await prisma.$transaction(async (tx) => {
       const created = await tx.tournament.create({
         data: {
           name: data.name,
           description: data.description,
-          location: data.location,
+          location: String(data.location || "").trim(),
+          ...verifiedLocation,
           logo: data.logo || null,
           startDate: new Date(data.startDate),
           endDate: new Date(data.endDate),
@@ -450,7 +469,14 @@ class TournamentService {
   static async updateTournament(tournamentId, data, userId) {
     const existing = await prisma.tournament.findUnique({
       where: { tournamentId: Number(tournamentId) },
-      select: { tournamentId: true, createdBy: true },
+      select: {
+        tournamentId: true,
+        createdBy: true,
+        location: true,
+        locationLatitude: true,
+        locationLongitude: true,
+        locationPlaceId: true,
+      },
     });
 
     if (!existing) {
@@ -461,12 +487,31 @@ class TournamentService {
       throw new Error("Only tournament owner can update tournament details");
     }
 
+    const nextLocation =
+      data.location !== undefined ? String(data.location || "").trim() : undefined;
+    const locationChanged =
+      nextLocation !== undefined && nextLocation !== String(existing.location || "").trim();
+    const hasIncomingCoordinates =
+      data.locationLatitude !== undefined ||
+      data.locationLongitude !== undefined ||
+      data.locationPlaceId !== undefined;
+
+    const verifiedLocation =
+      locationChanged || hasIncomingCoordinates
+        ? buildVerifiedLocationData(data)
+        : {
+            locationLatitude: existing.locationLatitude,
+            locationLongitude: existing.locationLongitude,
+            locationPlaceId: existing.locationPlaceId,
+          };
+
     const updatedTournament = await prisma.tournament.update({
       where: { tournamentId: Number(tournamentId) },
       data: {
         ...(data.name !== undefined && { name: data.name }),
         ...(data.description !== undefined && { description: data.description }),
-        ...(data.location !== undefined && { location: data.location }),
+        ...(nextLocation !== undefined && { location: nextLocation }),
+        ...verifiedLocation,
         ...(data.logo !== undefined && { logo: data.logo }),
         ...(data.startDate && { startDate: new Date(data.startDate) }),
         ...(data.endDate && { endDate: new Date(data.endDate) }),

@@ -6,6 +6,7 @@ import Topbar from "../../components/Global/Topbar";
 import ClubListCard from "../../components/Club/ClubListCard";
 import CreateClub from "./Components/CreateClub";
 import { getMyClubs, getAllClubs, createClub } from "../../services/api.clubs";
+import { getLocationRecommendations } from "../../services/api.locations";
 import { toMediaUrl } from "../../services/media";
 import { itemVariants, listVariants } from "../../components/ui/motion";
 
@@ -26,12 +27,29 @@ export default function MyClubs() {
       setLoading(true);
       setError(null);
       try {
-        const [my, all] = await Promise.all([
+        const [my, recommendations, all] = await Promise.all([
           getMyClubs().catch(() => []),
+          getLocationRecommendations({ radiusKm: 2000, limit: 10 }).catch(() => null),
           getAllClubs().catch(() => []),
         ]);
-        setMyClubs(Array.isArray(my) ? my : []);
-        setBrowseClubs(Array.isArray(all) ? all : []);
+
+        const normalizedMyClubs = Array.isArray(my) ? my : [];
+        setMyClubs(normalizedMyClubs);
+
+        const recommendedClubs = Array.isArray(recommendations?.clubs) ? recommendations.clubs : [];
+        if (recommendedClubs.length > 0) {
+          setBrowseClubs(recommendedClubs.slice(0, 10));
+        } else {
+          const myClubIds = new Set(normalizedMyClubs.map((club) => Number(club.clubId)));
+          const fallbackClubs = (Array.isArray(all) ? all : [])
+            .filter((club) => !myClubIds.has(Number(club.clubId)))
+            .slice(0, 10);
+          setBrowseClubs(fallbackClubs);
+        }
+
+        if (normalizedMyClubs.length === 0) {
+          setActiveTab("browseClubs");
+        }
       } catch (err) {
         setError(err?.message || "Failed to load clubs");
         throw err;
@@ -72,8 +90,32 @@ export default function MyClubs() {
     try {
       await createClub(formData, logoFile);
       setIsCreateClubOpen(false);
-      const my = await getMyClubs();
-      setMyClubs(Array.isArray(my) ? my : []);
+
+      const [my, recommendations, all] = await Promise.all([
+        getMyClubs().catch(() => []),
+        getLocationRecommendations({ radiusKm: 2000, limit: 10 }).catch(() => null),
+        getAllClubs().catch(() => []),
+      ]);
+
+      const normalizedMyClubs = Array.isArray(my) ? my : [];
+      setMyClubs(normalizedMyClubs);
+
+      const recommendedClubs = Array.isArray(recommendations?.clubs) ? recommendations.clubs : [];
+      if (recommendedClubs.length > 0) {
+        setBrowseClubs(recommendedClubs.slice(0, 10));
+      } else {
+        const myClubIds = new Set(normalizedMyClubs.map((club) => Number(club.clubId)));
+        const fallbackClubs = (Array.isArray(all) ? all : [])
+          .filter((club) => !myClubIds.has(Number(club.clubId)))
+          .slice(0, 10);
+        setBrowseClubs(fallbackClubs);
+      }
+
+      if (normalizedMyClubs.length === 0) {
+        setActiveTab("browseClubs");
+      } else {
+        setActiveTab("myClubs");
+      }
     } catch (err) {
       setError(err?.message || "Failed to create club");
       throw err;
@@ -254,6 +296,11 @@ export default function MyClubs() {
                             <circle cx="12" cy="10" r="3" />
                           </svg>
                           <span>{club.location ?? "—"}</span>
+                          {club.distanceKm != null && (
+                            <span className="rounded-full bg-blue-50 px-2 py-0.5 text-xs font-semibold text-blue-700">
+                              {club.distanceKm} km away
+                            </span>
+                          )}
                         </div>
                       </div>
                     </div>

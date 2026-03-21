@@ -164,7 +164,7 @@ export default function Login() {
               <p className="text-center text-xs text-gray-500 mb-2">Continue with Google</p>
               {isGoogleEnabled ? (
                 <div className="flex justify-center">
-                  <GoogleLogin onSuccess={handleGoogleSuccess} onError={handleGoogleError} />
+                  <GoogleLogin locale="en" onSuccess={handleGoogleSuccess} onError={handleGoogleError} />
                 </div>
               ) : (
                 <p className="text-center text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-2">

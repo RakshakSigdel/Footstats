@@ -69,6 +69,9 @@ export default function Tournaments() {
         name: formData.tournamentName,
         description: formData.description || "",
         location: formData.location || "",
+        locationLatitude: formData.locationLatitude,
+        locationLongitude: formData.locationLongitude,
+        locationPlaceId: formData.locationPlaceId,
         startDate: formData.startDate ? new Date(formData.startDate).toISOString() : new Date().toISOString(),
         endDate: formData.endDate ? new Date(formData.endDate).toISOString() : new Date().toISOString(),
         entryFee: entryFeeNum,
@@ -92,6 +95,9 @@ export default function Tournaments() {
         name: formData.tournamentName,
         description: formData.description,
         location: formData.location,
+        locationLatitude: formData.locationLatitude,
+        locationLongitude: formData.locationLongitude,
+        locationPlaceId: formData.locationPlaceId,
         startDate: formData.startDate ? new Date(formData.startDate).toISOString() : undefined,
         endDate: formData.endDate ? new Date(formData.endDate).toISOString() : undefined,
         entryFee: entryFeeNum,
@@ -120,6 +126,9 @@ export default function Tournaments() {
       prizePool: tournament.prizePool,
       status: tournament.status,
       maxTeams: tournament.maxTeams,
+      locationLatitude: tournament.locationLatitude,
+      locationLongitude: tournament.locationLongitude,
+      locationPlaceId: tournament.locationPlaceId,
     });
     setIsEditTournamentOpen(true);
   };
