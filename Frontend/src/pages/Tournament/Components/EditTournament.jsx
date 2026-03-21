@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 
 const EditTournament = ({ isOpen, onClose, onEditTournament, tournamentData }) => {
   const [formData, setFormData] = useState(tournamentData || {
@@ -27,11 +28,11 @@ const EditTournament = ({ isOpen, onClose, onEditTournament, tournamentData }) =
     onEditTournament(formData);
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 flex justify-center items-center z-50 bg-black/30 backdrop-blur-sm">
-      <div className="bg-white rounded-xl w-full max-w-lg shadow-2xl overflow-hidden">
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
+          <motion.div initial={{ y: 18, opacity: 0, scale: 0.98 }} animate={{ y: 0, opacity: 1, scale: 1 }} exit={{ y: 12, opacity: 0 }} className="app-card w-full max-w-lg overflow-hidden">
         {/* Modal Header */}
         <div className="p-6 border-b border-gray-200">
           <div className="flex items-start justify-between">
@@ -188,23 +189,25 @@ const EditTournament = ({ isOpen, onClose, onEditTournament, tournamentData }) =
 
           {/* Action Buttons */}
           <div className="flex gap-3 justify-end pt-4 border-t border-gray-200 mt-6">
-            <button
+            <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
               type="button"
               onClick={onClose}
-              className="px-6 py-2 text-gray-700 font-medium hover:bg-gray-100 transition-colors rounded-lg"
+              className="btn-secondary px-6 py-2 text-gray-700 font-medium"
             >
               Cancel
-            </button>
-            <button
+            </motion.button>
+            <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
               type="submit"
-              className="px-6 py-2 bg-slate-900 text-white rounded-lg font-medium hover:bg-slate-800 transition-colors"
+              className="btn-primary px-6 py-2 font-medium"
             >
               Save Changes
-            </button>
+            </motion.button>
           </div>
         </form>
-      </div>
-    </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 };
 

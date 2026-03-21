@@ -28,7 +28,10 @@ export default function Discover() {
           getMyClubs().catch(() => []),
         ]);
         setClubs(Array.isArray(clubsData) ? clubsData : []);
-        setTournaments(Array.isArray(tournamentsData) ? tournamentsData : []);
+        const tournamentItems = Array.isArray(tournamentsData)
+          ? tournamentsData
+          : tournamentsData?.tournaments || [];
+        setTournaments(tournamentItems);
         const ids = new Set((Array.isArray(myClubsData) ? myClubsData : []).map(c => c.clubId));
         setMyClubIds(ids);
       } catch (err) {
