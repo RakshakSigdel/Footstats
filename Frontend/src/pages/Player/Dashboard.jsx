@@ -10,6 +10,14 @@ import { getAllClubs } from "../../services/api.clubs";
 import { toMediaUrl } from "../../services/media";
 
 export default function Dashboard() {
+  const storedUser = useMemo(() => {
+    try {
+      return JSON.parse(localStorage.getItem("user") || "null");
+    } catch {
+      return null;
+    }
+  }, []);
+
   const [profile, setProfile] = useState(null);
   const [stats, setStats] = useState(null);
   const [schedules, setSchedules] = useState([]);
@@ -118,7 +126,7 @@ export default function Dashboard() {
           {/* Welcome Header */}
           <div className="mb-6">
             <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-1">
-              Welcome back, {profile?.firstName ?? "Player"}!
+              Welcome back, {profile?.firstName ?? storedUser?.firstName ?? "Player"}!
             </h2>
             <p className="text-sm md:text-base text-gray-500">
               Here's what's happening with your football journey

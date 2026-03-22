@@ -14,7 +14,20 @@ export const getMyProfile = async () => {
     const response = await api.get("/players/me");
     return response.data.profile;
   } catch (error) {
-    throw error.response?.data || { message: "Failed to fetch profile" };
+    const payload = error.response?.data || { message: "Failed to fetch profile" };
+    const message = String(payload?.message || "");
+
+    // After DB migration, old tokens can point to user IDs that no longer exist.
+    if (/Player not found|Invalid token payload|Invalid access token|Access token is missing/i.test(message)) {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      if (typeof window !== "undefined" && window.location.pathname !== "/login") {
+        window.location.href = "/login";
+      }
+      throw { message: "Session expired. Please log in again." };
+    }
+
+    throw payload;
   }
 };
 

@@ -25,13 +25,14 @@ export const getAllPlayers = async (req, res) => {
 export const getMyProfile = async (req, res) => {
   try {
     const userId = req.user.userId;
-    console.log("Logged in user ID:", userId);
+    if (!userId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
     const profile = await PlayerService.getPlayerByUserId(userId);
     res.status(200).json({ profile });
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Error retrieving profile", error: error.message });
+    const status = error.status || 500;
+    res.status(status).json({ message: error.message || "Error retrieving profile" });
   }
 };
 
@@ -113,12 +114,14 @@ export const getPlayersByClubId = async (req, res) => {
 export const getMyStats = async (req, res) => {
   try {
     const userId = req.user.userId;
+    if (!userId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
     const stats = await PlayerService.getPlayerStats(userId);
     res.status(200).json({ stats });
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Error retrieving player stats", error: error.message });
+    const status = error.status || 500;
+    res.status(status).json({ message: error.message || "Error retrieving player stats" });
   }
 };
 
