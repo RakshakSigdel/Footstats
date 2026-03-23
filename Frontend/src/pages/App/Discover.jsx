@@ -1,10 +1,20 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 import Sidebar from "../../components/Global/Sidebar";
 import Topbar from "../../components/Global/Topbar";
 import { getAllClubs, getMyClubs } from "../../services/api.clubs";
 import { getAllTournaments } from "../../services/api.tournaments";
 import { getLocationRecommendations } from "../../services/api.locations";
+import { Users, Trophy, MapPin, Search, X, CalendarDays } from "lucide-react";
+
+const cardVariants = {
+  hidden: { opacity: 0, y: 20, scale: 0.96 },
+  visible: (i) => ({
+    opacity: 1, y: 0, scale: 1,
+    transition: { duration: 0.4, delay: i * 0.06, ease: [0.22, 1, 0.36, 1] },
+  }),
+};
 
 export default function Discover() {
   const navigate = useNavigate();
@@ -88,162 +98,190 @@ export default function Discover() {
 
       <div className="flex-1 flex flex-col">
         <Topbar />
-        <div className="border-t border-gray-200"></div>
 
         <main className="flex-1 p-6 md:p-8 overflow-auto bg-[#eef1f6]">
-          {error && <div className="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 text-red-700">{error}</div>}
-          {loading && <div className="mb-6 text-gray-500">Loading...</div>}
-          <div className="mb-8">
-            <h1 className="text-4xl font-bold text-gray-900 mb-2">Discover</h1>
-            <p className="text-gray-600">
+          {error && <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mb-6 p-4 rounded-2xl bg-red-50 border border-red-200 text-red-700">{error}</motion.div>}
+          {loading && (
+            <div className="mb-6 flex items-center gap-3 text-slate-500">
+              <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: "linear" }} className="w-5 h-5 rounded-full border-2 border-slate-200 border-t-emerald-500" />
+              Loading...
+            </div>
+          )}
+
+          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
+            <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2 font-['Outfit']">Discover</h1>
+            <p className="text-slate-500">
               {recommendationMode
                 ? "Nearest clubs and tournaments based on your location"
                 : "Find clubs and tournaments near you"}
             </p>
-          </div>
+          </motion.div>
 
           {/* Search and Filter Section */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-8">
-            {/* Search Bar */}
-            <div className="flex gap-4 mb-6">
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="bg-white rounded-2xl shadow-sm border border-slate-100/80 p-6 mb-8"
+          >
+            <div className="flex gap-4 mb-5">
               <div className="flex-1 relative">
-                <div className="absolute left-4 top-1/2 -translate-y-1/2">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-400">
-                    <circle cx="11" cy="11" r="8" />
-                    <path d="m21 21-4.35-4.35" />
-                  </svg>
-                </div>
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                 <input
                   type="text"
                   placeholder="Search clubs or tournaments..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-12 pr-10 py-3 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full pl-11 pr-10 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm"
                 />
                 {searchQuery && (
-                  <button
-                    onClick={() => setSearchQuery("")}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                  >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <line x1="18" y1="6" x2="6" y2="18" />
-                      <line x1="6" y1="6" x2="18" y2="18" />
-                    </svg>
+                  <button onClick={() => setSearchQuery("")} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                    <X size={16} />
                   </button>
                 )}
               </div>
             </div>
 
-            {/* Filter Tabs */}
-            <div className="flex flex-wrap gap-3">
+            <div className="flex flex-wrap gap-2">
               {filters.map((filter) => (
-                <button
+                <motion.button
                   key={filter}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                   onClick={() => setActiveFilter(filter)}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
                     activeFilter === filter
-                      ? "bg-slate-900 text-white"
-                      : "bg-transparent text-gray-600 hover:bg-green-600 hover:text-white"
+                      ? "bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-md shadow-emerald-500/20"
+                      : "bg-slate-100 text-slate-600 hover:bg-emerald-50 hover:text-emerald-700"
                   }`}
                 >
                   {filter}
-                </button>
+                </motion.button>
               ))}
             </div>
-          </div>
+          </motion.div>
 
           {/* Clubs Near You Section */}
-          <div className="mb-8">
-            <div className="flex items-center gap-2 mb-6">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                <circle cx="9" cy="7" r="4" />
-                <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-                <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-              </svg>
-              <h2 className="text-2xl font-bold text-gray-900">Clubs Near You</h2>
-            </div>
-
-            <div className="grid grid-cols-2 gap-6">
-              {filteredClubs.length === 0 && !loading && (
-                <div className="col-span-2 text-center py-8 text-gray-500">No clubs to show.</div>
-              )}
-              {filteredClubs.map((club) => (
-                <div key={club.clubId} className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-lg hover:-translate-y-1 transition-all duration-200 cursor-pointer">
-                  <div className="flex items-start justify-between mb-4">
-                    <h3 className="text-xl font-bold text-gray-900">{club.name}</h3>
-                  </div>
-                  <div className="flex items-center gap-1.5 text-sm text-gray-600 mb-4">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-                      <circle cx="12" cy="10" r="3" />
-                    </svg>
-                    <span>{club.location ?? "—"}</span>
-                    {club.distanceKm != null && (
-                      <span className="rounded-full bg-blue-50 px-2 py-0.5 text-xs font-semibold text-blue-700">
-                        {club.distanceKm} km away
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex items-center justify-between">
-                    {club.description && <span className="text-sm text-gray-600 line-clamp-1 flex-1 mr-2">{club.description}</span>}
-                    <button onClick={() => navigate(`/club/${club.clubId}`)} className="bg-slate-900 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-slate-800 whitespace-nowrap">
-                      View Details
-                    </button>
-                  </div>
+          {(activeFilter === "All" || activeFilter === "Clubs") && (
+            <div className="mb-8">
+              <div className="flex items-center gap-2.5 mb-5">
+                <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center">
+                  <Users size={18} className="text-emerald-600" />
                 </div>
-              ))}
-            </div>
-          </div>
+                <h2 className="text-2xl font-bold text-slate-900 font-['Outfit']">Clubs Near You</h2>
+              </div>
 
-          {/* Upcoming Tournaments Section */}
-          <div>
-            <div className="flex items-center gap-2 mb-6">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
-                <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
-                <path d="M4 22h16" />
-                <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
-                <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
-                <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
-              </svg>
-              <h2 className="text-2xl font-bold text-gray-900">Upcoming Tournaments</h2>
-            </div>
-
-            <div className="grid grid-cols-3 gap-6">
-              {filteredTournaments.length === 0 && !loading && (
-                <div className="col-span-3 text-center py-8 text-gray-500">No tournaments to show.</div>
-              )}
-              {filteredTournaments.map((tournament) => (
-                <div key={tournament.tournamentId} className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-lg hover:-translate-y-1 transition-all duration-200 cursor-pointer">
-                  <h3 className="text-xl font-bold text-gray-900 mb-4">{tournament.name}</h3>
-                  <div className="space-y-2 mb-6">
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-                        <circle cx="12" cy="10" r="3" />
-                      </svg>
-                      <span>{tournament.location ?? "—"}</span>
-                      {tournament.distanceKm != null && (
-                        <span className="rounded-full bg-blue-50 px-2 py-0.5 text-xs font-semibold text-blue-700">
-                          {tournament.distanceKm} km away
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                {filteredClubs.length === 0 && !loading && (
+                  <div className="col-span-2 text-center py-10 bg-white rounded-2xl border border-slate-100">
+                    <div className="text-4xl mb-3">🏟️</div>
+                    <p className="text-slate-500">No clubs to show</p>
+                  </div>
+                )}
+                {filteredClubs.map((club, idx) => (
+                  <motion.div
+                    key={club.clubId}
+                    custom={idx}
+                    variants={cardVariants}
+                    initial="hidden"
+                    animate="visible"
+                    whileHover={{ y: -4, scale: 1.01, transition: { duration: 0.2 } }}
+                    className="bg-white rounded-2xl shadow-sm border border-slate-100/80 p-6 group relative overflow-hidden cursor-pointer"
+                  >
+                    <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-emerald-400 to-teal-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    <div className="flex items-start justify-between mb-4">
+                      <h3 className="text-xl font-bold text-slate-900">{club.name}</h3>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-sm text-slate-500 mb-4">
+                      <MapPin size={14} />
+                      <span>{club.location ?? "—"}</span>
+                      {club.distanceKm != null && (
+                        <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700 border border-emerald-100">
+                          {club.distanceKm} km away
                         </span>
                       )}
                     </div>
-                    <div className="text-sm text-gray-900 font-medium">
-                      {tournament.startDate ? `Starts ${new Date(tournament.startDate).toLocaleDateString()}` : "—"}
+                    <div className="flex items-center justify-between">
+                      {club.description && <span className="text-sm text-slate-500 line-clamp-1 flex-1 mr-3">{club.description}</span>}
+                      <motion.button
+                        whileHover={{ scale: 1.03 }}
+                        whileTap={{ scale: 0.97 }}
+                        onClick={() => navigate(`/club/${club.clubId}`)}
+                        className="btn-primary px-5 py-2 rounded-xl text-sm font-semibold whitespace-nowrap"
+                      >
+                        View Details
+                      </motion.button>
                     </div>
-                    <div className="text-sm text-gray-900 font-bold">
-                      {tournament.entryFee != null && tournament.entryFee > 0 ? `NPR ${tournament.entryFee}` : "Free"}
-                    </div>
-                  </div>
-                  <button onClick={() => navigate(`/tournament/${tournament.tournamentId}`)} className="w-full bg-slate-900 text-white py-3 rounded-lg text-sm font-medium hover:bg-slate-800">
-                    View Details
-                  </button>
-                </div>
-              ))}
+                  </motion.div>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
+
+          {/* Upcoming Tournaments Section */}
+          {(activeFilter !== "Clubs") && (
+            <div>
+              <div className="flex items-center gap-2.5 mb-5">
+                <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center">
+                  <Trophy size={18} className="text-amber-600" />
+                </div>
+                <h2 className="text-2xl font-bold text-slate-900 font-['Outfit']">Upcoming Tournaments</h2>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                {filteredTournaments.length === 0 && !loading && (
+                  <div className="col-span-full text-center py-10 bg-white rounded-2xl border border-slate-100">
+                    <div className="text-4xl mb-3">🏆</div>
+                    <p className="text-slate-500">No tournaments to show</p>
+                  </div>
+                )}
+                {filteredTournaments.map((tournament, idx) => (
+                  <motion.div
+                    key={tournament.tournamentId}
+                    custom={idx}
+                    variants={cardVariants}
+                    initial="hidden"
+                    animate="visible"
+                    whileHover={{ y: -4, scale: 1.01, transition: { duration: 0.2 } }}
+                    className="bg-white rounded-2xl shadow-sm border border-slate-100/80 p-6 group relative overflow-hidden cursor-pointer"
+                  >
+                    <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-amber-400 to-orange-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    <h3 className="text-xl font-bold text-slate-900 mb-4">{tournament.name}</h3>
+                    <div className="space-y-2 mb-5">
+                      <div className="flex items-center gap-2 text-sm text-slate-500">
+                        <MapPin size={14} />
+                        <span>{tournament.location ?? "—"}</span>
+                        {tournament.distanceKm != null && (
+                          <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700 border border-emerald-100">
+                            {tournament.distanceKm} km away
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2 text-sm text-slate-700 font-medium">
+                        <CalendarDays size={14} className="text-slate-400" />
+                        {tournament.startDate ? `Starts ${new Date(tournament.startDate).toLocaleDateString()}` : "—"}
+                      </div>
+                      <div className="text-sm font-bold">
+                        {tournament.entryFee != null && tournament.entryFee > 0 ? (
+                          <span className="text-amber-600">NPR {tournament.entryFee}</span>
+                        ) : (
+                          <span className="text-emerald-600">Free Entry ✨</span>
+                        )}
+                      </div>
+                    </div>
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => navigate(`/tournament/${tournament.tournamentId}`)}
+                      className="w-full btn-primary py-2.5 rounded-xl text-sm font-semibold"
+                    >
+                      View Details
+                    </motion.button>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          )}
         </main>
       </div>
     </div>

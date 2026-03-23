@@ -1,10 +1,42 @@
 import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 import Sidebar from "../../components/Global/Sidebar";
 import Topbar from "../../components/Global/Topbar";
 import { getMyProfile, updatePlayerById } from "../../services/api.player";
 import { resendVerificationCode, verifyEmail } from "../../services/api.auth";
 import { useTheme } from "../../context/ThemeContext";
 import PlaceAutocompleteInput from "../../components/Location/PlaceAutocompleteInput";
+import {
+  User, Bell, Moon, Shield, Globe, CreditCard, HelpCircle, AlertTriangle, CheckCircle2, ChevronRight
+} from "lucide-react";
+
+function ToggleSwitch({ enabled, onToggle }) {
+  return (
+    <button
+      onClick={onToggle}
+      className={`relative w-12 h-6 rounded-full transition-colors duration-200 ${
+        enabled ? "bg-emerald-500" : "bg-slate-300"
+      }`}
+    >
+      <motion.div
+        animate={{ x: enabled ? 24 : 2 }}
+        transition={{ type: "spring", stiffness: 500, damping: 30 }}
+        className="absolute top-0.5 w-5 h-5 bg-white rounded-full shadow-md"
+      />
+    </button>
+  );
+}
+
+function SectionHeader({ icon: Icon, title, iconColor = "text-emerald-600", iconBg = "bg-emerald-50" }) {
+  return (
+    <div className="flex items-center gap-3 mb-6">
+      <div className={`w-10 h-10 rounded-xl ${iconBg} flex items-center justify-center`}>
+        <Icon size={20} className={iconColor} />
+      </div>
+      <h2 className="text-xl font-bold text-slate-900 font-['Outfit']">{title}</h2>
+    </div>
+  );
+}
 
 export default function Settings() {
   const { isDarkMode, toggleDarkMode } = useTheme();
@@ -80,13 +112,11 @@ export default function Settings() {
 
   const handleSaveChanges = async () => {
     if (!profile?.userId) return;
-
     const locationChanged = formData.location.trim() !== String(profile?.location || "").trim();
     if (locationChanged && !selectedPlace) {
       setLocationError("Please select a real location from suggestions");
       return;
     }
-
     setError(null);
     setSaveSuccess(false);
     try {
@@ -101,19 +131,10 @@ export default function Settings() {
           locationPlaceId: selectedPlace.placeId,
         }),
       });
-
       const updatedProfile = response?.updatedPlayer;
       if (updatedProfile) {
-        setProfile((prev) => ({
-          ...prev,
-          ...updatedProfile,
-        }));
-
-        if (
-          updatedProfile.locationPlaceId &&
-          updatedProfile.locationLatitude != null &&
-          updatedProfile.locationLongitude != null
-        ) {
+        setProfile((prev) => ({ ...prev, ...updatedProfile }));
+        if (updatedProfile.locationPlaceId && updatedProfile.locationLatitude != null && updatedProfile.locationLongitude != null) {
           setSelectedPlace({
             placeId: updatedProfile.locationPlaceId,
             displayName: updatedProfile.location,
@@ -122,7 +143,6 @@ export default function Settings() {
           });
         }
       }
-
       setLocationError(null);
       setSaveSuccess(true);
     } catch (err) {
@@ -158,9 +178,7 @@ export default function Settings() {
         const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
         localStorage.setItem("user", JSON.stringify({ ...storedUser, emailVerified: true }));
         window.dispatchEvent(new Event("user-updated"));
-      } catch {
-        // Ignore local storage parse errors and keep UI state updated.
-      }
+      } catch { /* ignore */ }
       setVerificationCode("");
       setEmailMessage(response?.message || "Email verified successfully.");
     } catch (err) {
@@ -176,250 +194,121 @@ export default function Settings() {
 
       <div className="flex-1 flex flex-col">
         <Topbar />
-        <div className="border-t border-gray-200"></div>
 
         <main className="flex-1 p-6 md:p-8 overflow-auto bg-[#eef1f6]">
-          <div className="mb-8">
-            <h1 className="text-4xl font-bold text-gray-900 mb-2">Settings</h1>
-            <p className="text-gray-600">Manage your account preferences</p>
-          </div>
+          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
+            <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-1 font-['Outfit']">Settings</h1>
+            <p className="text-sm text-slate-500">Manage your account preferences</p>
+          </motion.div>
 
-          {error && <div className="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 text-red-700">{error}</div>}
-          {saveSuccess && <div className="mb-6 p-4 rounded-xl bg-green-50 border border-green-200 text-green-700">Profile updated successfully.</div>}
-          {loading && <div className="mb-6 text-gray-500">Loading...</div>}
-
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 mb-6">
-            <div className="flex items-center gap-3 mb-6">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                <circle cx="12" cy="7" r="4" />
-              </svg>
-              <h2 className="text-2xl font-bold text-gray-900">Profile (from backend)</h2>
+          {error && <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mb-6 p-4 rounded-2xl bg-red-50 border border-red-200 text-red-700">{error}</motion.div>}
+          {saveSuccess && <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mb-6 p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-700 flex items-center gap-2"><CheckCircle2 size={16} />Profile updated successfully.</motion.div>}
+          {loading && (
+            <div className="mb-6 flex items-center gap-3 text-slate-500">
+              <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: "linear" }} className="w-5 h-5 rounded-full border-2 border-slate-200 border-t-emerald-500" />
+              Loading...
             </div>
+          )}
 
+          {/* Profile Section */}
+          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="bg-white rounded-2xl shadow-sm border border-slate-100/80 p-8 mb-6">
+            <SectionHeader icon={User} title="Profile" />
             <div className="space-y-5">
               <div>
-                <label className="block text-sm font-medium text-gray-900 mb-2">First Name</label>
-                <input
-                  type="text"
-                  name="firstName"
-                  value={formData.firstName}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
+                <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wide">First Name</label>
+                <input type="text" name="firstName" value={formData.firstName} onChange={handleInputChange} className="w-full px-4 py-3 rounded-xl text-sm" />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-900 mb-2">Last Name</label>
-                <input
-                  type="text"
-                  name="lastName"
-                  value={formData.lastName}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
+                <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wide">Last Name</label>
+                <input type="text" name="lastName" value={formData.lastName} onChange={handleInputChange} className="w-full px-4 py-3 rounded-xl text-sm" />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-900 mb-2">Phone Number</label>
-                <input
-                  type="tel"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
+                <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wide">Phone Number</label>
+                <input type="tel" name="phone" value={formData.phone} onChange={handleInputChange} className="w-full px-4 py-3 rounded-xl text-sm" />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-900 mb-2">Location</label>
+                <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wide">Location</label>
                 <PlaceAutocompleteInput
                   value={formData.location}
-                  onChange={(nextLocation) => {
-                    setFormData((prev) => ({ ...prev, location: nextLocation }));
-                    setSelectedPlace(null);
-                    setLocationError(null);
-                  }}
-                  onSelect={(place) => {
-                    setSelectedPlace(place);
-                    setLocationError(null);
-                  }}
+                  onChange={(nextLocation) => { setFormData((prev) => ({ ...prev, location: nextLocation })); setSelectedPlace(null); setLocationError(null); }}
+                  onSelect={(place) => { setSelectedPlace(place); setLocationError(null); }}
                   placeholder="Search exact location"
-                  className="bg-gray-50"
                 />
                 {locationError && <p className="mt-1 text-xs text-red-600">{locationError}</p>}
               </div>
-              <button
+              <motion.button
+                whileHover={{ scale: 1.02, y: -1 }}
+                whileTap={{ scale: 0.98 }}
                 onClick={handleSaveChanges}
                 disabled={loading || !profile?.userId}
-                className="bg-slate-900 text-white px-6 py-3 rounded-lg text-sm font-medium hover:bg-slate-800 disabled:opacity-50"
+                className="btn-primary px-6 py-3 rounded-xl text-sm font-semibold disabled:opacity-50"
               >
                 Save Changes
-              </button>
+              </motion.button>
             </div>
-          </div>
+          </motion.div>
 
           {/* Notifications Section */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 mb-6">
-            <div className="flex items-center gap-3 mb-6">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-                <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-              </svg>
-              <h2 className="text-2xl font-bold text-gray-900">Notifications</h2>
+          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="bg-white rounded-2xl shadow-sm border border-slate-100/80 p-8 mb-6">
+            <SectionHeader icon={Bell} title="Notifications" iconColor="text-blue-600" iconBg="bg-blue-50" />
+            <div className="space-y-1">
+              {[
+                { key: "matchReminders", title: "Match Reminders", desc: "Get notified about upcoming matches" },
+                { key: "tournamentUpdates", title: "Tournament Updates", desc: "Receive updates about tournaments" },
+                { key: "clubInvitations", title: "Club Invitations", desc: "Get notified when clubs invite you" },
+                { key: "emailNotifications", title: "Email Notifications", desc: "Receive email updates" },
+              ].map((item) => (
+                <div key={item.key} className="flex items-center justify-between py-4 border-b border-slate-100 last:border-0">
+                  <div>
+                    <h3 className="text-sm font-semibold text-slate-900">{item.title}</h3>
+                    <p className="text-xs text-slate-500 mt-0.5">{item.desc}</p>
+                  </div>
+                  <ToggleSwitch enabled={notifications[item.key]} onToggle={() => handleToggle(item.key)} />
+                </div>
+              ))}
             </div>
-
-            <div className="space-y-5">
-              {/* Match Reminders */}
-              <div className="flex items-center justify-between py-3 border-b border-gray-100">
-                <div>
-                  <h3 className="text-base font-semibold text-gray-900 mb-1">Match Reminders</h3>
-                  <p className="text-sm text-gray-600">Get notified about upcoming matches</p>
-                </div>
-                <button
-                  onClick={() => handleToggle("matchReminders")}
-                  className={`relative w-12 h-6 rounded-full transition-colors ${
-                    notifications.matchReminders ? "bg-slate-900" : "bg-gray-300"
-                  }`}
-                >
-                  <div
-                    className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${
-                      notifications.matchReminders ? "translate-x-6" : "translate-x-0"
-                    }`}
-                  ></div>
-                </button>
-              </div>
-
-              {/* Tournament Updates */}
-              <div className="flex items-center justify-between py-3 border-b border-gray-100">
-                <div>
-                  <h3 className="text-base font-semibold text-gray-900 mb-1">Tournament Updates</h3>
-                  <p className="text-sm text-gray-600">Receive updates about tournaments</p>
-                </div>
-                <button
-                  onClick={() => handleToggle("tournamentUpdates")}
-                  className={`relative w-12 h-6 rounded-full transition-colors ${
-                    notifications.tournamentUpdates ? "bg-slate-900" : "bg-gray-300"
-                  }`}
-                >
-                  <div
-                    className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${
-                      notifications.tournamentUpdates ? "translate-x-6" : "translate-x-0"
-                    }`}
-                  ></div>
-                </button>
-              </div>
-
-              {/* Club Invitations */}
-              <div className="flex items-center justify-between py-3 border-b border-gray-100">
-                <div>
-                  <h3 className="text-base font-semibold text-gray-900 mb-1">Club Invitations</h3>
-                  <p className="text-sm text-gray-600">Get notified when clubs invite you</p>
-                </div>
-                <button
-                  onClick={() => handleToggle("clubInvitations")}
-                  className={`relative w-12 h-6 rounded-full transition-colors ${
-                    notifications.clubInvitations ? "bg-slate-900" : "bg-gray-300"
-                  }`}
-                >
-                  <div
-                    className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${
-                      notifications.clubInvitations ? "translate-x-6" : "translate-x-0"
-                    }`}
-                  ></div>
-                </button>
-              </div>
-
-              {/* Email Notifications */}
-              <div className="flex items-center justify-between py-3">
-                <div>
-                  <h3 className="text-base font-semibold text-gray-900 mb-1">Email Notifications</h3>
-                  <p className="text-sm text-gray-600">Receive email updates</p>
-                </div>
-                <button
-                  onClick={() => handleToggle("emailNotifications")}
-                  className={`relative w-12 h-6 rounded-full transition-colors ${
-                    notifications.emailNotifications ? "bg-slate-900" : "bg-gray-300"
-                  }`}
-                >
-                  <div
-                    className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${
-                      notifications.emailNotifications ? "translate-x-6" : "translate-x-0"
-                    }`}
-                  ></div>
-                </button>
-              </div>
-            </div>
-          </div>
+          </motion.div>
 
           {/* Appearance Section */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 mb-6">
-            <div className="flex items-center gap-3 mb-6">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-              </svg>
-              <h2 className="text-2xl font-bold text-gray-900">Appearance</h2>
-            </div>
-
-            <div className="space-y-5">
-              {/* Dark Mode Toggle */}
-              <div className="flex items-center justify-between py-3">
-                <div>
-                  <h3 className="text-base font-semibold text-gray-900 mb-1">Dark Mode</h3>
-                  <p className="text-sm text-gray-600">Switch to dark theme for better viewing in low light</p>
-                </div>
-                <button
-                  onClick={toggleDarkMode}
-                  className={`relative w-12 h-6 rounded-full transition-colors ${
-                    isDarkMode ? "bg-slate-900" : "bg-gray-300"
-                  }`}
-                >
-                  <div
-                    className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${
-                      isDarkMode ? "translate-x-6" : "translate-x-0"
-                    }`}
-                  ></div>
-                </button>
+          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="bg-white rounded-2xl shadow-sm border border-slate-100/80 p-8 mb-6">
+            <SectionHeader icon={Moon} title="Appearance" iconColor="text-purple-600" iconBg="bg-purple-50" />
+            <div className="flex items-center justify-between py-4">
+              <div>
+                <h3 className="text-sm font-semibold text-slate-900">Dark Mode</h3>
+                <p className="text-xs text-slate-500 mt-0.5">Switch to dark theme for better viewing in low light</p>
               </div>
+              <ToggleSwitch enabled={isDarkMode} onToggle={toggleDarkMode} />
             </div>
-          </div>
+          </motion.div>
 
           {/* Privacy & Security Section */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 mb-6">
-            <div className="flex items-center gap-3 mb-6">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-              </svg>
-              <h2 className="text-2xl font-bold text-gray-900">Privacy & Security</h2>
-            </div>
+          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="bg-white rounded-2xl shadow-sm border border-slate-100/80 p-8 mb-6">
+            <SectionHeader icon={Shield} title="Privacy & Security" iconColor="text-amber-600" iconBg="bg-amber-50" />
 
             {!profile?.emailVerified && (
-              <div className="mb-6 p-4 rounded-lg border border-amber-200 bg-amber-50">
-                <div className="flex items-start gap-3">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-amber-600 mt-0.5">
-                    <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-                    <line x1="12" y1="9" x2="12" y2="13" />
-                    <line x1="12" y1="17" x2="12.01" y2="17" />
-                  </svg>
-                  <div>
-                    <p className="text-sm font-semibold text-amber-900">Verify your email to stay updated</p>
-                    <p className="text-sm text-amber-800">Your account can miss important updates such as match reminders, schedule changes, invitations, and security alerts until your email is verified.</p>
-                  </div>
+              <div className="mb-6 p-4 rounded-xl border border-amber-200 bg-amber-50 flex items-start gap-3">
+                <AlertTriangle size={18} className="text-amber-600 mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="text-sm font-semibold text-amber-900">Verify your email to stay updated</p>
+                  <p className="text-xs text-amber-800 mt-0.5">Your account can miss important updates like match reminders, invitations, and security alerts until verified.</p>
                 </div>
               </div>
             )}
 
-            <div className="mb-6 p-4 rounded-lg border border-gray-200 bg-gray-50">
+            <div className="mb-6 p-4 rounded-xl border border-slate-200 bg-slate-50">
               <div className="flex items-center justify-between gap-3 mb-3">
                 <div>
-                  <p className="text-sm font-semibold text-gray-900">Email Verification</p>
-                  <p className="text-xs text-gray-600">{profile?.email || "No email available"}</p>
+                  <p className="text-sm font-semibold text-slate-900">Email Verification</p>
+                  <p className="text-xs text-slate-500">{profile?.email || "No email available"}</p>
                 </div>
                 {profile?.emailVerified ? (
-                  <span className="px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">Verified</span>
+                  <span className="px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1">
+                    <CheckCircle2 size={12} /> Verified
+                  </span>
                 ) : (
-                  <span className="px-3 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-700">Not Verified</span>
+                  <span className="px-3 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">Not Verified</span>
                 )}
               </div>
-
               {!profile?.emailVerified && (
                 <div className="space-y-3">
                   <div className="flex flex-col md:flex-row gap-3">
@@ -428,140 +317,98 @@ export default function Settings() {
                       value={verificationCode}
                       onChange={(e) => setVerificationCode(e.target.value)}
                       placeholder="Enter verification code"
-                      className="flex-1 px-4 py-3 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="flex-1 px-4 py-3 bg-white rounded-xl text-sm"
                     />
-                    <button
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
                       type="button"
                       onClick={handleVerifyEmail}
                       disabled={emailActionLoading || !verificationCode.trim()}
-                      className="px-4 py-3 rounded-lg text-sm font-medium bg-slate-900 text-white hover:bg-slate-800 disabled:opacity-50"
+                      className="btn-primary px-4 py-3 rounded-xl text-sm font-semibold disabled:opacity-50"
                     >
                       Verify Email
-                    </button>
+                    </motion.button>
                   </div>
                   <button
                     type="button"
                     onClick={handleSendVerificationCode}
                     disabled={emailActionLoading}
-                    className="px-4 py-2 rounded-lg text-sm font-medium bg-white border border-gray-300 text-gray-700 hover:bg-gray-100 disabled:opacity-50"
+                    className="px-4 py-2 rounded-xl text-sm font-semibold bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 disabled:opacity-50 transition-colors"
                   >
                     Send Verification Code
                   </button>
-                  {emailMessage && <p className="text-sm text-green-700">{emailMessage}</p>}
+                  {emailMessage && <p className="text-sm text-emerald-700">{emailMessage}</p>}
                 </div>
               )}
             </div>
 
-            <div className="space-y-3">
-              <button className="w-full px-4 py-3 bg-gray-50 rounded-lg text-left text-base font-medium text-gray-900 hover:bg-green-600 hover:text-white transition-colors">
-                Change Password
-              </button>
-              <button className="w-full px-4 py-3 bg-gray-50 rounded-lg text-left text-base font-medium text-gray-900 hover:bg-green-600 hover:text-white transition-colors">
-                Two-Factor Authentication
-              </button>
-              <button className="w-full px-4 py-3 bg-gray-50 rounded-lg text-left text-base font-medium text-gray-900 hover:bg-green-600 hover:text-white transition-colors">
-                Privacy Settings
-              </button>
+            <div className="space-y-2">
+              {["Change Password", "Two-Factor Authentication", "Privacy Settings"].map((label) => (
+                <motion.button
+                  key={label}
+                  whileHover={{ x: 4 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                  className="w-full px-4 py-3 rounded-xl text-left text-sm font-semibold text-slate-700 bg-slate-50 hover:bg-emerald-50 hover:text-emerald-700 transition-colors flex items-center justify-between"
+                >
+                  {label}
+                  <ChevronRight size={16} className="text-slate-400" />
+                </motion.button>
+              ))}
             </div>
-          </div>
+          </motion.div>
 
           {/* Language & Region Section */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 mb-6">
-            <div className="flex items-center gap-3 mb-6">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="12" cy="12" r="10" />
-                <line x1="2" y1="12" x2="22" y2="12" />
-                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
-              </svg>
-              <h2 className="text-2xl font-bold text-gray-900">Language & Region</h2>
-            </div>
-
+          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }} className="bg-white rounded-2xl shadow-sm border border-slate-100/80 p-8 mb-6">
+            <SectionHeader icon={Globe} title="Language & Region" iconColor="text-cyan-600" iconBg="bg-cyan-50" />
             <div className="space-y-5">
-              {/* Language */}
               <div>
-                <label className="block text-sm font-medium text-gray-900 mb-2">
-                  Language
-                </label>
-                <select
-                  value={language}
-                  onChange={(e) => setLanguage(e.target.value)}
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none cursor-pointer"
-                  style={{
-                    backgroundImage: `url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L6 6L11 1' stroke='%23666' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E")`,
-                    backgroundRepeat: "no-repeat",
-                    backgroundPosition: "right 1rem center"
-                  }}
-                >
+                <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wide">Language</label>
+                <select value={language} onChange={(e) => setLanguage(e.target.value)} className="w-full px-4 py-3 rounded-xl text-sm">
                   <option value="English">English</option>
                   <option value="Nepali">Nepali</option>
                 </select>
               </div>
-
-              {/* Timezone */}
               <div>
-                <label className="block text-sm font-medium text-gray-900 mb-2">
-                  Timezone
-                </label>
-                <select
-                  value={timezone}
-                  onChange={(e) => setTimezone(e.target.value)}
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none cursor-pointer"
-                  style={{
-                    backgroundImage: `url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L6 6L11 1' stroke='%23666' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E")`,
-                    backgroundRepeat: "no-repeat",
-                    backgroundPosition: "right 1rem center"
-                  }}
-                >
+                <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wide">Timezone</label>
+                <select value={timezone} onChange={(e) => setTimezone(e.target.value)} className="w-full px-4 py-3 rounded-xl text-sm">
                   <option value="Asia/Kathmandu (NPT)">Asia/Kathmandu (NPT)</option>
-                
-                  
                 </select>
               </div>
             </div>
-          </div>
+          </motion.div>
 
-          {/* Payment Methods Section */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 mb-6">
-            <div className="flex items-center gap-3 mb-3">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
-                <line x1="1" y1="10" x2="23" y2="10" />
-              </svg>
-              <h2 className="text-2xl font-bold text-gray-900">Payment Methods</h2>
-            </div>
-            <p className="text-sm text-gray-600 mb-6">Add payment methods for tournament entries</p>
-
-            <button className="w-full px-4 py-3 bg-gray-50 rounded-lg text-left text-base font-medium text-gray-900 hover:bg-green-600 hover:text-white transition-colors">
+          {/* Payment Methods */}
+          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="bg-white rounded-2xl shadow-sm border border-slate-100/80 p-8 mb-6">
+            <SectionHeader icon={CreditCard} title="Payment Methods" iconColor="text-rose-600" iconBg="bg-rose-50" />
+            <p className="text-sm text-slate-500 mb-5 -mt-2">Add payment methods for tournament entries</p>
+            <motion.button
+              whileHover={{ x: 4 }}
+              transition={{ type: "spring", stiffness: 400, damping: 25 }}
+              className="w-full px-4 py-3 rounded-xl text-left text-sm font-semibold text-slate-700 bg-slate-50 hover:bg-emerald-50 hover:text-emerald-700 transition-colors flex items-center justify-between"
+            >
               + Add Payment Method
-            </button>
-          </div>
+              <ChevronRight size={16} className="text-slate-400" />
+            </motion.button>
+          </motion.div>
 
-          {/* Help & Support Section */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8">
-            <div className="flex items-center gap-3 mb-6">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="12" cy="12" r="10" />
-                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
-                <line x1="12" y1="17" x2="12.01" y2="17" />
-              </svg>
-              <h2 className="text-2xl font-bold text-gray-900">Help & Support</h2>
+          {/* Help & Support */}
+          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }} className="bg-white rounded-2xl shadow-sm border border-slate-100/80 p-8">
+            <SectionHeader icon={HelpCircle} title="Help & Support" iconColor="text-indigo-600" iconBg="bg-indigo-50" />
+            <div className="space-y-2">
+              {["Help Center", "Contact Support", "Terms of Service", "Privacy Policy"].map((label) => (
+                <motion.button
+                  key={label}
+                  whileHover={{ x: 4 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                  className="w-full px-4 py-3 rounded-xl text-left text-sm font-semibold text-slate-700 bg-slate-50 hover:bg-emerald-50 hover:text-emerald-700 transition-colors flex items-center justify-between"
+                >
+                  {label}
+                  <ChevronRight size={16} className="text-slate-400" />
+                </motion.button>
+              ))}
             </div>
-
-            <div className="space-y-3">
-              <button className="w-full px-4 py-3 bg-gray-50 rounded-lg text-left text-base font-medium text-gray-900 hover:bg-green-600 hover:text-white transition-colors">
-                Help Center
-              </button>
-              <button className="w-full px-4 py-3 bg-gray-50 rounded-lg text-left text-base font-medium text-gray-900 hover:bg-green-600 hover:text-white transition-colors">
-                Contact Support
-              </button>
-              <button className="w-full px-4 py-3 bg-gray-50 rounded-lg text-left text-base font-medium text-gray-900 hover:bg-green-600 hover:text-white transition-colors">
-                Terms of Service
-              </button>
-              <button className="w-full px-4 py-3 bg-gray-50 rounded-lg text-left text-base font-medium text-gray-900 hover:bg-green-600 hover:text-white transition-colors">
-                Privacy Policy
-              </button>
-            </div>
-          </div>
+          </motion.div>
         </main>
       </div>
     </div>
