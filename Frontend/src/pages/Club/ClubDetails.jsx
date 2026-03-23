@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import Sidebar from "../../components/Global/Sidebar";
 import Topbar from "../../components/Global/Topbar";
 import { getClubById, updateClub, getClubMembers, removeClubMember, updateMemberRole, updateMemberPosition, leaveClub, uploadClubLogo } from "../../services/api.clubs";
@@ -23,6 +24,7 @@ import ClubRequests from './Components/ClubRequests';
 import ClubChat from './Components/ClubChat';
 import ClubDetailHeader from './Components/ClubDetailHeader';
 import { getClubMessages } from '../../services/api.messages';
+import { pageVariants, MotionButton } from "../../components/ui/motion";
 
 
 // Main ClubDetails Component
@@ -42,9 +44,9 @@ export default function ClubDetails() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
-  const [myRequestStatus, setMyRequestStatus] = useState(null); // null | 'PENDING'
+  const [myRequestStatus, setMyRequestStatus] = useState(null);
   const [memberActionLoading, setMemberActionLoading] = useState(null);
-  const [confirmModal, setConfirmModal] = useState(null); // { title, message, confirmLabel, confirmStyle, onConfirm }
+  const [confirmModal, setConfirmModal] = useState(null);
   const [editingPositionForUser, setEditingPositionForUser] = useState(null);
   const [positionDraft, setPositionDraft] = useState("");
   const [unreadChatCount, setUnreadChatCount] = useState(0);
@@ -86,13 +88,11 @@ export default function ClubDetails() {
         (Array.isArray(allClubs) ? allClubs : []).forEach((c) => { if (c?.clubId) map[c.clubId] = c.name; });
         setClubsMap(map);
 
-        // Check the current user's own request status (works for any logged-in user)
         if (user) {
           const myReq = await getMyRequestStatus(clubId).catch(() => null);
           setMyRequestStatus(myReq?.status || null);
         }
 
-        // Load requests for admin (club creator or ADMIN role member)
         const isUserAdmin = user && (
           club?.createdBy === user.userId ||
           (Array.isArray(members) ? members : []).some(
@@ -113,7 +113,6 @@ export default function ClubDetails() {
     load();
   }, [clubId]);
 
-  // Check if current user is a member of the club
   const isClubMember = currentUser && (
     clubPlayers.some(player => player.userId === currentUser.userId) ||
     clubMembers.some(member => member.user?.userId === currentUser.userId)
@@ -122,7 +121,6 @@ export default function ClubDetails() {
   const isClubCreator = currentUser && clubData && currentUser.userId === clubData.createdBy;
   const isClubAdmin = isClubCreator || currentMemberRole === "ADMIN";
 
-  // Filter tabs based on user role
   const allTabs = [
     { id: "overview", label: "Overview", icon: "📊" },
     { id: "members", label: "Members", icon: "👥" },
@@ -166,7 +164,7 @@ export default function ClubDetails() {
         try {
           await Notification.requestPermission();
         } catch {
-          // Ignore permission request errors to keep chat polling resilient.
+          // Ignore
         }
       }
     };
@@ -225,7 +223,7 @@ export default function ClubDetails() {
           localStorage.setItem(chatThresholdStorageKey, "0");
         }
       } catch {
-        // Silent fail to avoid noisy UI when chat fetch fails intermittently.
+        // Silent fail
       }
     };
 
@@ -267,12 +265,10 @@ export default function ClubDetails() {
   const handleLogoChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      // Validate file type
       if (!file.type.startsWith('image/')) {
         setUploadLogoError('Please select an image file');
         return;
       }
-      // Validate file size (5MB)
       if (file.size > 5 * 1024 * 1024) {
         setUploadLogoError('Image size should be less than 5MB');
         return;
@@ -289,7 +285,6 @@ export default function ClubDetails() {
     setUploadLogoError(null);
     try {
       await uploadClubLogo(clubId, logoFile);
-      // Refresh club data to get the new logo URL
       const updated = await getClubById(clubId);
       setClubData(updated);
       setLogoFile(null);
@@ -317,7 +312,6 @@ export default function ClubDetails() {
     return null;
   };
 
-  // Helper functions for matches
   const getMatchForSchedule = (scheduleId) => matches.find((m) => m.scheduleId === scheduleId);
   
   const now = new Date();
@@ -326,32 +320,26 @@ export default function ClubDetails() {
 
   const handleApproveRequest = async (requestId) => {
     try {
-      console.log('Approving request:', requestId);
       await approveJoinRequest(requestId);
-      // Reload requests and players
       const [requests, players] = await Promise.all([
         getClubRequests(clubId),
         getPlayersByClubId(clubId),
       ]);
       setClubRequests(Array.isArray(requests) ? requests : []);
       setClubPlayers(Array.isArray(players) ? players : []);
-      setError(null); // Clear any previous errors
+      setError(null);
     } catch (err) {
-      console.error('Error approving request:', err);
       setError(err?.message || "Failed to approve request");
     }
   };
 
   const handleRejectRequest = async (requestId) => {
     try {
-      console.log('Rejecting request:', requestId);
       await rejectJoinRequest(requestId);
-      // Reload requests
       const requests = await getClubRequests(clubId);
       setClubRequests(Array.isArray(requests) ? requests : []);
-      setError(null); // Clear any previous errors
+      setError(null);
     } catch (err) {
-      console.error('Error rejecting request:', err);
       setError(err?.message || "Failed to reject request");
     }
   };
@@ -380,7 +368,8 @@ export default function ClubDetails() {
     });
   };
 
-  const handleRemoveMember = (userId) => {    setConfirmModal({
+  const handleRemoveMember = (userId) => {
+    setConfirmModal({
       title: "Remove Member",
       message: "Are you sure you want to remove this member from the club?",
       confirmLabel: "Yes, Remove",
@@ -389,7 +378,7 @@ export default function ClubDetails() {
         setConfirmModal(null);
         setMemberActionLoading(userId);
         try {
-              await removeClubMember(clubId, userId);
+          await removeClubMember(clubId, userId);
           const [players, members] = await Promise.all([
             getPlayersByClubId(clubId).catch(() => []),
             getClubMembers(clubId).catch(() => []),
@@ -455,29 +444,42 @@ export default function ClubDetails() {
   };
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-screen bg-gray-50 exclude-link-pointer">
       <Sidebar />
 
       <div className="flex-1 flex flex-col">
         <Topbar />
 
-        <main className="flex-1 p-6 md:p-8 overflow-auto bg-[#eef1f6]">
-          <button
+        <motion.main
+          variants={pageVariants}
+          initial="initial"
+          animate="animate"
+          exit="exit"
+          className="flex-1 p-6 md:p-8 overflow-auto"
+        >
+          <MotionButton
             onClick={() => navigate(-1)}
-            className="flex items-center gap-2 text-blue-600 hover:text-blue-700 mb-6 font-medium"
+            className="flex items-center gap-2 text-primary-600 hover:text-primary-700 mb-6 font-semibold text-sm"
           >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M19 12H5M12 19l-7-7 7-7" />
             </svg>
             Back
-          </button>
+          </MotionButton>
 
           {error && (
-            <div className="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 text-red-700">{error}</div>
+            <motion.div initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} className="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm">
+              {error}
+            </motion.div>
           )}
-          {loading && <div className="mb-6 text-gray-500">Loading club...</div>}
+          {loading && (
+            <div className="mb-6 flex items-center gap-3 text-surface-500">
+              <div className="w-5 h-5 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
+              Loading club...
+            </div>
+          )}
           {!clubData && !loading && (
-            <div className="mb-6 text-gray-500">Club not found.</div>
+            <div className="mb-6 text-surface-500">Club not found.</div>
           )}
 
           {clubData && (
@@ -500,34 +502,49 @@ export default function ClubDetails() {
             onOpenEditModal={() => setIsEditModalOpen(true)}
           />
 
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 mb-6 overflow-hidden">
-            <div className="flex items-center border-b border-gray-200">
+          {/* Tab Bar */}
+          <div className="mb-6">
+            <div className="inline-flex flex-wrap gap-1 bg-surface-100 rounded-2xl p-1 border border-surface-200">
               {tabs.map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex-1 px-6 py-4 text-sm font-semibold transition-all relative flex items-center justify-center gap-2 ${
-                    activeTab === tab.id ? "text-blue-600 bg-blue-50" : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                  className={`relative px-4 py-2 text-sm font-semibold rounded-xl transition-all flex items-center gap-2 ${
+                    activeTab === tab.id ? "text-primary-700" : "text-surface-600 hover:text-gray-900"
                   }`}
                 >
-                  <span className="text-lg">{tab.icon}</span>
-                  <span>{tab.label}</span>
+                  {activeTab === tab.id && (
+                    <motion.span
+                      layoutId="club-details-tab-pill"
+                      transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                      className="absolute inset-0 rounded-xl bg-white shadow-sm"
+                    />
+                  )}
+                  <span className="relative z-10 text-lg">{tab.icon}</span>
+                  <span className="relative z-10">{tab.label}</span>
                   {tab.id === "requests" && clubRequests.length > 0 && (
-                    <span className="ml-1 min-w-[1.25rem] h-5 px-1 flex items-center justify-center rounded-full bg-red-500 text-white text-xs font-bold leading-none">
+                    <span className="relative z-10 ml-1 min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full bg-red-500 text-white text-[10px] font-bold leading-none">
                       {clubRequests.length > 99 ? "99+" : clubRequests.length}
                     </span>
                   )}
                   {tab.id === "chat" && unreadChatCount > 0 && (
-                    <span className="ml-1 min-w-[1.25rem] h-5 px-1.5 flex items-center justify-center rounded-full bg-blue-600 text-white text-xs font-bold leading-none shadow-sm">
+                    <span className="relative z-10 ml-1 min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full bg-primary-600 text-white text-[10px] font-bold leading-none">
                       {unreadChatCount > 99 ? "99+" : unreadChatCount}
                     </span>
                   )}
-                  {activeTab === tab.id && <div className="absolute bottom-0 left-0 right-0 h-1 bg-blue-600"></div>}
                 </button>
               ))}
             </div>
           </div>
 
+          <AnimatePresence mode="wait">
+          <motion.div
+            key={activeTab}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.2 }}
+          >
           {activeTab === "overview" && (
             <ClubOverview
               clubData={clubData}
@@ -591,6 +608,8 @@ export default function ClubDetails() {
               onMarkRead={markChatAsRead}
             />
           )}
+          </motion.div>
+          </AnimatePresence>
 
           <EditClub
             isOpen={isEditModalOpen}
@@ -621,7 +640,7 @@ export default function ClubDetails() {
           />
           </>
           )}
-        </main>
+        </motion.main>
       </div>
     </div>
   );

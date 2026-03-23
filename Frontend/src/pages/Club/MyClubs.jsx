@@ -9,6 +9,7 @@ import { getMyClubs, getAllClubs, createClub } from "../../services/api.clubs";
 import { getLocationRecommendations } from "../../services/api.locations";
 import { toMediaUrl } from "../../services/media";
 import { itemVariants, listVariants } from "../../components/ui/motion";
+import { Plus, Search, X, MapPin, Users } from "lucide-react";
 
 const getClubLogoUrl = (logoPath) => toMediaUrl(logoPath);
 
@@ -60,7 +61,6 @@ export default function MyClubs() {
     load();
   }, []);
 
-  // Filter clubs based on search query
   const filteredMyClubs = useMemo(() => {
     if (!searchQuery.trim()) return myClubs;
     const query = searchQuery.toLowerCase();
@@ -129,74 +129,60 @@ export default function MyClubs() {
 
   return (
     <div className="flex min-h-screen bg-gray-50 exclude-link-pointer">
-      {/* Fixed Sidebar */}
       <Sidebar />
 
-      {/* Main Content Area */}
       <div className="flex-1 flex flex-col">
-        {/* Top Bar */}
         <Topbar />
 
         <main className="flex-1 p-6 md:p-8 overflow-auto bg-[#eef1f6]">
           {error && (
-            <div className="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 text-red-700">{error}</div>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mb-6 p-4 rounded-2xl bg-red-50 border border-red-200 text-red-700">{error}</motion.div>
           )}
-          {loading && <div className="mb-6 text-gray-500">Loading clubs...</div>}
+          {loading && (
+            <div className="mb-6 flex items-center gap-3 text-slate-500">
+              <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: "linear" }} className="w-5 h-5 rounded-full border-2 border-slate-200 border-t-emerald-500" />
+              Loading clubs...
+            </div>
+          )}
+
           {/* Header Section */}
-          <div className="flex justify-between items-start mb-6">
+          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="flex justify-between items-start mb-6">
             <div>
-              <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-1">
+              <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-1 font-['Outfit']">
                 My Clubs
               </h2>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-slate-500">
                 Join or create football clubs
               </p>
             </div>
-            <button 
+            <motion.button 
+              whileHover={{ scale: 1.04, y: -2 }}
+              whileTap={{ scale: 0.96 }}
               onClick={() => setIsCreateClubOpen(true)}
-              className="bg-slate-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-800 transition-colors flex items-center gap-2"
+              className="btn-primary px-5 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2"
             >
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-              >
-                <line x1="12" y1="5" x2="12" y2="19" />
-                <line x1="5" y1="12" x2="19" y2="12" />
-              </svg>
+              <Plus size={16} />
               Create Club
-            </button>
-          </div>
+            </motion.button>
+          </motion.div>
 
           {/* Search Bar */}
           <div className="mb-6">
             <div className="relative max-w-md">
-              <svg 
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" 
-                width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
-              >
-                <circle cx="11" cy="11" r="8" />
-                <line x1="21" y1="21" x2="16.65" y2="16.65" />
-              </svg>
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
               <input
                 type="text"
                 placeholder="Search clubs by name, location..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                className="w-full pl-10 pr-10 py-2.5 border border-slate-200 rounded-xl bg-white text-sm"
               />
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery("")}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
                 >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <line x1="18" y1="6" x2="6" y2="18" />
-                    <line x1="6" y1="6" x2="18" y2="18" />
-                  </svg>
+                  <X size={16} />
                 </button>
               )}
             </div>
@@ -204,7 +190,7 @@ export default function MyClubs() {
 
           {/* Tabs */}
           <div className="mb-8">
-            <div className="relative inline-flex rounded-full border border-gray-200 bg-gray-100 p-1">
+            <div className="relative inline-flex rounded-full border border-slate-200 bg-slate-100 p-1">
               <motion.div
                 layoutId="clubs-tab-pill"
                 transition={{ type: "spring", stiffness: 360, damping: 28 }}
@@ -215,7 +201,7 @@ export default function MyClubs() {
               <button 
                 onClick={() => setActiveTab("myClubs")}
                 className={`relative z-10 px-5 py-1.5 text-sm font-semibold rounded-full transition-colors ${
-                  activeTab === "myClubs" ? "text-gray-900" : "text-gray-500 hover:text-gray-700"
+                  activeTab === "myClubs" ? "text-slate-900" : "text-slate-500 hover:text-slate-700"
                 }`}
               >
                 My Clubs
@@ -223,7 +209,7 @@ export default function MyClubs() {
               <button 
                 onClick={() => setActiveTab("browseClubs")}
                 className={`relative z-10 px-5 py-1.5 text-sm font-semibold rounded-full transition-colors ${
-                  activeTab === "browseClubs" ? "text-gray-900" : "text-gray-500 hover:text-gray-700"
+                  activeTab === "browseClubs" ? "text-slate-900" : "text-slate-500 hover:text-slate-700"
                 }`}
               >
                 Browse Clubs
@@ -239,12 +225,18 @@ export default function MyClubs() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -8 }}
-                className="space-y-5"
+                className="space-y-4"
               >
                 {filteredMyClubs.length === 0 && !loading && (
-                  <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-100 text-center text-gray-500">
-                    {searchQuery ? `No clubs found matching "${searchQuery}"` : "You have not created any clubs yet. Create one above."}
-                  </div>
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-white p-10 rounded-2xl shadow-sm border border-slate-100 text-center">
+                    <div className="text-4xl mb-3">🏟️</div>
+                    <p className="text-slate-600 font-medium mb-1">
+                      {searchQuery ? `No clubs found matching "${searchQuery}"` : "You haven't joined any clubs yet"}
+                    </p>
+                    <p className="text-sm text-slate-400">
+                      {searchQuery ? "Try a different search" : "Create one or browse nearby clubs to get started!"}
+                    </p>
+                  </motion.div>
                 )}
                 {filteredMyClubs.map((club) => (
                   <motion.div key={club.clubId} variants={itemVariants}>
@@ -264,54 +256,55 @@ export default function MyClubs() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -8 }}
-                className="grid grid-cols-1 md:grid-cols-2 gap-6"
+                className="grid grid-cols-1 md:grid-cols-2 gap-5"
               >
                 {filteredBrowseClubs.length === 0 && !loading && (
-                  <div className="md:col-span-2 text-center py-8 text-gray-500">
-                    {searchQuery ? `No clubs found matching "${searchQuery}"` : "No clubs to browse yet."}
-                  </div>
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="md:col-span-2 text-center py-10 bg-white rounded-2xl border border-slate-100">
+                    <div className="text-4xl mb-3">🔍</div>
+                    <p className="text-slate-500 font-medium">
+                      {searchQuery ? `No clubs found matching "${searchQuery}"` : "No clubs to browse yet"}
+                    </p>
+                  </motion.div>
                 )}
-                {filteredBrowseClubs.map((club) => (
-                  <motion.div key={club.clubId} variants={itemVariants} className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                    <div className="flex items-start gap-4 mb-6">
-                      <div className="w-14 h-14 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
+                {filteredBrowseClubs.map((club, idx) => (
+                  <motion.div
+                    key={club.clubId}
+                    variants={itemVariants}
+                    whileHover={{ y: -4, scale: 1.01, transition: { duration: 0.2 } }}
+                    className="bg-white rounded-2xl shadow-sm border border-slate-100/80 p-6 group relative overflow-hidden"
+                  >
+                    <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-emerald-400 to-teal-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    <div className="flex items-start gap-4 mb-5">
+                      <div className="w-14 h-14 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden shadow-md shadow-emerald-500/20">
                         {getClubLogoUrl(club.logo) ? (
                           <img src={getClubLogoUrl(club.logo)} alt={club.name} className="w-full h-full object-cover" />
                         ) : (
-                          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
-                            <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
-                            <path d="M4 22h16" />
-                            <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
-                            <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
-                            <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
-                          </svg>
+                          <Users size={24} className="text-white" />
                         )}
                       </div>
                       <div className="flex-1">
-                        <h3 className="text-xl font-bold text-gray-900 mb-2">{club.name}</h3>
-                        <div className="flex items-center gap-1.5 text-sm text-gray-600">
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-                            <circle cx="12" cy="10" r="3" />
-                          </svg>
+                        <h3 className="text-xl font-bold text-slate-900 mb-1.5">{club.name}</h3>
+                        <div className="flex items-center gap-1.5 text-sm text-slate-500">
+                          <MapPin size={14} />
                           <span>{club.location ?? "—"}</span>
                           {club.distanceKm != null && (
-                            <span className="rounded-full bg-blue-50 px-2 py-0.5 text-xs font-semibold text-blue-700">
+                            <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700 border border-emerald-100">
                               {club.distanceKm} km away
                             </span>
                           )}
                         </div>
                       </div>
                     </div>
-                    {club.description && <p className="text-sm text-gray-600 mb-4 line-clamp-2">{club.description}</p>}
+                    {club.description && <p className="text-sm text-slate-500 mb-4 line-clamp-2">{club.description}</p>}
                     <div className="flex justify-end">
-                      <button
+                      <motion.button
+                        whileHover={{ scale: 1.03 }}
+                        whileTap={{ scale: 0.97 }}
                         onClick={() => handleJoinClub(club.clubId)}
-                        className="bg-slate-900 text-white px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-slate-800 transition-colors"
+                        className="btn-primary px-5 py-2.5 rounded-xl text-sm font-semibold"
                       >
                         View Details
-                      </button>
+                      </motion.button>
                     </div>
                   </motion.div>
                 ))}
