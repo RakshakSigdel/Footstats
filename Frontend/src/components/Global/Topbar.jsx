@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useSidebar } from "../../context/SidebarContext";
 import { useTheme } from "../../context/ThemeContext";
+import { Bell, Menu, Sun, Moon, CheckCheck } from "lucide-react";
 import {
   getMyNotifications,
   getUnreadNotificationCount,
@@ -105,146 +106,188 @@ export default function Topbar() {
   }, []);
 
   return (
-    <div className="sticky top-0 z-40 isolate border-b border-slate-200 bg-white/90 px-4 py-4 backdrop-blur md:px-8 md:py-4 dark:bg-slate-900/90">
+    <div className="sticky top-0 z-40 isolate border-b border-white/20 dark:border-white/[0.06] px-4 py-3 md:px-8 md:py-3"
+      style={{
+        background: isDarkMode
+          ? "rgba(12, 18, 34, 0.8)"
+          : "rgba(255, 255, 255, 0.7)",
+        backdropFilter: "blur(20px) saturate(180%)",
+        WebkitBackdropFilter: "blur(20px) saturate(180%)",
+      }}
+    >
       <div className="flex items-center justify-between">
         {/* Left side - Hamburger menu (mobile only) */}
         <div className="flex items-center">
           {isMobile && (
-            <button 
+            <motion.button 
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               onClick={toggleSidebar}
-              className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-gray-300 mr-2"
+              className="p-2 text-slate-600 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 rounded-xl transition-colors mr-2"
               aria-label="Toggle menu"
             >
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <line x1="3" y1="6" x2="21" y2="6" />
-                <line x1="3" y1="12" x2="21" y2="12" />
-                <line x1="3" y1="18" x2="21" y2="18" />
-              </svg>
-            </button>
+              <Menu size={22} />
+            </motion.button>
           )}
           
           {/* Logo on mobile */}
           {isMobile && (
-            <Link to="/dashboard" className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-slate-900 rounded-lg flex items-center justify-center">
-                <svg viewBox="0 0 40 40" className="w-6 h-6" fill="none">
-                  <circle cx="20" cy="20" r="12" fill="white"/>
-                </svg>
+            <Link to="/dashboard" className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center shadow-md shadow-emerald-500/20">
+                <img src="/images/NoLogo.png" alt="FootStats" className="w-5 h-5 object-contain" />
               </div>
-              <span className="font-bold text-gray-900">FootStats</span>
+              <span className="font-bold text-slate-900 dark:text-white font-['Outfit']">FootStats</span>
             </Link>
           )}
         </div>
 
         {/* Right side - Dark Mode, Notifications and Avatar */}
-        <div className="flex items-center gap-3 md:gap-4">
+        <div className="flex items-center gap-2 md:gap-3">
           {/* Dark Mode Toggle */}
-          <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+          <motion.button 
+            whileHover={{ scale: 1.1 }} 
+            whileTap={{ scale: 0.9, rotate: 15 }}
             onClick={toggleDarkMode}
-            className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-gray-300"
+            className="p-2.5 text-slate-500 dark:text-slate-300 hover:text-amber-500 dark:hover:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-500/10 rounded-xl transition-colors"
             aria-label="Toggle dark mode"
             title={isDarkMode ? "Switch to light mode" : "Switch to dark mode"}
           >
-            {isDarkMode ? (
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="12" cy="12" r="5" />
-                <line x1="12" y1="1" x2="12" y2="3" />
-                <line x1="12" y1="21" x2="12" y2="23" />
-                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
-                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
-                <line x1="1" y1="12" x2="3" y2="12" />
-                <line x1="21" y1="12" x2="23" y2="12" />
-                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
-                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
-              </svg>
-            ) : (
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-              </svg>
-            )}
+            <AnimatePresence mode="wait">
+              {isDarkMode ? (
+                <motion.div
+                  key="sun"
+                  initial={{ scale: 0, rotate: -90 }}
+                  animate={{ scale: 1, rotate: 0 }}
+                  exit={{ scale: 0, rotate: 90 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <Sun size={18} />
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="moon"
+                  initial={{ scale: 0, rotate: 90 }}
+                  animate={{ scale: 1, rotate: 0 }}
+                  exit={{ scale: 0, rotate: -90 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <Moon size={18} />
+                </motion.div>
+              )}
+            </AnimatePresence>
           </motion.button>
 
           {/* Notification Bell */}
           <div className="relative" ref={panelRef}>
-            <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+            <motion.button 
+              whileHover={{ scale: 1.1 }} 
+              whileTap={{ scale: 0.9 }}
               onClick={openNotifications}
-              className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-gray-300"
+              className="relative p-2.5 text-slate-500 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 rounded-xl transition-colors"
               aria-label="Notifications"
             >
-              <svg 
-                width="20" 
-                height="20" 
-                viewBox="0 0 24 24" 
-                fill="none" 
-                stroke="currentColor" 
-                strokeWidth="2" 
-                strokeLinecap="round" 
-                strokeLinejoin="round"
-              >
-                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-                <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-              </svg>
+              <Bell size={18} />
               {unreadCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center">
+                <motion.span 
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-gradient-to-r from-red-500 to-rose-500 text-white text-[10px] font-bold flex items-center justify-center shadow-lg shadow-red-500/30"
+                >
                   {unreadCount > 99 ? "99+" : unreadCount}
-                </span>
+                </motion.span>
               )}
             </motion.button>
 
-            {isNotificationOpen && (
-              <div className="absolute right-0 mt-2 w-[340px] max-w-[90vw] bg-white rounded-xl border border-gray-200 shadow-xl z-50 overflow-hidden">
-                <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
-                  <p className="text-sm font-semibold text-gray-900">Notifications</p>
-                  <button
-                    onClick={markAllRead}
-                    className="text-xs font-semibold text-blue-600 hover:text-blue-700"
-                  >
-                    Mark all read
-                  </button>
-                </div>
-
-                <div className="max-h-[420px] overflow-y-auto">
-                  {loadingNotifications && (
-                    <div className="p-4 text-sm text-gray-500">Loading...</div>
-                  )}
-
-                  {!loadingNotifications && notifications.length === 0 && (
-                    <div className="p-4 text-sm text-gray-500">No notifications yet.</div>
-                  )}
-
-                  {!loadingNotifications && notifications.map((notification) => (
+            <AnimatePresence>
+              {isNotificationOpen && (
+                <motion.div
+                  initial={{ opacity: 0, y: 8, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 8, scale: 0.95 }}
+                  transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+                  className="absolute right-0 mt-2 w-[360px] max-w-[90vw] rounded-2xl border border-white/40 dark:border-white/[0.08] shadow-xl z-50 overflow-hidden"
+                  style={{
+                    background: isDarkMode
+                      ? "rgba(24, 33, 57, 0.95)"
+                      : "rgba(255, 255, 255, 0.95)",
+                    backdropFilter: "blur(20px)",
+                    WebkitBackdropFilter: "blur(20px)",
+                  }}
+                >
+                  <div className="px-5 py-4 border-b border-slate-100 dark:border-white/[0.06] flex items-center justify-between">
+                    <p className="text-sm font-bold text-slate-900 dark:text-white font-['Outfit']">Notifications</p>
                     <button
-                      key={notification.notificationId}
-                      onClick={() => onNotificationClick(notification)}
-                      className={`w-full text-left px-4 py-3 border-b border-gray-100 hover:bg-gray-50 ${
-                        notification.isRead ? "bg-white" : "bg-blue-50/60"
-                      }`}
+                      onClick={markAllRead}
+                      className="flex items-center gap-1.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 transition-colors"
                     >
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <p className="text-sm font-semibold text-gray-900">{notification.title}</p>
-                          <p className="text-xs text-gray-600 mt-1">{notification.message}</p>
-                        </div>
-                        {!notification.isRead && (
-                          <span className="w-2 h-2 rounded-full bg-blue-600 mt-2" />
-                        )}
-                      </div>
-                      <p className="text-[11px] text-gray-400 mt-2">{formatTime(notification.createdAt)}</p>
+                      <CheckCheck size={14} />
+                      Mark all read
                     </button>
-                  ))}
-                </div>
-              </div>
-            )}
+                  </div>
+
+                  <div className="max-h-[420px] overflow-y-auto">
+                    {loadingNotifications && (
+                      <div className="p-6 flex items-center justify-center">
+                        <motion.div
+                          animate={{ rotate: 360 }}
+                          transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+                          className="w-6 h-6 rounded-full border-2 border-slate-200 dark:border-slate-600 border-t-emerald-500"
+                        />
+                      </div>
+                    )}
+
+                    {!loadingNotifications && notifications.length === 0 && (
+                      <div className="p-8 text-center">
+                        <div className="text-3xl mb-2">🔔</div>
+                        <p className="text-sm text-slate-500 dark:text-slate-400">No notifications yet</p>
+                        <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">You're all caught up!</p>
+                      </div>
+                    )}
+
+                    {!loadingNotifications && notifications.map((notification, idx) => (
+                      <motion.button
+                        key={notification.notificationId}
+                        initial={{ opacity: 0, x: -8 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: idx * 0.03 }}
+                        onClick={() => onNotificationClick(notification)}
+                        className={`w-full text-left px-5 py-3.5 border-b border-slate-100/60 dark:border-white/[0.04] hover:bg-emerald-50/50 dark:hover:bg-emerald-500/5 transition-colors ${
+                          notification.isRead ? "" : "bg-emerald-50/40 dark:bg-emerald-500/[0.06]"
+                        }`}
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <p className="text-sm font-semibold text-slate-900 dark:text-white">{notification.title}</p>
+                            <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 leading-relaxed">{notification.message}</p>
+                          </div>
+                          {!notification.isRead && (
+                            <span className="w-2 h-2 rounded-full bg-emerald-500 mt-2 flex-shrink-0 shadow-sm shadow-emerald-500/50" />
+                          )}
+                        </div>
+                        <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-2">{formatTime(notification.createdAt)}</p>
+                      </motion.button>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
 
           {/* User Avatar / Initial */}
           <Link 
             to="/profile" 
-            className="flex items-center gap-3 hover:opacity-90 transition-opacity"
+            className="group flex items-center gap-3"
           >
-            <div className="w-9 h-9 rounded-full overflow-hidden bg-slate-900 flex items-center justify-center border border-gray-300">
-              <span className="text-white font-semibold text-sm">{initials}</span>
-            </div>
+            <motion.div 
+              whileHover={{ scale: 1.08 }}
+              whileTap={{ scale: 0.95 }}
+              className="w-9 h-9 rounded-full overflow-hidden flex items-center justify-center border-2 border-emerald-200 dark:border-emerald-500/30 shadow-md"
+              style={{
+                background: "linear-gradient(135deg, #059669, #10b981)",
+              }}
+            >
+              <span className="text-white font-bold text-sm">{initials}</span>
+            </motion.div>
           </Link>
         </div>
       </div>
