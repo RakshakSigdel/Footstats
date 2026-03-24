@@ -4,9 +4,14 @@ import { AnimatePresence, motion } from "framer-motion";
 import { toast } from "sonner";
 import Sidebar from "../../components/Global/Sidebar";
 import Topbar from "../../components/Global/Topbar";
-import ClubListCard from "../../components/Club/ClubListCard";
 import EditTournament from "./Components/EditTournament";
 import JoinTournamentForm from "./Components/JoinTournamentForm";
+import TournamentOverviewTab from "./Components/TournamentOverviewTab";
+import TournamentClubsTab from "./Components/TournamentClubsTab";
+import TournamentJoinRequestsTab from "./Components/TournamentJoinRequestsTab";
+import TournamentSchedulesTab from "./Components/TournamentSchedulesTab";
+import TournamentTopPlayersTab from "./Components/TournamentTopPlayersTab";
+import TournamentTopClubsTab from "./Components/TournamentTopClubsTab";
 import CreateSchedule from "../Schedule/Components/CreateSchedule";
 import {
   getTournamentById,
@@ -438,117 +443,20 @@ export default function TournamentDetails() {
                 transition={{ duration: 0.2 }}
               >
               {activeTab === "overview" && (
-                <div className="space-y-6">
-                  <section className="app-card p-6">
-                    <h2 className="text-lg font-bold text-gray-900 font-['Outfit']">Tournament Overview</h2>
-                    <p className="mt-1 text-sm text-surface-600">
-                      Snapshot of the competition details, timeline, and participation status.
-                    </p>
-
-                    <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="rounded-2xl border border-surface-200 bg-surface-50 p-4">
-                        <p className="text-xs font-semibold uppercase tracking-wide text-surface-500">Start Date</p>
-                        <p className="mt-1 text-sm font-semibold text-gray-900">
-                          {tournament.startDate ? new Date(tournament.startDate).toLocaleString() : "TBD"}
-                        </p>
-                      </div>
-                      <div className="rounded-2xl border border-surface-200 bg-surface-50 p-4">
-                        <p className="text-xs font-semibold uppercase tracking-wide text-surface-500">End Date</p>
-                        <p className="mt-1 text-sm font-semibold text-gray-900">
-                          {tournament.endDate ? new Date(tournament.endDate).toLocaleString() : "TBD"}
-                        </p>
-                      </div>
-                    </div>
-
-                    {tournament.paymentInstructions && (
-                      <div className="mt-4 rounded-2xl border border-blue-200 bg-blue-50 p-4">
-                        <p className="text-xs font-semibold uppercase tracking-wide text-blue-700">Payment Instructions</p>
-                        <p className="mt-2 text-sm text-blue-900 whitespace-pre-wrap">{tournament.paymentInstructions}</p>
-                      </div>
-                    )}
-
-                    {canSubmitJoinRequest && (
-                      <div className="mt-4 rounded-2xl border border-primary-200 bg-primary-50 p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-                        <p className="text-sm text-primary-900 font-medium">
-                          Ready to participate? Open the Join Tournament tab to submit your club.
-                        </p>
-                        <MotionButton
-                          onClick={() => setActiveTab("join")}
-                          className="btn-primary rounded-xl px-4 py-2 text-sm"
-                        >
-                          Open Join Form
-                        </MotionButton>
-                      </div>
-                    )}
-
-                    {!canJoinByTournamentState && (
-                      <div className="mt-4 rounded-2xl border border-accent-400/30 bg-accent-400/10 p-4 text-sm text-accent-600">
-                        Tournament enrollment is currently unavailable because this tournament is {tournament?.status?.toLowerCase() || "not open"} or enrollment is closed by the admin.
-                      </div>
-                    )}
-                  </section>
-
-                  {isTournamentAdmin && (
-                    <section className="app-card p-6">
-                      <h2 className="text-lg font-bold text-gray-900 font-['Outfit']">Tournament Controls</h2>
-                      <p className="mt-1 text-sm text-surface-600">
-                        Manage tournament status and winner details.
-                      </p>
-
-                      <form className="mt-4 grid grid-cols-1 md:grid-cols-4 gap-4" onSubmit={handleUpdateStatus}>
-                        <select
-                          value={statusForm.status}
-                          onChange={(e) => setStatusForm((p) => ({ ...p, status: e.target.value }))}
-                          className="px-3 py-2.5 text-sm"
-                        >
-                          {STATUS_OPTIONS.map((status) => (
-                            <option key={status} value={status}>{status}</option>
-                          ))}
-                        </select>
-
-                        <select
-                          value={statusForm.enrollmentStatus}
-                          onChange={(e) => setStatusForm((p) => ({ ...p, enrollmentStatus: e.target.value }))}
-                          className="px-3 py-2.5 text-sm"
-                        >
-                          {ENROLLMENT_OPTIONS.map((state) => (
-                            <option key={state} value={state}>Enrollment {state}</option>
-                          ))}
-                        </select>
-
-                        <select
-                          value={statusForm.winnerClubId}
-                          onChange={(e) => setStatusForm((p) => ({ ...p, winnerClubId: e.target.value }))}
-                          className="px-3 py-2.5 text-sm"
-                        >
-                          <option value="">Winner club (optional)</option>
-                          {acceptedRegistrations.map((r) => (
-                            <option key={r.registrationId} value={r.clubId}>{r.club?.name}</option>
-                          ))}
-                        </select>
-
-                        <select
-                          value={statusForm.runnerUpClubId}
-                          onChange={(e) => setStatusForm((p) => ({ ...p, runnerUpClubId: e.target.value }))}
-                          className="px-3 py-2.5 text-sm"
-                        >
-                          <option value="">Runner-up club (optional)</option>
-                          {acceptedRegistrations.map((r) => (
-                            <option key={`${r.registrationId}-runner`} value={r.clubId}>{r.club?.name}</option>
-                          ))}
-                        </select>
-
-                        <MotionButton
-                          type="submit"
-                          disabled={statusLoading}
-                          className="md:col-span-4 btn-primary py-2.5 text-sm disabled:opacity-60"
-                        >
-                          {statusLoading ? "Updating..." : "Update Tournament Status"}
-                        </MotionButton>
-                      </form>
-                    </section>
-                  )}
-                </div>
+                <TournamentOverviewTab
+                  tournament={tournament}
+                  canSubmitJoinRequest={canSubmitJoinRequest}
+                  canJoinByTournamentState={canJoinByTournamentState}
+                  onOpenJoinForm={() => setActiveTab("join")}
+                  isTournamentAdmin={isTournamentAdmin}
+                  statusForm={statusForm}
+                  setStatusForm={setStatusForm}
+                  statusLoading={statusLoading}
+                  onUpdateStatus={handleUpdateStatus}
+                  acceptedRegistrations={acceptedRegistrations}
+                  statusOptions={STATUS_OPTIONS}
+                  enrollmentOptions={ENROLLMENT_OPTIONS}
+                />
               )}
 
               {activeTab === "join" && (
@@ -566,221 +474,42 @@ export default function TournamentDetails() {
               )}
 
               {activeTab === "clubs" && (
-                <section className="app-card p-6">
-                  <h2 className="text-lg font-bold text-gray-900 font-['Outfit']">Joined Clubs</h2>
-                  {acceptedRegistrations.length === 0 ? (
-                    <p className="mt-3 text-sm text-surface-600">No clubs have been approved yet.</p>
-                  ) : (
-                    <div className="mt-4 space-y-4">
-                      {acceptedRegistrations.map((r) => (
-                        <ClubListCard
-                          key={r.registrationId}
-                          club={{
-                            ...r.club,
-                            foundedDate: r.club?.foundedDate,
-                          }}
-                          showRole={false}
-                          showFounded={false}
-                          onClick={() => navigate(`/club/${r.clubId}`)}
-                          metaLines={[
-                            ...(isTournamentAdmin
-                              ? [{ label: "Payment", value: r.paymentStatus || "PENDING" }]
-                              : []),
-                            ...(r.notes
-                              ? [{ label: "Note", value: r.notes }]
-                              : []),
-                          ]}
-                        />
-                      ))}
-                    </div>
-                  )}
-                </section>
+                <TournamentClubsTab
+                  acceptedRegistrations={acceptedRegistrations}
+                  isTournamentAdmin={isTournamentAdmin}
+                  onClubClick={(clubId) => navigate(`/club/${clubId}`)}
+                />
               )}
 
               {activeTab === "requests" && isTournamentAdmin && (
-                <section className="app-card p-6">
-                  <h2 className="text-lg font-bold text-gray-900 font-['Outfit']">Join Requests</h2>
-                  <p className="mt-1 text-sm text-surface-600">Review club requests and approve or decline.</p>
-
-                  {pendingRegistrations.length === 0 ? (
-                    <p className="mt-4 text-sm text-surface-600">No pending requests.</p>
-                  ) : (
-                    <div className="mt-4 space-y-3">
-                      {pendingRegistrations.map((registration) => (
-                        <div
-                          key={registration.registrationId}
-                          className="rounded-xl border border-surface-200 p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3 hover:border-primary-200 transition-colors"
-                        >
-                          <div>
-                            <div className="font-semibold text-gray-900">{registration.club?.name || `Club ${registration.clubId}`}</div>
-                            <div className="text-xs text-surface-500">Payment status: {registration.paymentStatus}</div>
-                            {registration.notes && (
-                              <p className="mt-1 text-xs text-surface-600">{registration.notes}</p>
-                            )}
-                          </div>
-                          <div className="flex gap-2">
-                            <MotionButton
-                              onClick={() => handleReviewRegistration(registration.registrationId, "APPROVE")}
-                              className="btn-primary rounded-xl px-3 py-2 text-xs"
-                            >
-                              Approve
-                            </MotionButton>
-                            <MotionButton
-                              onClick={() => handleReviewRegistration(registration.registrationId, "DECLINE")}
-                              className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700 hover:bg-red-100"
-                            >
-                              Decline
-                            </MotionButton>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </section>
+                <TournamentJoinRequestsTab
+                  pendingRegistrations={pendingRegistrations}
+                  onReviewRegistration={handleReviewRegistration}
+                />
               )}
 
               {activeTab === "schedules" && (
-                <section className="space-y-4">
-                  {isTournamentAdmin && (
-                    <div className="app-card p-6">
-                      <h2 className="text-lg font-bold text-gray-900 font-['Outfit']">Create Tournament Schedule</h2>
-                      <p className="mt-1 text-sm text-surface-600">Create match schedules directly from this tournament with both clubs selected from accepted registrations.</p>
-                      <MotionButton
-                        onClick={() => setIsCreateScheduleOpen(true)}
-                        className="btn-primary mt-4 rounded-xl px-4 py-2 text-sm"
-                      >
-                        Open Create Schedule
-                      </MotionButton>
-                    </div>
-                  )}
-
-                  <div className="app-card p-6">
-                    <h2 className="text-lg font-bold text-gray-900 font-['Outfit']">Tournament Matches</h2>
-                    {tournamentSchedules.length === 0 ? (
-                      <p className="mt-3 text-sm text-surface-600">No schedules created yet.</p>
-                    ) : (
-                      <div className="mt-4 space-y-3">
-                        {tournamentSchedules.map((schedule) => (
-                          <div
-                            key={schedule.scheduleId}
-                            onClick={() => navigate(`/schedule/${schedule.scheduleId}`)}
-                            className="cursor-pointer rounded-xl border border-surface-200 p-4 hover:border-primary-200 hover:bg-primary-50/30 transition-all"
-                          >
-                            <div className="flex flex-wrap items-center justify-between gap-2">
-                              <div className="font-semibold text-gray-900">
-                                {schedule.teamOne?.name || `Club ${schedule.teamOneId}`} vs {schedule.teamTwo?.name || `Club ${schedule.teamTwoId}`}
-                              </div>
-                              <div className="text-xs font-medium text-surface-500 bg-surface-100 px-2.5 py-1 rounded-full">{schedule.scheduleStatus}</div>
-                            </div>
-                            <div className="mt-1 text-xs text-surface-500">
-                              {schedule.date ? new Date(schedule.date).toLocaleString() : "TBD"} at {schedule.location}
-                            </div>
-                            {schedule.match && (
-                              <div className="mt-2 text-sm font-bold text-gray-900 font-['Outfit']">
-                                Score: {schedule.match.teamOneGoals} - {schedule.match.teamTwoGoals}
-                              </div>
-                            )}
-                            <p className="mt-2 text-xs font-semibold text-primary-700">Open Schedule Details →</p>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </section>
+                <TournamentSchedulesTab
+                  isTournamentAdmin={isTournamentAdmin}
+                  onOpenCreateSchedule={() => setIsCreateScheduleOpen(true)}
+                  tournamentSchedules={tournamentSchedules}
+                  onScheduleClick={(scheduleId) => navigate(`/schedule/${scheduleId}`)}
+                />
               )}
 
               {activeTab === "topPlayers" && (
-                <section className="app-card p-6">
-                  <h2 className="text-lg font-bold text-gray-900 font-['Outfit']">Top Players</h2>
-                  <p className="mt-1 text-sm text-surface-600">Tournament-specific leaderboard by goals and assists.</p>
-                  {topPlayers.length === 0 ? (
-                    <p className="mt-3 text-sm text-surface-600">No player stats available yet.</p>
-                  ) : (
-                    <div className="mt-4 overflow-x-auto">
-                      <table className="table-premium w-full min-w-[520px] text-sm">
-                        <thead>
-                          <tr className="border-b-2 border-surface-200 text-left text-xs uppercase tracking-wide text-surface-500">
-                            <th className="py-3 pr-4">Player</th>
-                            <th className="py-3 pr-4">Club</th>
-                            <th className="py-3 pr-4">Goals</th>
-                            <th className="py-3">Assists</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {topPlayers.map((player) => (
-                            <tr key={`${player.userId}-${player.clubId}`} className="border-b border-surface-100 hover:bg-primary-50/30 transition-colors">
-                              <td className="py-3 pr-4 font-semibold text-gray-900">
-                                <button
-                                  type="button"
-                                  onClick={() => navigate(`/player/${player.userId}`)}
-                                  className="text-left text-primary-700 hover:text-primary-800 hover:underline"
-                                >
-                                  {player.firstName} {player.lastName}
-                                </button>
-                              </td>
-                              <td className="py-3 pr-4 text-surface-600">
-                                <button
-                                  type="button"
-                                  onClick={() => navigate(`/club/${player.clubId}`)}
-                                  className="text-left text-primary-700 hover:text-primary-800 hover:underline"
-                                >
-                                  {player.clubName || `Club ${player.clubId}`}
-                                </button>
-                              </td>
-                              <td className="py-3 pr-4 font-bold text-gray-900">{player.goals}</td>
-                              <td className="py-3 font-bold text-gray-900">{player.assists}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-                </section>
+                <TournamentTopPlayersTab
+                  topPlayers={topPlayers}
+                  onPlayerClick={(playerId) => navigate(`/player/${playerId}`)}
+                  onClubClick={(clubId) => navigate(`/club/${clubId}`)}
+                />
               )}
 
               {activeTab === "topClubs" && (
-                <section className="app-card p-6">
-                  <h2 className="text-lg font-bold text-gray-900 font-['Outfit']">Top Clubs</h2>
-                  <p className="mt-1 text-sm text-surface-600">Tournament table generated from completed match scores.</p>
-                  {topClubs.length === 0 ? (
-                    <p className="mt-3 text-sm text-surface-600">No club standings available yet.</p>
-                  ) : (
-                    <div className="mt-4 overflow-x-auto">
-                      <table className="table-premium w-full min-w-[700px] text-sm">
-                        <thead>
-                          <tr className="border-b-2 border-surface-200 text-left text-xs uppercase tracking-wide text-surface-500">
-                            <th className="py-3 pr-4">Club</th>
-                            <th className="py-3 pr-4">P</th>
-                            <th className="py-3 pr-4">W</th>
-                            <th className="py-3 pr-4">D</th>
-                            <th className="py-3 pr-4">L</th>
-                            <th className="py-3 pr-4">GF</th>
-                            <th className="py-3 pr-4">GA</th>
-                            <th className="py-3">Pts</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {topClubs.map((club) => (
-                            <tr
-                              key={club.clubId}
-                              onClick={() => navigate(`/club/${club.clubId}`)}
-                              className="border-b border-surface-100 cursor-pointer hover:bg-primary-50/30 transition-colors"
-                            >
-                              <td className="py-3 pr-4 font-semibold text-gray-900">{club.clubName}</td>
-                              <td className="py-3 pr-4 text-surface-700">{club.played}</td>
-                              <td className="py-3 pr-4 text-surface-700">{club.wins}</td>
-                              <td className="py-3 pr-4 text-surface-700">{club.draws}</td>
-                              <td className="py-3 pr-4 text-surface-700">{club.losses}</td>
-                              <td className="py-3 pr-4 text-surface-700">{club.goalsFor}</td>
-                              <td className="py-3 pr-4 text-surface-700">{club.goalsAgainst}</td>
-                              <td className="py-3 font-bold text-primary-700">{club.points}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-                </section>
+                <TournamentTopClubsTab
+                  topClubs={topClubs}
+                  onClubClick={(clubId) => navigate(`/club/${clubId}`)}
+                />
               )}
               </motion.div>
               </AnimatePresence>
