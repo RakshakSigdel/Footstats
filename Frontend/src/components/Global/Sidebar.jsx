@@ -62,7 +62,7 @@ export default function Sidebar() {
     ? `fixed inset-y-0 left-0 z-50 w-72 flex flex-col transform transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
         isOpen ? "translate-x-0" : "-translate-x-full"
       }`
-    : "w-72 flex flex-col min-h-screen sticky top-0 h-screen overflow-y-auto";
+    : "w-72 z-40 flex flex-col min-h-screen sticky top-0 h-screen overflow-y-auto";
 
   return (
     <>
