@@ -6,6 +6,7 @@ import { ThemeProvider } from "./context/ThemeContext";
 import ProtectedRoute from "./components/Global/ProtectedRoute";
 import AppSkeleton from "./components/ui/AppSkeleton";
 import PageTransition from "./components/ui/PageTransition";
+import ParticlesBackground from "./pages/Player/Components/ParticlesBackground";
 
 const Register = lazy(() => import("./pages/Authentication/register"));
 const Login = lazy(() => import("./pages/Authentication/login"));
@@ -62,7 +63,21 @@ function App() {
     <BrowserRouter>
       <ThemeProvider>
         <SidebarProvider>
-          <AnimatedRoutes />
+          <div className="relative min-h-screen">
+            <ParticlesBackground
+              className="pointer-events-none fixed inset-0 z-30 opacity-70"
+              quantity={110}
+              staticity={55}
+              ease={60}
+              size={0.6}
+              color="#0ea5e9"
+              vx={0.01}
+              vy={0.01}
+            />
+            <div className="relative z-20">
+              <AnimatedRoutes />
+            </div>
+          </div>
         </SidebarProvider>
       </ThemeProvider>
     </BrowserRouter>

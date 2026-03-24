@@ -213,7 +213,7 @@ export default function Dashboard() {
       <div className="flex-1 flex flex-col">
         <Topbar />
 
-        <main className="flex-1 p-6 md:p-8 overflow-auto bg-[#eef1f6]">
+        <main className="relative flex-1 overflow-auto bg-[#eef1f6] p-6 md:p-8">
           {error && (
             <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="mb-4 p-4 rounded-2xl bg-red-50 border border-red-200 text-red-700">
               {error}

@@ -25,5 +25,8 @@
   "homepage": "https://github.com/RakshakSigdel/Footstats#readme",
   "devDependencies": {
     "concurrently": "^9.2.1"
+  },
+  "dependencies": {
+    "react-responsive": "^10.0.1"
   }
 }
