@@ -1,8 +1,9 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import Sidebar from "../../components/Global/Sidebar";
 import Topbar from "../../components/Global/Topbar";
+import { AnimatedBeam, Circle } from "./Components/animated-beam";
 import { getMyProfile, getMyStats } from "../../services/api.player";
 import { getMySchedules } from "../../services/api.schedules";
 import { getMyClubs } from "../../services/api.clubs";
@@ -20,15 +21,6 @@ const cardVariants = {
     transition: { duration: 0.45, delay: i * 0.06, ease: [0.22, 1, 0.36, 1] },
   }),
 };
-
-const statCards = [
-  { key: "matches", label: "Matches", subtitle: "Played", icon: CalendarDays, gradient: "from-blue-500 to-indigo-600", iconBg: "bg-blue-500/10", iconColor: "text-blue-500" },
-  { key: "goals", label: "Goals", subtitle: "Scored", icon: Target, gradient: "from-emerald-500 to-teal-600", iconBg: "bg-emerald-500/10", iconColor: "text-emerald-500" },
-  { key: "assists", label: "Assists", subtitle: "Provided", icon: Users, gradient: "from-purple-500 to-violet-600", iconBg: "bg-purple-500/10", iconColor: "text-purple-500" },
-  { key: "winRate", label: "Win Rate", subtitle: "", icon: Trophy, gradient: "from-amber-500 to-orange-600", iconBg: "bg-amber-500/10", iconColor: "text-amber-500" },
-  { key: "cards", label: "Cards", subtitle: "Yellow / Red", icon: CreditCard, gradient: "from-red-500 to-rose-600", iconBg: "bg-red-500/10", iconColor: "text-red-500" },
-  { key: "clubs", label: "Clubs", subtitle: "Active", icon: Shield, gradient: "from-cyan-500 to-blue-600", iconBg: "bg-cyan-500/10", iconColor: "text-cyan-500" },
-];
 
 export default function Dashboard() {
   const storedUser = useMemo(() => {
@@ -48,6 +40,17 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
+  const statsNetworkRef = useRef(null);
+  const centerRef = useRef(null);
+  const matchesRef = useRef(null);
+  const goalsRef = useRef(null);
+  const assistsRef = useRef(null);
+  const winRateRef = useRef(null);
+  const winsRef = useRef(null);
+  const drawsRef = useRef(null);
+  const lossesRef = useRef(null);
+  const cardsRef = useRef(null);
+  const tournamentsRef = useRef(null);
 
   useEffect(() => {
     let isCurrent = true;
@@ -111,7 +114,7 @@ export default function Dashboard() {
   };
 
   const appearanceCount = stats?.matchesPlayed ?? 0;
-  const goalsCount = stats?.goalsScored ?? 0;
+  const goalsCount = stats?.goals ?? stats?.goalsScored ?? 0;
   const assistsCount = stats?.assists ?? 0;
   const winsCount = stats?.wins ?? 0;
   const drawsCount = stats?.draws ?? 0;
@@ -121,15 +124,82 @@ export default function Dashboard() {
   const redCards = stats?.redCards ?? 0;
   const clubsCount = myClubsCount;
   const tournamentsCount = myTournamentsCount;
+  const contributionCount = goalsCount + assistsCount;
 
-  const statValues = {
-    matches: appearanceCount,
-    goals: goalsCount,
-    assists: assistsCount,
-    winRate: `${winRate}%`,
-    cards: null,
-    clubs: clubsCount,
-  };
+  const metricNodes = [
+    {
+      key: "matches",
+      label: "Matches",
+      value: appearanceCount,
+      Icon: CalendarDays,
+      ref: matchesRef,
+      className: "left-[8%] top-[8%] h-24 w-24 md:h-28 md:w-28",
+      iconClass: "text-sky-600",
+    },
+    {
+      key: "goals",
+      label: "Goals",
+      value: goalsCount,
+      Icon: Target,
+      ref: goalsRef,
+      className: "left-[38%] top-[2%] h-24 w-24 md:h-28 md:w-28",
+      iconClass: "text-emerald-600",
+    },
+    {
+      key: "assists",
+      label: "Assists",
+      value: assistsCount,
+      Icon: Users,
+      ref: assistsRef,
+      className: "right-[8%] top-[8%] h-24 w-24 md:h-28 md:w-28",
+      iconClass: "text-indigo-600",
+    },
+    {
+      key: "wins",
+      label: "Wins",
+      value: winsCount,
+      Icon: Trophy,
+      ref: winsRef,
+      className: "left-[5%] top-[42%] h-24 w-24 md:h-28 md:w-28",
+      iconClass: "text-amber-600",
+    },
+    {
+      key: "draws",
+      label: "Draws",
+      value: drawsCount,
+      Icon: Shield,
+      ref: drawsRef,
+      className: "left-[25%] bottom-[7%] h-24 w-24 md:h-28 md:w-28",
+      iconClass: "text-cyan-600",
+    },
+    {
+      key: "losses",
+      label: "Losses",
+      value: lossesCount,
+      Icon: Zap,
+      ref: lossesRef,
+      className: "left-[50%] bottom-[2%] h-24 w-24 md:h-28 md:w-28",
+      iconClass: "text-rose-600",
+    },
+    {
+      key: "cards",
+      label: "Cards",
+      value: `${yellowCards}/${redCards}`,
+      Icon: CreditCard,
+      ref: cardsRef,
+      className: "right-[24%] bottom-[7%] h-24 w-24 md:h-28 md:w-28",
+      iconClass: "text-orange-600",
+    },
+    {
+      key: "tournaments",
+      label: "Tournaments",
+      value: tournamentsCount,
+      Icon: TrendingUp,
+      ref: tournamentsRef,
+      className: "right-[5%] top-[42%] h-24 w-24 md:h-28 md:w-28",
+      iconClass: "text-violet-600",
+    },
+  ];
 
   const handleViewAllSchedules = () => navigate("/schedules");
   const openDashboardScheduleDetails = (schedule) => {
@@ -166,60 +236,80 @@ export default function Dashboard() {
             </p>
           </motion.div>
 
-          {/* Stats Cards */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
-            {statCards.map((card, idx) => {
-              const Icon = card.icon;
-              return (
-                <motion.div
-                  key={card.key}
-                  custom={idx}
-                  variants={cardVariants}
-                  initial="hidden"
-                  animate="visible"
-                  whileHover={{ y: -6, scale: 1.03, transition: { duration: 0.2 } }}
-                  className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100/80 cursor-pointer group relative overflow-hidden"
-                >
-                  {/* Subtle gradient accent at top */}
-                  <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${card.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
-                  
-                  <div className="flex justify-between items-start mb-3">
-                    <div className={`w-10 h-10 ${card.iconBg} rounded-xl flex items-center justify-center`}>
-                      <Icon size={20} className={card.iconColor} />
+          {/* Animated Stats Network */}
+          <motion.section
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.45, delay: 0.1 }}
+            className="mb-8"
+          >
+            <div className="mb-4 flex items-center justify-between gap-2">
+              <h3 className="text-xl font-bold text-slate-900 font-['Outfit']">Live Performance Network</h3>
+              <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
+                Real-time season metrics
+              </span>
+            </div>
+
+            <div className="rounded-3xl border border-slate-200 bg-gradient-to-br from-white via-slate-50 to-emerald-50/40 p-3 md:p-5 shadow-sm">
+              <div ref={statsNetworkRef} className="relative mx-auto h-[520px] w-full max-w-5xl overflow-hidden rounded-2xl">
+                {metricNodes.map((node, idx) => (
+                  <AnimatedBeam
+                    key={`beam-${node.key}`}
+                    containerRef={statsNetworkRef}
+                    fromRef={centerRef}
+                    toRef={node.ref}
+                    curvature={28 + (idx % 3) * 14}
+                    delay={idx * 0.1}
+                    reverse={idx % 2 === 0}
+                    pathColor="#94a3b8"
+                    pathOpacity={0.22}
+                    gradientStartColor="#10b981"
+                    gradientStopColor="#0ea5e9"
+                    dotted={idx % 4 === 0}
+                  />
+                ))}
+
+                <div className="absolute inset-0">
+                  <Circle
+                    ref={centerRef}
+                    className="absolute left-1/2 top-1/2 h-40 w-40 -translate-x-1/2 -translate-y-1/2 border-emerald-200 bg-gradient-to-br from-white to-emerald-50"
+                  >
+                    <div className="text-center px-3">
+                      <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Contribution</p>
+                      <p className="text-3xl font-bold text-slate-900">{contributionCount}</p>
+                      <p className="text-xs text-slate-500">Goals + Assists</p>
+                      <p className="mt-1 text-xs font-semibold text-emerald-700">Win Rate {winRate}%</p>
                     </div>
+                  </Circle>
+
+                  {metricNodes.map((node, idx) => {
+                    const NodeIcon = node.Icon;
+                    return (
+                      <motion.div
+                        key={node.key}
+                        className={`absolute ${node.className}`}
+                        initial={{ opacity: 0, scale: 0.7 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: 0.12 + idx * 0.06, duration: 0.35 }}
+                      >
+                        <Circle ref={node.ref} className="h-full w-full border-slate-200 bg-white/95">
+                          <div className="text-center">
+                            <NodeIcon size={16} className={`mx-auto mb-1 ${node.iconClass}`} />
+                            <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">{node.label}</p>
+                            <p className="text-lg md:text-xl font-bold text-slate-900 leading-none mt-1">{node.value}</p>
+                          </div>
+                        </Circle>
+                      </motion.div>
+                    );
+                  })}
+
+                  <div className="absolute right-3 top-3 rounded-full border border-slate-200 bg-white/80 px-3 py-1 text-xs font-medium text-slate-500">
+                    Clubs: <span className="font-semibold text-slate-900">{clubsCount}</span>
                   </div>
-                  <p className="text-sm text-slate-500 mb-1">{card.label}</p>
-                  {card.key === "cards" ? (
-                    <>
-                      <div className="flex gap-1.5 items-baseline">
-                        <span className="text-2xl font-bold text-amber-500">{yellowCards}</span>
-                        <span className="text-slate-300">/</span>
-                        <span className="text-2xl font-bold text-red-500">{redCards}</span>
-                      </div>
-                      <p className="text-xs text-slate-400">{card.subtitle}</p>
-                    </>
-                  ) : card.key === "winRate" ? (
-                    <>
-                      <h3 className="text-2xl font-bold text-slate-900 mb-1">{winRate}%</h3>
-                      <p className="text-xs text-slate-400">{winsCount}W {drawsCount}D {lossesCount}L</p>
-                    </>
-                  ) : card.key === "clubs" && clubsCount === 0 ? (
-                    <>
-                      <h3 className="text-2xl font-bold text-slate-900 mb-1">0</h3>
-                      <Link to="/clubs" className="text-xs text-emerald-600 hover:text-emerald-700 font-semibold">
-                        Join Now
-                      </Link>
-                    </>
-                  ) : (
-                    <>
-                      <h3 className="text-2xl font-bold text-slate-900 mb-1">{statValues[card.key]}</h3>
-                      <p className="text-xs text-slate-400">{card.subtitle}</p>
-                    </>
-                  )}
-                </motion.div>
-              );
-            })}
-          </div>
+                </div>
+              </div>
+            </div>
+          </motion.section>
 
           {/* Upcoming Matches Section */}
           <div className="mb-8">
