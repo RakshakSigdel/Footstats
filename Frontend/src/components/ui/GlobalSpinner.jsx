@@ -13,15 +13,15 @@ export default function GlobalSpinner() {
           <motion.div
             animate={{ rotate: 360 }}
             transition={{ repeat: Infinity, duration: 1.2, ease: "linear" }}
-            className="absolute inset-0 rounded-full border-[3px] border-transparent border-t-emerald-500 border-r-emerald-300"
+            className="absolute inset-0 rounded-full border-[3px] border-transparent border-t-sky-500 border-r-sky-300"
           />
           <motion.div
             animate={{ rotate: -360 }}
             transition={{ repeat: Infinity, duration: 1.8, ease: "linear" }}
-            className="absolute inset-1.5 rounded-full border-[3px] border-transparent border-b-emerald-400/60 border-l-emerald-200/40"
+            className="absolute inset-1.5 rounded-full border-[3px] border-transparent border-b-sky-400/60 border-l-sky-200/40"
           />
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-3 h-3 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 shadow-md shadow-emerald-500/30" />
+            <div className="w-3 h-3 rounded-full bg-gradient-to-br from-sky-400 to-sky-600 shadow-md shadow-sky-500/30" />
           </div>
         </div>
         <motion.p

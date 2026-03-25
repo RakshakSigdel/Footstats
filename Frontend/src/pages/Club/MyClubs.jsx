@@ -134,7 +134,7 @@ export default function MyClubs() {
             patternType="grid"
             patternSize={50}
             patternColor="rgba(15,23,42,0.035)"
-            gradient="linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(241,245,249,0.92) 55%, rgba(236,253,245,0.88) 100%)"
+            gradient="linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(241,245,249,0.92) 55%, rgba(224,242,254,0.88) 100%)"
             showAccents
           />
           <div className="relative z-10">
@@ -143,7 +143,7 @@ export default function MyClubs() {
           )}
           {loading && (
             <div className="mb-6 flex items-center gap-3 text-slate-500">
-              <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: "linear" }} className="w-5 h-5 rounded-full border-2 border-slate-200 border-t-emerald-500" />
+              <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: "linear" }} className="w-5 h-5 rounded-full border-2 border-slate-200 border-t-sky-500" />
               Loading clubs...
             </div>
           )}
@@ -276,9 +276,9 @@ export default function MyClubs() {
                     whileHover={{ y: -4, scale: 1.01, transition: { duration: 0.2 } }}
                     className="bg-white rounded-2xl shadow-sm border border-slate-100/80 p-6 group relative overflow-hidden"
                   >
-                    <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-emerald-400 to-teal-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-sky-400 to-cyan-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                     <div className="flex items-start gap-4 mb-5">
-                      <div className="w-14 h-14 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden shadow-md shadow-emerald-500/20">
+                      <div className="w-14 h-14 bg-gradient-to-br from-sky-500 to-sky-600 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden shadow-md shadow-sky-500/20">
                         {getClubLogoUrl(club.logo) ? (
                           <img src={getClubLogoUrl(club.logo)} alt={club.name} className="w-full h-full object-cover" />
                         ) : (
@@ -291,7 +291,7 @@ export default function MyClubs() {
                           <MapPin size={14} />
                           <span>{club.location ?? "—"}</span>
                           {club.distanceKm != null && (
-                            <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700 border border-emerald-100">
+                            <span className="rounded-full bg-sky-50 px-2 py-0.5 text-xs font-semibold text-sky-700 border border-sky-100">
                               {club.distanceKm} km away
                             </span>
                           )}

@@ -123,7 +123,7 @@ export default function Topbar() {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={toggleSidebar}
-              className="p-2 text-slate-600 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 rounded-xl transition-colors mr-2"
+              className="p-2 text-slate-600 dark:text-slate-300 hover:text-sky-600 dark:hover:text-sky-400 hover:bg-sky-50 dark:hover:bg-sky-500/10 rounded-xl transition-colors mr-2"
               aria-label="Toggle menu"
             >
               <Menu size={22} />
@@ -133,7 +133,7 @@ export default function Topbar() {
           {/* Logo on mobile */}
           {isMobile && (
             <Link to="/dashboard" className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center shadow-md shadow-emerald-500/20">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-sky-400 to-sky-600 flex items-center justify-center shadow-md shadow-sky-500/20">
                 <img src="/images/NoLogo.png" alt="FootStats" className="w-5 h-5 object-contain" />
               </div>
               <span className="font-bold text-slate-900 dark:text-white font-['Outfit']">FootStats</span>
@@ -183,7 +183,7 @@ export default function Topbar() {
               whileHover={{ scale: 1.1 }} 
               whileTap={{ scale: 0.9 }}
               onClick={openNotifications}
-              className="relative p-2.5 text-slate-500 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 rounded-xl transition-colors"
+              className="relative p-2.5 text-slate-500 dark:text-slate-300 hover:text-sky-600 dark:hover:text-sky-400 hover:bg-sky-50 dark:hover:bg-sky-500/10 rounded-xl transition-colors"
               aria-label="Notifications"
             >
               <Bell size={18} />
@@ -218,7 +218,7 @@ export default function Topbar() {
                     <p className="text-sm font-bold text-slate-900 dark:text-white font-['Outfit']">Notifications</p>
                     <button
                       onClick={markAllRead}
-                      className="flex items-center gap-1.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 transition-colors"
+                      className="flex items-center gap-1.5 text-xs font-semibold text-sky-600 dark:text-sky-400 hover:text-sky-700 transition-colors"
                     >
                       <CheckCheck size={14} />
                       Mark all read
@@ -231,7 +231,7 @@ export default function Topbar() {
                         <motion.div
                           animate={{ rotate: 360 }}
                           transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
-                          className="w-6 h-6 rounded-full border-2 border-slate-200 dark:border-slate-600 border-t-emerald-500"
+                          className="w-6 h-6 rounded-full border-2 border-slate-200 dark:border-slate-600 border-t-sky-500"
                         />
                       </div>
                     )}
@@ -251,8 +251,8 @@ export default function Topbar() {
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: idx * 0.03 }}
                         onClick={() => onNotificationClick(notification)}
-                        className={`w-full text-left px-5 py-3.5 border-b border-slate-100/60 dark:border-white/[0.04] hover:bg-emerald-50/50 dark:hover:bg-emerald-500/5 transition-colors ${
-                          notification.isRead ? "" : "bg-emerald-50/40 dark:bg-emerald-500/[0.06]"
+                        className={`w-full text-left px-5 py-3.5 border-b border-slate-100/60 dark:border-white/[0.04] hover:bg-sky-50/50 dark:hover:bg-sky-500/5 transition-colors ${
+                          notification.isRead ? "" : "bg-sky-50/40 dark:bg-sky-500/[0.06]"
                         }`}
                       >
                         <div className="flex items-start justify-between gap-3">
@@ -261,7 +261,7 @@ export default function Topbar() {
                             <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 leading-relaxed">{notification.message}</p>
                           </div>
                           {!notification.isRead && (
-                            <span className="w-2 h-2 rounded-full bg-emerald-500 mt-2 flex-shrink-0 shadow-sm shadow-emerald-500/50" />
+                            <span className="w-2 h-2 rounded-full bg-sky-500 mt-2 flex-shrink-0 shadow-sm shadow-sky-500/50" />
                           )}
                         </div>
                         <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-2">{formatTime(notification.createdAt)}</p>
@@ -281,9 +281,9 @@ export default function Topbar() {
             <motion.div 
               whileHover={{ scale: 1.08 }}
               whileTap={{ scale: 0.95 }}
-              className="w-9 h-9 rounded-full overflow-hidden flex items-center justify-center border-2 border-emerald-200 dark:border-emerald-500/30 shadow-md"
+              className="w-9 h-9 rounded-full overflow-hidden flex items-center justify-center border-2 border-sky-200 dark:border-sky-500/30 shadow-md"
               style={{
-                background: "linear-gradient(135deg, #059669, #10b981)",
+                background: "linear-gradient(135deg, #0284c7, #0ea5e9)",
               }}
             >
               <span className="text-white font-bold text-sm">{initials}</span>

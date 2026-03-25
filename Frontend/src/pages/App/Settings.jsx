@@ -14,7 +14,7 @@ function ToggleSwitch({ enabled, onToggle }) {
     <button
       onClick={onToggle}
       className={`relative w-12 h-6 rounded-full transition-colors duration-200 ${
-        enabled ? "bg-emerald-500" : "bg-slate-300"
+        enabled ? "bg-sky-500" : "bg-slate-300"
       }`}
     >
       <motion.div
@@ -26,7 +26,7 @@ function ToggleSwitch({ enabled, onToggle }) {
   );
 }
 
-function SectionHeader({ icon: Icon, title, iconColor = "text-emerald-600", iconBg = "bg-emerald-50" }) {
+function SectionHeader({ icon: Icon, title, iconColor = "text-sky-600", iconBg = "bg-sky-50" }) {
   return (
     <div className="flex items-center gap-3 mb-6">
       <div className={`w-10 h-10 rounded-xl ${iconBg} flex items-center justify-center`}>
@@ -194,7 +194,7 @@ export default function Settings() {
             patternType="grid"
             patternSize={50}
             patternColor="rgba(15,23,42,0.035)"
-            gradient="linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(241,245,249,0.92) 55%, rgba(236,253,245,0.88) 100%)"
+            gradient="linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(241,245,249,0.92) 55%, rgba(224,242,254,0.88) 100%)"
             showAccents
           />
           <div className="relative z-10">
@@ -204,10 +204,10 @@ export default function Settings() {
           </motion.div>
 
           {error && <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mb-6 p-4 rounded-2xl bg-red-50 border border-red-200 text-red-700">{error}</motion.div>}
-          {saveSuccess && <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mb-6 p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-700 flex items-center gap-2"><CheckCircle2 size={16} />Profile updated successfully.</motion.div>}
+          {saveSuccess && <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mb-6 p-4 rounded-2xl bg-sky-50 border border-sky-200 text-sky-700 flex items-center gap-2"><CheckCircle2 size={16} />Profile updated successfully.</motion.div>}
           {loading && (
             <div className="mb-6 flex items-center gap-3 text-slate-500">
-              <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: "linear" }} className="w-5 h-5 rounded-full border-2 border-slate-200 border-t-emerald-500" />
+              <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: "linear" }} className="w-5 h-5 rounded-full border-2 border-slate-200 border-t-sky-500" />
               Loading...
             </div>
           )}
@@ -304,7 +304,7 @@ export default function Settings() {
                   <p className="text-xs text-slate-500">{profile?.email || "No email available"}</p>
                 </div>
                 {profile?.emailVerified ? (
-                  <span className="px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1">
+                  <span className="px-3 py-1 rounded-full text-xs font-semibold bg-sky-50 text-sky-700 border border-sky-200 flex items-center gap-1">
                     <CheckCircle2 size={12} /> Verified
                   </span>
                 ) : (
@@ -340,7 +340,7 @@ export default function Settings() {
                   >
                     Send Verification Code
                   </button>
-                  {emailMessage && <p className="text-sm text-emerald-700">{emailMessage}</p>}
+                  {emailMessage && <p className="text-sm text-sky-700">{emailMessage}</p>}
                 </div>
               )}
             </div>
@@ -351,7 +351,7 @@ export default function Settings() {
                   key={label}
                   whileHover={{ x: 4 }}
                   transition={{ type: "spring", stiffness: 400, damping: 25 }}
-                  className="w-full px-4 py-3 rounded-xl text-left text-sm font-semibold text-slate-700 bg-slate-50 hover:bg-emerald-50 hover:text-emerald-700 transition-colors flex items-center justify-between"
+                  className="w-full px-4 py-3 rounded-xl text-left text-sm font-semibold text-slate-700 bg-slate-50 hover:bg-sky-50 hover:text-sky-700 transition-colors flex items-center justify-between"
                 >
                   {label}
                   <ChevronRight size={16} className="text-slate-400" />
@@ -387,7 +387,7 @@ export default function Settings() {
             <motion.button
               whileHover={{ x: 4 }}
               transition={{ type: "spring", stiffness: 400, damping: 25 }}
-              className="w-full px-4 py-3 rounded-xl text-left text-sm font-semibold text-slate-700 bg-slate-50 hover:bg-emerald-50 hover:text-emerald-700 transition-colors flex items-center justify-between"
+              className="w-full px-4 py-3 rounded-xl text-left text-sm font-semibold text-slate-700 bg-slate-50 hover:bg-sky-50 hover:text-sky-700 transition-colors flex items-center justify-between"
             >
               + Add Payment Method
               <ChevronRight size={16} className="text-slate-400" />
@@ -403,7 +403,7 @@ export default function Settings() {
                   key={label}
                   whileHover={{ x: 4 }}
                   transition={{ type: "spring", stiffness: 400, damping: 25 }}
-                  className="w-full px-4 py-3 rounded-xl text-left text-sm font-semibold text-slate-700 bg-slate-50 hover:bg-emerald-50 hover:text-emerald-700 transition-colors flex items-center justify-between"
+                  className="w-full px-4 py-3 rounded-xl text-left text-sm font-semibold text-slate-700 bg-slate-50 hover:bg-sky-50 hover:text-sky-700 transition-colors flex items-center justify-between"
                 >
                   {label}
                   <ChevronRight size={16} className="text-slate-400" />

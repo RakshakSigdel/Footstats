@@ -281,7 +281,7 @@ export default function CreateSchedule({
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">Team 1 (Your Club)</label>
               {formData.creationType === 'club' ? (
-                <div className={`px-4 py-3 rounded-lg border text-sm ${teamOneName ? 'border-green-300 bg-green-50 text-green-800 font-medium' : 'border-gray-200 bg-gray-50 text-gray-400'}`}>
+                <div className={`px-4 py-3 rounded-lg border text-sm ${teamOneName ? 'border-blue-300 bg-blue-50 text-blue-800 font-medium' : 'border-gray-200 bg-gray-50 text-gray-400'}`}>
                   {teamOneName || 'Auto-set when you pick a club above'}
                 </div>
               ) : (

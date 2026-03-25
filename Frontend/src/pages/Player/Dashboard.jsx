@@ -144,7 +144,7 @@ export default function Dashboard() {
       Icon: Target,
       ref: goalsRef,
       className: "left-[38%] top-[2%] h-24 w-24 md:h-28 md:w-28",
-      iconClass: "text-emerald-600",
+      iconClass: "text-sky-600",
     },
     {
       key: "assists",
@@ -227,7 +227,7 @@ export default function Dashboard() {
           )}
           {loading && (
             <div className="mb-4 flex items-center gap-3 text-black">
-              <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: "linear" }} className="w-5 h-5 rounded-full border-2 border-slate-200 border-t-emerald-500" />
+              <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: "linear" }} className="w-5 h-5 rounded-full border-2 border-slate-200 border-t-sky-500" />
               Loading your stats...
             </div>
           )}
@@ -258,14 +258,14 @@ export default function Dashboard() {
           >
             <div className="mb-4 flex items-center justify-between gap-2">
               <h3 className="text-xl font-bold text-black dark:text-slate-100 font-['Outfit']">Live Performance Network</h3>
-              <span className="rounded-full border border-emerald-300 bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-800 dark:border-emerald-700/60 dark:bg-emerald-900/30 dark:text-emerald-300">
+              <span className="rounded-full border border-sky-300 bg-sky-100 px-3 py-1 text-xs font-semibold text-sky-800 dark:border-sky-700/60 dark:bg-sky-900/30 dark:text-sky-300">
                 Real-time season metrics
               </span>
             </div>
 
             <div className={`rounded-3xl border p-3 md:p-5 shadow-sm ${
               isDarkMode
-                ? "border-slate-700/70 bg-gradient-to-br from-slate-900 via-slate-900/90 to-emerald-950/30"
+                ? "border-slate-700/70 bg-gradient-to-br from-slate-900 via-slate-900/90 to-sky-950/30"
                 : "border-slate-200 bg-white"
             }`}>
               <div ref={statsNetworkRef} className="relative mx-auto h-[520px] w-full max-w-5xl overflow-hidden rounded-2xl">
@@ -280,7 +280,7 @@ export default function Dashboard() {
                     reverse={idx % 2 === 0}
                     pathColor={isDarkMode ? "#64748b" : "#94a3b8"}
                     pathOpacity={isDarkMode ? 0.35 : 0.22}
-                    gradientStartColor="#10b981"
+                    gradientStartColor="#0ea5e9"
                     gradientStopColor="#0ea5e9"
                     dotted={idx % 4 === 0}
                   />
@@ -291,15 +291,15 @@ export default function Dashboard() {
                     ref={centerRef}
                     className={`absolute left-1/2 top-1/2 h-40 w-40 -translate-x-1/2 -translate-y-1/2 ${
                       isDarkMode
-                        ? "!border-emerald-700/60 !bg-gradient-to-br !from-slate-900 !to-emerald-900/40"
-                        : "border-emerald-200 bg-white"
+                        ? "!border-sky-700/60 !bg-gradient-to-br !from-slate-900 !to-sky-900/40"
+                        : "border-sky-200 bg-white"
                     }`}
                   >
                     <div className="text-center px-3">
                       <p className="text-[11px] font-semibold uppercase tracking-wide text-black dark:text-slate-300">Contribution</p>
                       <p className="text-3xl font-bold text-black dark:text-slate-100">{contributionCount}</p>
                       <p className="text-xs text-black dark:text-slate-300">Goals + Assists</p>
-                      <p className="mt-1 text-xs font-semibold text-black dark:text-emerald-300">Win Rate {winRate}%</p>
+                      <p className="mt-1 text-xs font-semibold text-black dark:text-sky-300">Win Rate {winRate}%</p>
                     </div>
                   </Circle>
 
@@ -350,13 +350,13 @@ export default function Dashboard() {
           >
             <div className="flex items-center justify-between mb-5">
               <h3 className="text-xl font-bold text-black dark:text-slate-100 font-['Outfit'] flex items-center gap-2">
-                <Zap size={20} className="text-emerald-500" />
+                <Zap size={20} className="text-sky-500" />
                 Upcoming Matches
               </h3>
               <button
                 type="button"
                 onClick={handleViewAllSchedules}
-                className="text-sm text-emerald-600 hover:text-emerald-700 font-semibold flex items-center gap-1 transition-colors"
+                className="text-sm text-sky-600 hover:text-sky-700 font-semibold flex items-center gap-1 transition-colors"
               >
                 View All <ChevronRight size={16} />
               </button>
@@ -364,14 +364,14 @@ export default function Dashboard() {
 
             <div className={`relative overflow-hidden rounded-3xl border p-3 md:p-5 ${
               isDarkMode
-                ? "border-slate-700/70 bg-gradient-to-br from-slate-900 via-slate-900/85 to-emerald-950/30"
+                ? "border-slate-700/70 bg-gradient-to-br from-slate-900 via-slate-900/85 to-sky-950/30"
                 : "border-slate-200 bg-white"
             }`}>
               <div className={`relative mb-4 flex items-center justify-between rounded-2xl border px-4 py-3 backdrop-blur ${
                 isDarkMode ? "border-slate-700 bg-slate-900/80" : "border-slate-200 bg-white"
               }`}>
                 <div>
-                  <p className="text-[11px] font-semibold tracking-[0.1em] text-emerald-600">Match Spotlight</p>
+                  <p className="text-[11px] font-semibold tracking-[0.1em] text-sky-600">Match Spotlight</p>
                   <p className="text-sm text-black dark:text-slate-300">
                     {upcomingSchedules.length > 0
                       ? `${upcomingSchedules.length} fixture${upcomingSchedules.length > 1 ? "s" : ""} scheduled soon`
@@ -379,7 +379,7 @@ export default function Dashboard() {
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 dark:border-emerald-700/60 dark:bg-emerald-900/30 dark:text-emerald-300">Upcoming</span>
+                  <span className="rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-700 dark:border-sky-700/60 dark:bg-sky-900/30 dark:text-sky-300">Upcoming</span>
                   <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-black dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">Top 3</span>
                 </div>
               </div>
@@ -394,7 +394,7 @@ export default function Dashboard() {
                 >
                   <div className="mb-3 text-4xl">🏟️</div>
                   <p className="font-medium text-black dark:text-slate-200">No upcoming matches</p>
-                  <Link to="/schedules" className="mt-1 inline-block text-sm font-semibold text-emerald-600 hover:text-emerald-700">
+                  <Link to="/schedules" className="mt-1 inline-block text-sm font-semibold text-sky-600 hover:text-sky-700">
                     View schedules →
                   </Link>
                 </motion.div>
@@ -424,13 +424,13 @@ export default function Dashboard() {
                     whileHover={{ y: -6, scale: 1.012, transition: { duration: 0.22 } }}
                     className={`group relative flex min-h-[300px] flex-col overflow-hidden rounded-2xl border p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_16px_42px_rgba(15,23,42,0.14)] ${
                       isDarkMode
-                        ? "border-slate-700 bg-slate-900/85 hover:border-emerald-700/70"
-                        : "border-slate-200 bg-white hover:border-emerald-200"
+                        ? "border-slate-700 bg-slate-900/85 hover:border-sky-700/70"
+                        : "border-slate-200 bg-white hover:border-sky-200"
                     }`}
                   >
-                    <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100 bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.2),transparent_52%)]" />
-                    <div className="pointer-events-none absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-emerald-300 via-teal-400 to-cyan-400 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-                    <div className="absolute left-0 right-0 top-0 h-px bg-gradient-to-r from-transparent via-emerald-300 to-transparent" />
+                    <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100 bg-[radial-gradient(circle_at_top_left,rgba(14,165,233,0.2),transparent_52%)]" />
+                    <div className="pointer-events-none absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-sky-300 via-cyan-400 to-cyan-400 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+                    <div className="absolute left-0 right-0 top-0 h-px bg-gradient-to-r from-transparent via-sky-300 to-transparent" />
 
                     <div className="mb-5 flex items-center justify-between">
                       <div className="flex items-center gap-3">
@@ -445,10 +445,10 @@ export default function Dashboard() {
                             <CalendarDays size={13} />
                             <span>{formatScheduleDate(schedule.date)}</span>
                           </div>
-                          <p className="mt-0.5 text-xs font-['Outfit'] font-semibold tracking-[0.04em] text-emerald-700 dark:text-emerald-300">Kickoff window</p>
+                          <p className="mt-0.5 text-xs font-['Outfit'] font-semibold tracking-[0.04em] text-sky-700 dark:text-sky-300">Kickoff window</p>
                         </div>
                       </div>
-                      <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 dark:border-emerald-700/60 dark:bg-emerald-900/30 dark:text-emerald-300">
+                      <span className="rounded-full border border-sky-200 bg-sky-50 px-2.5 py-1 text-xs font-semibold text-sky-700 dark:border-sky-700/60 dark:bg-sky-900/30 dark:text-sky-300">
                         Upcoming
                       </span>
                     </div>
@@ -480,8 +480,8 @@ export default function Dashboard() {
                       <div className="flex flex-col items-center gap-2 flex-1">
                         <div className={`h-12 w-12 overflow-hidden rounded-xl border flex items-center justify-center font-bold text-lg ${
                           isDarkMode
-                            ? "border-emerald-600/60 bg-emerald-900/40 text-emerald-300"
-                            : "border-emerald-400/40 bg-emerald-50 text-emerald-700"
+                            ? "border-sky-600/60 bg-sky-900/40 text-sky-300"
+                            : "border-sky-400/40 bg-sky-50 text-sky-700"
                         }`}>
                           {teamTwoLogo ? (
                             <img src={teamTwoLogo} alt={teamTwo} className="w-full h-full object-cover" />
@@ -519,8 +519,8 @@ export default function Dashboard() {
                       onClick={() => openDashboardScheduleDetails(schedule)}
                       className={`mt-auto w-full rounded-xl border py-2.5 text-sm font-semibold transition-colors ${
                         isDarkMode
-                          ? "border-emerald-700/60 bg-gradient-to-r from-emerald-900/45 to-cyan-900/35 text-emerald-300 hover:from-emerald-900/65 hover:to-cyan-900/55"
-                          : "border-emerald-300 bg-gradient-to-r from-emerald-50 to-cyan-50 text-emerald-800 hover:from-emerald-100 hover:to-cyan-100"
+                          ? "border-sky-700/60 bg-gradient-to-r from-sky-900/45 to-cyan-900/35 text-sky-300 hover:from-sky-900/65 hover:to-cyan-900/55"
+                          : "border-sky-300 bg-gradient-to-r from-sky-50 to-cyan-50 text-sky-800 hover:from-sky-100 hover:to-cyan-100"
                       }`}
                     >
                       View Details
@@ -545,10 +545,10 @@ export default function Dashboard() {
             >
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-xl font-bold text-black dark:text-slate-100 font-['Outfit'] flex items-center gap-2">
-                  <TrendingUp size={20} className="text-emerald-500" />
+                  <TrendingUp size={20} className="text-sky-500" />
                   Performance Snapshot
                 </h3>
-                <span className="text-xs font-semibold px-3 py-1.5 rounded-full bg-emerald-50 text-black border border-emerald-100 dark:border-emerald-700/60 dark:bg-emerald-900/30 dark:text-emerald-300">Season Form</span>
+                <span className="text-xs font-semibold px-3 py-1.5 rounded-full bg-sky-50 text-black border border-sky-100 dark:border-sky-700/60 dark:bg-sky-900/30 dark:text-sky-300">Season Form</span>
               </div>
               <div className="space-y-5">
                 <div>
@@ -562,7 +562,7 @@ export default function Dashboard() {
                       whileInView={{ width: `${Math.max(0, Math.min(100, Number(winRate) || 0))}%` }}
                       viewport={{ once: true, amount: 0.85 }}
                       transition={{ duration: 1, delay: 0.5, ease: "easeOut" }}
-                      className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-teal-500"
+                      className="h-full rounded-full bg-gradient-to-r from-sky-400 to-cyan-500"
                     />
                   </div>
                 </div>
@@ -570,8 +570,8 @@ export default function Dashboard() {
                 <div className="grid grid-cols-2 gap-3">
                   <div className={`rounded-2xl border p-4 ${
                     isDarkMode
-                      ? "border-emerald-800/60 bg-gradient-to-br from-emerald-950/45 to-slate-900"
-                      : "border-slate-200 bg-gradient-to-br from-emerald-100 to-white"
+                      ? "border-sky-800/60 bg-gradient-to-br from-sky-950/45 to-slate-900"
+                      : "border-slate-200 bg-gradient-to-br from-sky-100 to-white"
                   }`}>
                     <div className="text-xs uppercase tracking-wide text-black dark:text-slate-300 font-semibold">Goal Contributions</div>
                     <div className="mt-1 text-2xl font-bold text-black dark:text-slate-100">{goalsCount + assistsCount}</div>
@@ -590,11 +590,11 @@ export default function Dashboard() {
 
                 <div className={`rounded-2xl border p-4 ${
                   isDarkMode
-                    ? "border-emerald-700/60 bg-gradient-to-br from-emerald-900/30 to-slate-900"
-                    : "border-emerald-200 bg-gradient-to-br from-emerald-100 to-emerald-50"
+                    ? "border-sky-700/60 bg-gradient-to-br from-sky-900/30 to-slate-900"
+                    : "border-sky-200 bg-gradient-to-br from-sky-100 to-sky-50"
                 }`}>
-                  <div className="text-xs uppercase tracking-wide text-black dark:text-emerald-300 font-semibold">Next Steps</div>
-                  <p className="text-sm text-black dark:text-emerald-200 mt-1">
+                  <div className="text-xs uppercase tracking-wide text-black dark:text-sky-300 font-semibold">Next Steps</div>
+                  <p className="text-sm text-black dark:text-sky-200 mt-1">
                     {upcomingSchedules.length > 0
                       ? `You have ${upcomingSchedules.length} upcoming match${upcomingSchedules.length > 1 ? "es" : ""}. Stay sharp and check venue/time details.`
                       : "No upcoming matches. Create or accept a schedule to keep your momentum going."}
@@ -626,18 +626,18 @@ export default function Dashboard() {
                       className={`group relative flex items-center justify-between overflow-hidden rounded-2xl border p-4 shadow-sm transition-all hover:shadow-md ${
                         isDarkMode
                           ? "border-slate-700 bg-slate-900/70 hover:border-slate-500"
-                          : "border-slate-200 bg-white hover:border-emerald-200"
+                          : "border-slate-200 bg-white hover:border-sky-200"
                       }`}
                     >
-                      <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100 bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.18),transparent_52%)]" />
-                      <div className="absolute left-0 right-0 top-0 h-px bg-gradient-to-r from-transparent via-emerald-300 to-transparent" />
+                      <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100 bg-[radial-gradient(circle_at_top_left,rgba(14,165,233,0.18),transparent_52%)]" />
+                      <div className="absolute left-0 right-0 top-0 h-px bg-gradient-to-r from-transparent via-sky-300 to-transparent" />
 
                       <div>
                         <p className="font-semibold text-black dark:text-slate-100">{action.title}</p>
                         <p className="text-xs text-black dark:text-slate-300 mt-0.5">{action.desc}</p>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">{action.badge}</span>
+                        <span className="rounded-full border border-sky-200 bg-sky-50 px-2.5 py-1 text-xs font-semibold text-sky-700">{action.badge}</span>
                         <ChevronRight size={16} className="text-slate-300 group-hover:text-slate-500 dark:text-slate-500 dark:group-hover:text-slate-300 transition-colors" />
                       </div>
                     </Link>

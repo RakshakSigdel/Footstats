@@ -119,7 +119,7 @@ export default function Profile() {
   ];
 
   const resultStyle = (result) => {
-    if (result === "Win") return "bg-emerald-50 text-emerald-700 border border-emerald-200";
+    if (result === "Win") return "bg-sky-50 text-sky-700 border border-sky-200";
     if (result === "Loss") return "bg-red-50 text-red-700 border border-red-200";
     if (result === "Draw") return "bg-amber-50 text-amber-700 border border-amber-200";
     return "bg-slate-50 text-slate-600 border border-slate-200";
@@ -271,7 +271,7 @@ export default function Profile() {
             patternType="grid"
             patternSize={50}
             patternColor="rgba(15,23,42,0.035)"
-            gradient="linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(241,245,249,0.92) 55%, rgba(236,253,245,0.88) 100%)"
+            gradient="linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(241,245,249,0.92) 55%, rgba(224,242,254,0.88) 100%)"
             showAccents
           />
           <div className="relative z-10">
@@ -282,7 +282,7 @@ export default function Profile() {
           )}
           {loading && (
             <div className="mb-6 flex items-center gap-3 text-slate-500">
-              <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: "linear" }} className="w-5 h-5 rounded-full border-2 border-slate-200 border-t-emerald-500" />
+              <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: "linear" }} className="w-5 h-5 rounded-full border-2 border-slate-200 border-t-sky-500" />
               {isOwnProfileRoute ? "Loading profile..." : "Loading player..."}
             </div>
           )}
@@ -296,7 +296,7 @@ export default function Profile() {
                 className="bg-white rounded-2xl shadow-sm border border-slate-100/80 overflow-hidden mb-6"
               >
                 {/* Gradient banner */}
-                <div className="h-32 bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-500 relative">
+                <div className="h-32 bg-gradient-to-r from-sky-600 via-sky-500 to-cyan-500 relative">
                   <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cuc3ZnLm9yZyI+PGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMiIgZmlsbD0icmdiYSgyNTUsMjU1LDI1NSwwLjEpIi8+PC9zdmc+')] opacity-50" />
                 </div>
                 
@@ -305,7 +305,7 @@ export default function Profile() {
                     {/* Avatar */}
                     <div className="relative">
                       <div className="w-28 h-28 rounded-2xl bg-white p-1 shadow-lg">
-                        <div className="w-full h-full rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center overflow-hidden">
+                        <div className="w-full h-full rounded-xl bg-gradient-to-br from-sky-400 to-sky-600 flex items-center justify-center overflow-hidden">
                           {profilePhotoUrl ? (
                             <img src={profilePhotoUrl} alt={player.firstName} className="w-full h-full object-cover rounded-xl" />
                           ) : (
@@ -314,7 +314,7 @@ export default function Profile() {
                         </div>
                       </div>
                       {isOwnProfileRoute && (
-                        <label className="absolute -bottom-1 -right-1 w-9 h-9 bg-emerald-600 rounded-xl flex items-center justify-center cursor-pointer hover:bg-emerald-700 transition-colors shadow-lg border-2 border-white">
+                        <label className="absolute -bottom-1 -right-1 w-9 h-9 bg-sky-600 rounded-xl flex items-center justify-center cursor-pointer hover:bg-sky-700 transition-colors shadow-lg border-2 border-white">
                           <Camera size={16} className="text-white" />
                           <input type="file" accept="image/*" onChange={handlePhotoChange} className="hidden" />
                         </label>
@@ -339,7 +339,7 @@ export default function Profile() {
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                             onClick={handleOpenEditModal}
-                            className="bg-emerald-50 text-emerald-700 px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-emerald-100 flex items-center gap-2 transition-colors"
+                            className="bg-sky-50 text-sky-700 px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-sky-100 flex items-center gap-2 transition-colors"
                           >
                             <Edit3 size={15} />
                             Edit Profile
@@ -349,7 +349,7 @@ export default function Profile() {
 
                       <div className="flex flex-wrap gap-2 mb-4">
                         {displayPosition && (
-                          <span className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-xs px-3 py-1.5 rounded-full font-semibold shadow-sm shadow-emerald-500/20">
+                          <span className="bg-gradient-to-r from-sky-600 to-cyan-600 text-white text-xs px-3 py-1.5 rounded-full font-semibold shadow-sm shadow-sky-500/20">
                             {displayPosition}
                           </span>
                         )}
@@ -387,9 +387,9 @@ export default function Profile() {
                   </div>
 
                   {photoFile && isOwnProfileRoute && (
-                    <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="mt-6 p-4 bg-emerald-50 border border-emerald-200 rounded-xl">
+                    <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="mt-6 p-4 bg-sky-50 border border-sky-200 rounded-xl">
                       <div className="flex items-center justify-between gap-3">
-                        <span className="text-sm font-semibold text-emerald-900">New photo selected</span>
+                        <span className="text-sm font-semibold text-sky-900">New photo selected</span>
                         <div className="flex gap-2">
                           <button onClick={handleCancelPhotoUpload} className="px-3 py-1.5 text-sm text-slate-700 border border-slate-300 rounded-xl hover:bg-slate-50" disabled={uploadingPhoto}>Cancel</button>
                           <button onClick={handleUploadPhoto} disabled={uploadingPhoto} className="btn-primary px-4 py-1.5 text-sm rounded-xl">
@@ -414,7 +414,7 @@ export default function Profile() {
                       onClick={() => setActiveTab(tab.id)}
                       className={`flex-1 px-4 py-4 text-sm font-semibold transition-all relative ${
                         activeTab === tab.id
-                          ? "text-emerald-600"
+                          ? "text-sky-600"
                           : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
                       }`}
                     >
@@ -422,7 +422,7 @@ export default function Profile() {
                       {activeTab === tab.id && (
                         <motion.div
                           layoutId="profile-tab-indicator"
-                          className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-emerald-500 to-teal-500"
+                          className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-sky-500 to-cyan-500"
                           transition={{ type: "spring", stiffness: 380, damping: 30 }}
                         />
                       )}
@@ -436,10 +436,10 @@ export default function Profile() {
                   <motion.div key="details" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} className="space-y-6">
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                       <StatCard label="Matches" value={player.stats?.matchesPlayed} icon={Calendar} gradient="from-blue-400 to-indigo-500" />
-                      <StatCard label="Goals" value={player.stats?.goals} icon={Target} gradient="from-emerald-400 to-teal-500" />
+                      <StatCard label="Goals" value={player.stats?.goals} icon={Target} gradient="from-sky-400 to-cyan-500" />
                       <StatCard label="Assists" value={player.stats?.assists} icon={UsersIcon} gradient="from-purple-400 to-violet-500" />
                       <StatCard label="Win Rate" value={`${player.stats?.winRate ?? 0}%`} icon={Trophy} gradient="from-amber-400 to-orange-500" />
-                      <StatCard label="Wins" value={player.stats?.wins} gradient="from-emerald-400 to-green-500" />
+                      <StatCard label="Wins" value={player.stats?.wins} gradient="from-sky-400 to-blue-500" />
                       <StatCard label="Draws" value={player.stats?.draws} gradient="from-amber-400 to-yellow-500" />
                       <StatCard label="Losses" value={player.stats?.losses} gradient="from-red-400 to-rose-500" />
                       <StatCard label="Yellow Cards" value={player.stats?.yellowCards} gradient="from-yellow-400 to-amber-500" />
@@ -482,10 +482,10 @@ export default function Profile() {
                               key={uc.club.clubId}
                               whileHover={{ x: 4, transition: { duration: 0.15 } }}
                               onClick={() => navigate(`/club/${uc.club.clubId}`)}
-                              className="grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-4 p-4 border border-slate-200 rounded-2xl hover:bg-emerald-50/30 hover:border-emerald-200 cursor-pointer transition-all"
+                              className="grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-4 p-4 border border-slate-200 rounded-2xl hover:bg-sky-50/30 hover:border-sky-200 cursor-pointer transition-all"
                             >
                               <div className="flex items-center gap-4 min-w-0">
-                                <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden shadow-md shadow-emerald-500/20">
+                                <div className="w-12 h-12 bg-gradient-to-br from-sky-500 to-sky-600 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden shadow-md shadow-sky-500/20">
                                   {toMediaUrl(uc.club.logo) ? (
                                     <img src={toMediaUrl(uc.club.logo)} alt={uc.club.name} className="w-full h-full object-cover" />
                                   ) : (
@@ -499,7 +499,7 @@ export default function Profile() {
                                     {uc.role === "ADMIN" && <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-semibold">Admin</span>}
                                   </div>
                                   {uc.club.location && <div className="text-sm text-slate-500 mt-0.5 flex items-center gap-1"><MapPin size={12} />{uc.club.location}</div>}
-                                  {uc.position && <div className="text-sm text-emerald-600 font-medium mt-0.5">{uc.position}</div>}
+                                  {uc.position && <div className="text-sm text-sky-600 font-medium mt-0.5">{uc.position}</div>}
                                 </div>
                               </div>
                               <div className="hidden sm:flex items-center gap-8 mr-4 text-center">
@@ -543,7 +543,7 @@ export default function Profile() {
                               key={m.matchId ?? idx}
                               whileHover={{ x: 4, transition: { duration: 0.15 } }}
                               onClick={() => m.scheduleId && navigate(`/schedule/${m.scheduleId}`)}
-                              className="flex items-center justify-between p-4 border border-slate-200 rounded-2xl hover:bg-emerald-50/30 hover:border-emerald-200 cursor-pointer transition-all"
+                              className="flex items-center justify-between p-4 border border-slate-200 rounded-2xl hover:bg-sky-50/30 hover:border-sky-200 cursor-pointer transition-all"
                             >
                               <div className="flex-1 min-w-0">
                                 <div className="font-semibold text-slate-900 mb-1">
@@ -586,11 +586,11 @@ export default function Profile() {
                             <motion.div
                               key={achievement.id || `${achievement.title}-${idx}`}
                               whileHover={{ y: -3, scale: 1.01, transition: { duration: 0.2 } }}
-                              className="rounded-2xl border border-slate-200 bg-gradient-to-br from-white to-emerald-50/30 p-5 group"
+                              className="rounded-2xl border border-slate-200 bg-gradient-to-br from-white to-sky-50/30 p-5 group"
                             >
                               <div className="flex items-center justify-between gap-3 mb-3">
                                 <div className="text-2xl">{achievement.icon || "🏅"}</div>
-                                <span className="text-[11px] uppercase tracking-wide px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 font-semibold border border-emerald-100">
+                                <span className="text-[11px] uppercase tracking-wide px-2.5 py-1 rounded-full bg-sky-50 text-sky-700 font-semibold border border-sky-100">
                                   {achievement.tier || "Unlocked"}
                                 </span>
                               </div>

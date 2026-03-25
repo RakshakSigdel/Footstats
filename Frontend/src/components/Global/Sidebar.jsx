@@ -82,18 +82,18 @@ export default function Sidebar() {
       <div
         className={sidebarClasses}
         style={{
-          background: "linear-gradient(180deg, #0f172a 0%, #0c1a2e 40%, #062016 100%)",
+          background: "linear-gradient(180deg, #0f172a 0%, #0c1a2e 40%, #0b2645 100%)",
           color: "#f1f5f9",
         }}
       >
         {/* Logo Section */}
         <div className="flex items-center gap-3 px-6 pt-7 pb-6">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-500/25">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-sky-400 to-sky-600 flex items-center justify-center shadow-lg shadow-sky-500/25">
             <img src="/images/NoLogo.png" alt="FootStats logo" className="w-7 h-7 object-contain" />
           </div>
           <div>
             <h1 className="text-lg font-bold tracking-tight font-['Outfit']">FootStats</h1>
-            <p className="text-[11px] text-emerald-400/80 font-medium">गल्ली देखि गोल सम्म</p>
+            <p className="text-[11px] text-sky-400/80 font-medium">गल्ली देखि गोल सम्म</p>
           </div>
           {/* Close button for mobile */}
           {isMobile && (
@@ -128,14 +128,14 @@ export default function Sidebar() {
                   onClick={handleNavClick}
                   className={`relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
                     active
-                      ? "text-white bg-gradient-to-r from-emerald-500/20 to-emerald-600/10 shadow-[inset_0_0_0_1px_rgba(16,185,129,0.2)]"
+                      ? "text-white bg-gradient-to-r from-sky-500/20 to-sky-600/10 shadow-[inset_0_0_0_1px_rgba(14,165,233,0.2)]"
                       : "text-slate-400 hover:text-slate-200 hover:bg-white/[0.05]"
                   }`}
                 >
                   {active && (
                     <motion.div
                       layoutId="sidebar-active-pill"
-                      className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-full bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.6)]"
+                      className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-full bg-sky-400 shadow-[0_0_12px_rgba(56,189,248,0.6)]"
                       transition={{ type: "spring", stiffness: 350, damping: 30 }}
                     />
                   )}
@@ -153,14 +153,14 @@ export default function Sidebar() {
               onClick={handleNavClick}
               className={`relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
                 isActive('/settings')
-                  ? "text-white bg-gradient-to-r from-emerald-500/20 to-emerald-600/10 shadow-[inset_0_0_0_1px_rgba(16,185,129,0.2)]"
+                  ? "text-white bg-gradient-to-r from-sky-500/20 to-sky-600/10 shadow-[inset_0_0_0_1px_rgba(14,165,233,0.2)]"
                   : "text-slate-400 hover:text-slate-200 hover:bg-white/[0.05]"
               }`}
             >
               {isActive('/settings') && (
                 <motion.div
                   layoutId="sidebar-active-pill"
-                  className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-full bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.6)]"
+                  className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-full bg-sky-400 shadow-[0_0_12px_rgba(56,189,248,0.6)]"
                   transition={{ type: "spring", stiffness: 350, damping: 30 }}
                 />
               )}
@@ -192,7 +192,7 @@ export default function Sidebar() {
         </nav>
 
         {/* Bottom gradient fade */}
-        <div className="h-6 bg-gradient-to-t from-[#062016] to-transparent pointer-events-none" />
+        <div className="h-6 bg-gradient-to-t from-[#0b2645] to-transparent pointer-events-none" />
       </div>
     </>
   );

@@ -15,7 +15,7 @@ export default function AuthenticationSideImage({ image, title, subtitle }) {
       <div 
         className="absolute inset-0"
         style={{
-          background: "linear-gradient(135deg, rgba(5,150,105,0.55) 0%, rgba(15,23,42,0.75) 100%)",
+          background: "linear-gradient(135deg, rgba(2,132,199,0.55) 0%, rgba(15,23,42,0.75) 100%)",
         }}
       />
       {/* Bottom fade */}
@@ -47,7 +47,7 @@ export default function AuthenticationSideImage({ image, title, subtitle }) {
             initial={{ opacity: 0, scaleX: 0 }}
             animate={{ opacity: 1, scaleX: 1 }}
             transition={{ duration: 0.8, delay: 0.6 }}
-            className="mt-6 mx-auto w-20 h-0.5 rounded-full bg-gradient-to-r from-emerald-400 to-emerald-300"
+            className="mt-6 mx-auto w-20 h-0.5 rounded-full bg-gradient-to-r from-sky-400 to-sky-300"
           />
         </div>
       </div>

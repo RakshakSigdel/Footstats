@@ -200,7 +200,7 @@ export default function Tournaments() {
             patternType="grid"
             patternSize={50}
             patternColor="rgba(15,23,42,0.035)"
-            gradient="linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(241,245,249,0.92) 55%, rgba(236,253,245,0.88) 100%)"
+            gradient="linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(241,245,249,0.92) 55%, rgba(224,242,254,0.88) 100%)"
             showAccents
           />
           <div className="relative z-10">

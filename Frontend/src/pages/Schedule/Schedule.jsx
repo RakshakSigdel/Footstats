@@ -133,7 +133,7 @@ export default function Schedule() {
   const typeColor = (type) => {
     if (type === 'Knockout') return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
     if (type === 'League') return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
-    if (type === 'TOURNAMENT_MATCH') return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400'
+    if (type === 'TOURNAMENT_MATCH') return 'bg-sky-100 text-sky-800 dark:bg-sky-900/30 dark:text-sky-400'
     return 'bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400'
   }
 
@@ -164,7 +164,7 @@ export default function Schedule() {
             patternType="grid"
             patternSize={50}
             patternColor="rgba(15,23,42,0.035)"
-            gradient="linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(241,245,249,0.92) 55%, rgba(236,253,245,0.88) 100%)"
+            gradient="linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(241,245,249,0.92) 55%, rgba(224,242,254,0.88) 100%)"
             showAccents
           />
           <div className="relative z-10">

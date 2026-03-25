@@ -161,8 +161,8 @@ const Success = () => {
   // Success state - only shown for confirmed successful payments
   return (
     <div className="min-h-screen bg-slate-50 px-4 py-10">
-      <div className="mx-auto w-full max-w-2xl rounded-2xl border border-emerald-200 bg-white p-6 shadow-sm sm:p-8">
-        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
+      <div className="mx-auto w-full max-w-2xl rounded-2xl border border-sky-200 bg-white p-6 shadow-sm sm:p-8">
+        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-sky-100 text-sky-600">
         <svg
           xmlns="http://www.w3.org/2000/svg"
           width="48"
@@ -202,7 +202,7 @@ const Success = () => {
             </>
           )}
           {registrationMessage && (
-            <p className="mt-3 rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+            <p className="mt-3 rounded-lg bg-sky-50 px-3 py-2 text-sm text-sky-700">
               {registrationMessage}
             </p>
           )}

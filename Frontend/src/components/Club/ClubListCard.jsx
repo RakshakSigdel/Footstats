@@ -15,7 +15,7 @@ export default function ClubListCard({
   const roleBadge = {
     OWNER: { bg: "bg-purple-100 dark:bg-purple-500/20", text: "text-purple-700 dark:text-purple-300", label: "Owner" },
     ADMIN: { bg: "bg-amber-100 dark:bg-amber-500/20", text: "text-amber-700 dark:text-amber-300", label: "Admin" },
-    MEMBER: { bg: "bg-emerald-50 dark:bg-emerald-500/20", text: "text-emerald-700 dark:text-emerald-300", label: "Member" },
+    MEMBER: { bg: "bg-sky-50 dark:bg-sky-500/20", text: "text-sky-700 dark:text-sky-300", label: "Member" },
   };
 
   const badge = roleBadge[club?.userRole];
@@ -27,11 +27,11 @@ export default function ClubListCard({
       className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100/80 cursor-pointer group relative overflow-hidden transition-all"
     >
       {/* Accent strip */}
-      <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-emerald-400 to-teal-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+      <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-sky-400 to-cyan-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
       <div className="flex items-center justify-between gap-6">
         <div className="flex items-center gap-4 flex-1 min-w-0">
-          <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden shadow-md shadow-emerald-500/20">
+          <div className="w-12 h-12 bg-gradient-to-br from-sky-500 to-sky-600 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden shadow-md shadow-sky-500/20">
             {logoUrl ? (
               <img src={logoUrl} alt={club?.name || "Club logo"} className="w-full h-full object-cover" />
             ) : (
@@ -82,7 +82,7 @@ export default function ClubListCard({
             e.stopPropagation();
             onClick?.();
           }}
-          className="flex items-center gap-1.5 bg-emerald-50 text-emerald-700 rounded-xl px-4 py-2 text-sm font-semibold hover:bg-emerald-100 transition-colors whitespace-nowrap"
+          className="flex items-center gap-1.5 bg-sky-50 text-sky-700 rounded-xl px-4 py-2 text-sm font-semibold hover:bg-sky-100 transition-colors whitespace-nowrap"
         >
           {actionLabel}
           <ChevronRight size={14} />

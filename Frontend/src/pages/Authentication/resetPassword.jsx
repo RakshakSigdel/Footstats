@@ -29,7 +29,7 @@ export default function ResetPassword() {
         patternType="grid"
         patternSize={48}
         patternColor="rgba(15,23,42,0.03)"
-        gradient="linear-gradient(135deg, rgba(240,253,244,0.95) 0%, rgba(241,245,249,0.92) 50%, rgba(236,254,255,0.9) 100%)"
+        gradient="linear-gradient(135deg, rgba(239,246,255,0.95) 0%, rgba(241,245,249,0.92) 50%, rgba(236,254,255,0.9) 100%)"
         showAccents
       />
       <div className="relative z-10 flex flex-row min-h-screen">
@@ -101,8 +101,8 @@ export default function ResetPassword() {
             </>
           ) : (
             <div className="text-center space-y-6">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
-                <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto">
+                <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
                 </svg>
               </div>

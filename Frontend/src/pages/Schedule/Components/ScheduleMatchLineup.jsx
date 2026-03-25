@@ -215,7 +215,7 @@ export default function ScheduleMatchLineup({
 					{!isFormation && (
 						<div className="flex items-center gap-2 text-xs text-gray-600 mt-0.5">
 							{player.position && <span className="bg-gray-100 px-2 py-0.5 rounded">{player.position}</span>}
-							{player.isStarter && <span className="bg-green-100 text-green-700 px-2 py-0.5 rounded font-medium">Starter</span>}
+							{player.isStarter && <span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded font-medium">Starter</span>}
 						</div>
 					)}
 				</div>
@@ -278,7 +278,7 @@ export default function ScheduleMatchLineup({
 		})
 		
 		return (
-			<div className="relative bg-gradient-to-b from-green-600 to-green-700 rounded-xl p-6 min-h-[400px]" 
+			<div className="relative bg-gradient-to-b from-blue-600 to-blue-700 rounded-xl p-6 min-h-[400px]" 
 				style={{
 					backgroundImage: `
 						repeating-linear-gradient(0deg, rgba(255,255,255,0.03) 0px, rgba(255,255,255,0.03) 2px, transparent 2px, transparent 50px),
@@ -383,7 +383,7 @@ export default function ScheduleMatchLineup({
 									<div>
 										<h3 className="text-lg font-bold text-gray-900">{teamOneName}</h3>
 										<span className={`text-xs font-semibold ${
-											teamOneLineup.filter(p => p.isStarter).length >= matchSize ? 'text-green-600' : 'text-gray-500'
+											teamOneLineup.filter(p => p.isStarter).length >= matchSize ? 'text-blue-600' : 'text-gray-500'
 										}`}>
 											{teamOneLineup.filter(p => p.isStarter).length}/{matchSize} starters
 										</span>
@@ -440,7 +440,7 @@ export default function ScheduleMatchLineup({
 									<div>
 										<h3 className="text-lg font-bold text-gray-900">{teamTwoName}</h3>
 										<span className={`text-xs font-semibold ${
-											teamTwoLineup.filter(p => p.isStarter).length >= matchSize ? 'text-green-600' : 'text-gray-500'
+											teamTwoLineup.filter(p => p.isStarter).length >= matchSize ? 'text-blue-600' : 'text-gray-500'
 										}`}>
 											{teamTwoLineup.filter(p => p.isStarter).length}/{matchSize} starters
 										</span>

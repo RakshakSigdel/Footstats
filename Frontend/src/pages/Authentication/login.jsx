@@ -82,7 +82,7 @@ export default function Login() {
         patternType="grid"
         patternSize={48}
         patternColor="rgba(15,23,42,0.03)"
-        gradient="linear-gradient(135deg, rgba(240,253,244,0.95) 0%, rgba(241,245,249,0.92) 50%, rgba(236,254,255,0.9) 100%)"
+        gradient="linear-gradient(135deg, rgba(239,246,255,0.95) 0%, rgba(241,245,249,0.92) 50%, rgba(236,254,255,0.9) 100%)"
         showAccents
       />
       <div className="relative z-10 flex flex-row min-h-screen">
@@ -107,7 +107,7 @@ export default function Login() {
             transition={{ delay: 0.1 }}
             className="text-center mb-7"
           >
-            <div className="w-12 h-12 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-500/25">
+            <div className="w-12 h-12 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-sky-400 to-sky-600 flex items-center justify-center shadow-lg shadow-sky-500/25">
               <img src="/images/NoLogo.png" alt="FootStats" className="w-8 h-8 object-contain" />
             </div>
             <h2 className="text-2xl font-bold text-slate-900 font-['Outfit']">
@@ -171,7 +171,7 @@ export default function Login() {
             <motion.div custom={2} variants={fieldVariants} initial="hidden" animate="visible" className="text-right">
               <Link
                 to="/forgot-password"
-                className="text-xs font-semibold text-emerald-600 hover:text-emerald-700 transition-colors"
+                className="text-xs font-semibold text-sky-600 hover:text-sky-700 transition-colors"
               >
                 Forgot Password?
               </Link>
@@ -220,7 +220,7 @@ export default function Login() {
             Don't have an account?{" "}
             <Link
               to="/register"
-              className="font-semibold text-emerald-600 hover:text-emerald-700 transition-colors"
+              className="font-semibold text-sky-600 hover:text-sky-700 transition-colors"
             >
               Sign up for free
             </Link>

@@ -192,7 +192,7 @@ export default function MyClubs() {
                 >
                   <div className="flex items-center justify-between gap-6">
                     <div className="flex items-center gap-4 flex-1">
-                      <div className="w-12 h-12 bg-green-600 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
+                      <div className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
                         {getClubLogoUrl(club.logo) ? (
                           <img src={getClubLogoUrl(club.logo)} alt={club.name} className="w-full h-full object-cover" />
                         ) : (

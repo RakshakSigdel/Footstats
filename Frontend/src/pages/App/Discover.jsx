@@ -99,7 +99,7 @@ export default function Discover() {
             patternType="grid"
             patternSize={50}
             patternColor="rgba(15,23,42,0.035)"
-            gradient="linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(241,245,249,0.92) 55%, rgba(236,253,245,0.88) 100%)"
+            gradient="linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(241,245,249,0.92) 55%, rgba(224,242,254,0.88) 100%)"
             showAccents
           />
           <motion.div variants={pageSectionStaggerVariants} className="relative z-10">
@@ -111,7 +111,7 @@ export default function Discover() {
           {loading && (
             <PageTransitionItem className="mb-6">
               <div className="flex items-center gap-3 text-slate-500">
-                <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: "linear" }} className="w-5 h-5 rounded-full border-2 border-slate-200 border-t-emerald-500" />
+                <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: "linear" }} className="w-5 h-5 rounded-full border-2 border-slate-200 border-t-sky-500" />
                 Loading...
               </div>
             </PageTransitionItem>
@@ -155,8 +155,8 @@ export default function Discover() {
                   onClick={() => setActiveFilter(filter)}
                   className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
                     activeFilter === filter
-                      ? "bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-md shadow-emerald-500/20"
-                      : "bg-slate-100 text-slate-600 hover:bg-emerald-50 hover:text-emerald-700"
+                      ? "bg-gradient-to-r from-sky-600 to-cyan-600 text-white shadow-md shadow-sky-500/20"
+                      : "bg-slate-100 text-slate-600 hover:bg-sky-50 hover:text-sky-700"
                   }`}
                 >
                   {filter}
@@ -169,8 +169,8 @@ export default function Discover() {
           {(activeFilter === "All" || activeFilter === "Clubs") && (
             <PageTransitionItem className="mb-8">
               <div className="flex items-center gap-2.5 mb-5">
-                <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center">
-                  <Users size={18} className="text-emerald-600" />
+                <div className="w-8 h-8 rounded-lg bg-sky-50 flex items-center justify-center">
+                  <Users size={18} className="text-sky-600" />
                 </div>
                 <h2 className="text-2xl font-bold text-slate-900 font-['Outfit']">Clubs Near You</h2>
               </div>
@@ -192,7 +192,7 @@ export default function Discover() {
                     whileHover={{ y: -4, scale: 1.01, transition: { duration: 0.2 } }}
                     className="bg-white rounded-2xl shadow-sm border border-slate-100/80 p-6 group relative overflow-hidden cursor-pointer"
                   >
-                    <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-emerald-400 to-teal-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-sky-400 to-cyan-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                     <div className="flex items-start justify-between mb-4">
                       <h3 className="text-xl font-bold text-slate-900">{club.name}</h3>
                     </div>
@@ -200,7 +200,7 @@ export default function Discover() {
                       <MapPin size={14} />
                       <span>{club.location ?? "—"}</span>
                       {club.distanceKm != null && (
-                        <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700 border border-emerald-100">
+                        <span className="rounded-full bg-sky-50 px-2 py-0.5 text-xs font-semibold text-sky-700 border border-sky-100">
                           {club.distanceKm} km away
                         </span>
                       )}
@@ -256,7 +256,7 @@ export default function Discover() {
                         <MapPin size={14} />
                         <span>{tournament.location ?? "—"}</span>
                         {tournament.distanceKm != null && (
-                          <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700 border border-emerald-100">
+                          <span className="rounded-full bg-sky-50 px-2 py-0.5 text-xs font-semibold text-sky-700 border border-sky-100">
                             {tournament.distanceKm} km away
                           </span>
                         )}
@@ -269,7 +269,7 @@ export default function Discover() {
                         {tournament.entryFee != null && tournament.entryFee > 0 ? (
                           <span className="text-amber-600">NPR {tournament.entryFee}</span>
                         ) : (
-                          <span className="text-emerald-600">Free Entry ✨</span>
+                          <span className="text-sky-600">Free Entry ✨</span>
                         )}
                       </div>
                     </div>

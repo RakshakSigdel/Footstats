@@ -3,7 +3,7 @@ import { useTheme } from "../../context/ThemeContext";
 
 export default function DynamicBackground({
   className = "",
-  gradient = "linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(241,245,249,0.9) 55%, rgba(236,253,245,0.9) 100%)",
+  gradient = "linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(241,245,249,0.9) 55%, rgba(224,242,254,0.9) 100%)",
   darkGradient = "linear-gradient(135deg, rgba(12,18,34,0.96) 0%, rgba(13,27,45,0.94) 55%, rgba(14,35,44,0.92) 100%)",
   gradientOpacity = 1,
   patternType = "grid",
