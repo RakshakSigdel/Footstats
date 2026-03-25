@@ -215,7 +215,7 @@ export default function Dashboard() {
             patternType="grid"
             patternSize={50}
             patternColor="rgba(15,23,42,0.035)"
-            gradient="linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(241,245,249,0.92) 55%, rgba(236,253,245,0.88) 100%)"
+            gradient="linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(241,245,249,0.92) 55%, rgba(224,242,254,0.9) 100%)"
             showAccents
           />
 
@@ -240,10 +240,10 @@ export default function Dashboard() {
             transition={{ duration: 0.5 }}
             className="mb-8"
           >
-            <h2 className="text-2xl md:text-3xl font-bold text-black mb-1 font-['Outfit']">
+            <h2 className="text-2xl md:text-3xl font-bold text-black dark:text-white mb-1 font-['Outfit']">
               Welcome back, <span className="gradient-text">{profile?.firstName ?? storedUser?.firstName ?? "Player"}</span>! ⚽
             </h2>
-            <p className="text-sm md:text-base text-black">
+            <p className="text-sm md:text-base text-black dark:text-slate-300">
               Here's what's happening with your football journey
             </p>
           </motion.div>
@@ -608,9 +608,11 @@ export default function Dashboard() {
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true, amount: 0.25 }}
               transition={{ delay: 0.4, duration: 0.5 }}
-              className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100/80"
+              className={`p-6 rounded-2xl shadow-sm border ${
+                isDarkMode ? "bg-slate-900/80 border-slate-700" : "bg-white border-slate-100/80"
+              }`}
             >
-              <h3 className="text-xl font-bold text-black mb-6 font-['Outfit']">Action Center</h3>
+              <h3 className="text-xl font-bold text-black dark:text-slate-100 mb-6 font-['Outfit']">Action Center</h3>
               <div className="space-y-3">
                 {[
                   { to: "/profile", title: "Profile Insights", desc: "Review stats, clubs, and achievements", badge: "Open" },
@@ -619,17 +621,24 @@ export default function Dashboard() {
                   { to: "/tournaments", title: "Tournament Zone", desc: "Join, manage, and compete", badge: `${tournamentsCount} active` },
                 ].map((action) => (
                   <motion.div key={action.to} whileHover={{ y: -3, scale: 1.01 }} transition={{ duration: 0.2 }}>
-                    <Link to={action.to} className="group relative flex items-center justify-between overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-all hover:border-emerald-200 hover:shadow-md">
+                    <Link
+                      to={action.to}
+                      className={`group relative flex items-center justify-between overflow-hidden rounded-2xl border p-4 shadow-sm transition-all hover:shadow-md ${
+                        isDarkMode
+                          ? "border-slate-700 bg-slate-900/70 hover:border-slate-500"
+                          : "border-slate-200 bg-white hover:border-emerald-200"
+                      }`}
+                    >
                       <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100 bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.18),transparent_52%)]" />
                       <div className="absolute left-0 right-0 top-0 h-px bg-gradient-to-r from-transparent via-emerald-300 to-transparent" />
 
                       <div>
-                        <p className="font-semibold text-black">{action.title}</p>
-                        <p className="text-xs text-black mt-0.5">{action.desc}</p>
+                        <p className="font-semibold text-black dark:text-slate-100">{action.title}</p>
+                        <p className="text-xs text-black dark:text-slate-300 mt-0.5">{action.desc}</p>
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">{action.badge}</span>
-                        <ChevronRight size={16} className="text-slate-300 group-hover:text-slate-500 transition-colors" />
+                        <ChevronRight size={16} className="text-slate-300 group-hover:text-slate-500 dark:text-slate-500 dark:group-hover:text-slate-300 transition-colors" />
                       </div>
                     </Link>
                   </motion.div>

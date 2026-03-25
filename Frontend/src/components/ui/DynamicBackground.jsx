@@ -12,9 +12,9 @@ export default function DynamicBackground({
   patternSize = 22,
   patternOpacity = 1,
   showAccents = false,
-  accentOne = "rgba(16,185,129,0.16)",
+  accentOne = "rgba(59,130,246,0.16)",
   accentTwo = "rgba(14,165,233,0.14)",
-  darkAccentOne = "rgba(16,185,129,0.2)",
+  darkAccentOne = "rgba(59,130,246,0.22)",
   darkAccentTwo = "rgba(59,130,246,0.2)",
   adaptiveTheme = true,
 }) {
