@@ -115,11 +115,29 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--color-dark-text-muted);
 }
 
+.dark .text-slate-900 {
+  color: var(--color-dark-text);
+}
+
+.dark .text-slate-800,
+.dark .text-slate-700,
+.dark .text-slate-600,
+.dark .text-slate-500,
+.dark .text-slate-400 {
+  color: var(--color-dark-text-muted);
+}
+
 .dark .border-gray-100,
 .dark .border-gray-200,
 .dark .border-gray-300,
+.dark .border-slate-100,
 .dark .border-slate-200 {
   border-color: var(--color-dark-border);
+}
+
+.dark .bg-slate-50,
+.dark .bg-slate-100 {
+  background-color: var(--color-dark-surface);
 }
 
 .dark input,

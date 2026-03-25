@@ -2,8 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { toast } from "sonner";
-import Sidebar from "../../components/Global/Sidebar";
-import Topbar from "../../components/Global/Topbar";
 import EditTournament from "./Components/EditTournament";
 import JoinTournamentForm from "./Components/JoinTournamentForm";
 import TournamentOverviewTab from "./Components/TournamentOverviewTab";
@@ -296,18 +294,13 @@ export default function TournamentDetails() {
   ].filter((tab) => (!tab.adminOnly || isTournamentAdmin) && !tab.hide);
 
   return (
-    <div className="flex min-h-screen bg-gray-50 exclude-link-pointer">
-      <Sidebar />
-
-      <div className="flex-1 flex flex-col">
-        <Topbar />
-
-        <motion.main
+    <>
+      <motion.main
           variants={pageVariants}
           initial="initial"
           animate="animate"
           exit="exit"
-          className="relative flex-1 p-6 md:p-8 overflow-auto bg-[#eef1f6]"
+          className="relative flex-1 p-6 md:p-8 overflow-auto bg-[#eef1f6] exclude-link-pointer"
         >
           <DynamicBackground
             className="z-0"
@@ -526,8 +519,7 @@ export default function TournamentDetails() {
             </>
           )}
           </div>
-        </motion.main>
-      </div>
+      </motion.main>
 
       {tournament && (
         <EditTournament
@@ -562,6 +554,6 @@ export default function TournamentDetails() {
           lockCreationType={true}
         />
       )}
-    </div>
+    </>
   );
 }

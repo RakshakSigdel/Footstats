@@ -1,31 +1,81 @@
 import { motion } from "framer-motion";
+import { useState } from "react";
 
-const variants = {
-  initial: { opacity: 0, y: 20, scale: 0.98, filter: "blur(4px)" },
+export const pageItemVariants = {
+  initial: { opacity: 0, y: 20 },
   animate: {
     opacity: 1,
     y: 0,
-    scale: 1,
-    filter: "blur(0px)",
-    transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1], staggerChildren: 0.08 },
+    transition: { duration: 0.4, ease: [0.22, 1, 0.36, 1] },
   },
   exit: {
     opacity: 0,
-    y: -10,
-    scale: 0.99,
-    filter: "blur(2px)",
-    transition: { duration: 0.25, ease: "easeIn" },
+    y: -20,
+    transition: { duration: 0.3, ease: [0.4, 0, 1, 1] },
   },
 };
 
-export default function PageTransition({ children }) {
+export const pageContainerVariants = {
+  initial: {},
+  animate: {
+    transition: {
+      delay: 0.15,
+      delayChildren: 0.15,
+      staggerChildren: 0.12,
+      when: "beforeChildren",
+    },
+  },
+  exit: {
+    transition: {
+      staggerChildren: 0.1,
+      staggerDirection: 1,
+      when: "beforeChildren",
+    },
+  },
+};
+
+export const pageSectionStaggerVariants = {
+  initial: {},
+  animate: {
+    transition: {
+      staggerChildren: 0.12,
+      when: "beforeChildren",
+    },
+  },
+  exit: {
+    transition: {
+      staggerChildren: 0.1,
+      staggerDirection: 1,
+      when: "beforeChildren",
+    },
+  },
+};
+
+export function PageTransitionItem({ children, className = "", ...props }) {
   return (
     <motion.div
-      variants={variants}
+      variants={pageItemVariants}
+      data-page-transition-item="true"
+      className={`[will-change:transform,opacity] ${className}`.trim()}
+      {...props}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
+export default function PageTransition({ children, className = "min-h-full" }) {
+  const [isTransitioning, setIsTransitioning] = useState(false);
+
+  return (
+    <motion.div
+      variants={pageContainerVariants}
       initial="initial"
       animate="animate"
       exit="exit"
-      className="min-h-full"
+      onAnimationStart={() => setIsTransitioning(true)}
+      onAnimationComplete={() => setIsTransitioning(false)}
+      className={`${className} ${isTransitioning ? "pointer-events-none" : ""}`.trim()}
     >
       {children}
     </motion.div>

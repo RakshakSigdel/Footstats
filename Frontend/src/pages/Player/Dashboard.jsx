@@ -1,10 +1,9 @@
 import { useEffect, useState, useMemo, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import Sidebar from "../../components/Global/Sidebar";
-import Topbar from "../../components/Global/Topbar";
 import { AnimatedBeam, Circle } from "./Components/animated-beam";
 import DynamicBackground from "../../components/ui/DynamicBackground";
+import { useTheme } from "../../context/ThemeContext";
 import { getMyProfile, getMyStats } from "../../services/api.player";
 import { getMySchedules } from "../../services/api.schedules";
 import { getMyClubs } from "../../services/api.clubs";
@@ -24,6 +23,7 @@ const cardVariants = {
 };
 
 export default function Dashboard() {
+  const { isDarkMode } = useTheme();
   const storedUser = useMemo(() => {
     try {
       return JSON.parse(localStorage.getItem("user") || "null");
@@ -209,13 +209,7 @@ export default function Dashboard() {
   const scrollRevealViewport = { once: true, amount: 0.2 };
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
-      <Sidebar />
-
-      <div className="flex-1 flex flex-col">
-        <Topbar />
-
-        <main className="relative flex-1 overflow-auto bg-[#eef1f6] p-6 md:p-8">
+    <main className="relative flex-1 overflow-auto bg-[#eef1f6] p-6 md:p-8">
           <DynamicBackground
             className="z-0"
             patternType="grid"
@@ -232,7 +226,7 @@ export default function Dashboard() {
             </motion.div>
           )}
           {loading && (
-            <div className="mb-4 flex items-center gap-3 text-slate-500">
+            <div className="mb-4 flex items-center gap-3 text-black">
               <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: "linear" }} className="w-5 h-5 rounded-full border-2 border-slate-200 border-t-emerald-500" />
               Loading your stats...
             </div>
@@ -246,30 +240,34 @@ export default function Dashboard() {
             transition={{ duration: 0.5 }}
             className="mb-8"
           >
-            <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-1 font-['Outfit']">
+            <h2 className="text-2xl md:text-3xl font-bold text-black mb-1 font-['Outfit']">
               Welcome back, <span className="gradient-text">{profile?.firstName ?? storedUser?.firstName ?? "Player"}</span>! ⚽
             </h2>
-            <p className="text-sm md:text-base text-slate-500">
+            <p className="text-sm md:text-base text-black">
               Here's what's happening with your football journey
             </p>
           </motion.div>
 
           {/* Animated Stats Network */}
           <motion.section
-            initial={{ opacity: 0, y: 12 }}
+            initial={{ opacity: 1, y: 0 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={scrollRevealViewport}
             transition={{ duration: 0.45, delay: 0.1 }}
             className="mb-8"
           >
             <div className="mb-4 flex items-center justify-between gap-2">
-              <h3 className="text-xl font-bold text-slate-900 font-['Outfit']">Live Performance Network</h3>
-              <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
+              <h3 className="text-xl font-bold text-black dark:text-slate-100 font-['Outfit']">Live Performance Network</h3>
+              <span className="rounded-full border border-emerald-300 bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-800 dark:border-emerald-700/60 dark:bg-emerald-900/30 dark:text-emerald-300">
                 Real-time season metrics
               </span>
             </div>
 
-            <div className="rounded-3xl border border-slate-200 bg-gradient-to-br from-white via-slate-50 to-emerald-50/40 p-3 md:p-5 shadow-sm">
+            <div className={`rounded-3xl border p-3 md:p-5 shadow-sm ${
+              isDarkMode
+                ? "border-slate-700/70 bg-gradient-to-br from-slate-900 via-slate-900/90 to-emerald-950/30"
+                : "border-slate-200 bg-white"
+            }`}>
               <div ref={statsNetworkRef} className="relative mx-auto h-[520px] w-full max-w-5xl overflow-hidden rounded-2xl">
                 {metricNodes.map((node, idx) => (
                   <AnimatedBeam
@@ -280,8 +278,8 @@ export default function Dashboard() {
                     curvature={28 + (idx % 3) * 14}
                     delay={idx * 0.1}
                     reverse={idx % 2 === 0}
-                    pathColor="#94a3b8"
-                    pathOpacity={0.22}
+                    pathColor={isDarkMode ? "#64748b" : "#94a3b8"}
+                    pathOpacity={isDarkMode ? 0.35 : 0.22}
                     gradientStartColor="#10b981"
                     gradientStopColor="#0ea5e9"
                     dotted={idx % 4 === 0}
@@ -291,13 +289,17 @@ export default function Dashboard() {
                 <div className="absolute inset-0">
                   <Circle
                     ref={centerRef}
-                    className="absolute left-1/2 top-1/2 h-40 w-40 -translate-x-1/2 -translate-y-1/2 border-emerald-200 bg-gradient-to-br from-white to-emerald-50"
+                    className={`absolute left-1/2 top-1/2 h-40 w-40 -translate-x-1/2 -translate-y-1/2 ${
+                      isDarkMode
+                        ? "!border-emerald-700/60 !bg-gradient-to-br !from-slate-900 !to-emerald-900/40"
+                        : "border-emerald-200 bg-white"
+                    }`}
                   >
                     <div className="text-center px-3">
-                      <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Contribution</p>
-                      <p className="text-3xl font-bold text-slate-900">{contributionCount}</p>
-                      <p className="text-xs text-slate-500">Goals + Assists</p>
-                      <p className="mt-1 text-xs font-semibold text-emerald-700">Win Rate {winRate}%</p>
+                      <p className="text-[11px] font-semibold uppercase tracking-wide text-black dark:text-slate-300">Contribution</p>
+                      <p className="text-3xl font-bold text-black dark:text-slate-100">{contributionCount}</p>
+                      <p className="text-xs text-black dark:text-slate-300">Goals + Assists</p>
+                      <p className="mt-1 text-xs font-semibold text-black dark:text-emerald-300">Win Rate {winRate}%</p>
                     </div>
                   </Circle>
 
@@ -307,24 +309,31 @@ export default function Dashboard() {
                       <motion.div
                         key={node.key}
                         className={`absolute ${node.className}`}
-                        initial={{ opacity: 0, scale: 0.7 }}
+                        initial={{ opacity: 1, scale: 1 }}
                         whileInView={{ opacity: 1, scale: 1 }}
                         viewport={{ once: true, amount: 0.55 }}
                         transition={{ delay: 0.12 + idx * 0.06, duration: 0.35 }}
                       >
-                        <Circle ref={node.ref} className="h-full w-full border-slate-200 bg-white/95">
+                        <Circle
+                          ref={node.ref}
+                          className={`h-full w-full ${
+                            isDarkMode
+                              ? "!border-slate-700/60 !bg-slate-900/95"
+                              : "border-slate-200 bg-white"
+                          }`}
+                        >
                           <div className="text-center">
                             <NodeIcon size={16} className={`mx-auto mb-1 ${node.iconClass}`} />
-                            <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">{node.label}</p>
-                            <p className="text-lg md:text-xl font-bold text-slate-900 leading-none mt-1">{node.value}</p>
+                            <p className="text-[10px] font-semibold uppercase tracking-wide text-black dark:text-slate-300">{node.label}</p>
+                            <p className="text-lg md:text-xl font-bold text-black dark:text-slate-100 leading-none mt-1">{node.value}</p>
                           </div>
                         </Circle>
                       </motion.div>
                     );
                   })}
 
-                  <div className="absolute right-3 top-3 rounded-full border border-slate-200 bg-white/80 px-3 py-1 text-xs font-medium text-slate-500">
-                    Clubs: <span className="font-semibold text-slate-900">{clubsCount}</span>
+                  <div className="absolute right-3 top-3 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-black dark:border-slate-700 dark:bg-slate-900/85 dark:text-slate-300">
+                    Clubs: <span className="font-semibold text-black dark:text-slate-100">{clubsCount}</span>
                   </div>
                 </div>
               </div>
@@ -333,14 +342,14 @@ export default function Dashboard() {
 
           {/* Upcoming Matches Section */}
           <motion.div
-            initial={{ opacity: 0, y: 18 }}
+            initial={{ opacity: 1, y: 0 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={scrollRevealViewport}
             transition={{ duration: 0.45 }}
             className="mb-8"
           >
             <div className="flex items-center justify-between mb-5">
-              <h3 className="text-xl font-bold text-slate-900 font-['Outfit'] flex items-center gap-2">
+              <h3 className="text-xl font-bold text-black dark:text-slate-100 font-['Outfit'] flex items-center gap-2">
                 <Zap size={20} className="text-emerald-500" />
                 Upcoming Matches
               </h3>
@@ -353,19 +362,25 @@ export default function Dashboard() {
               </button>
             </div>
 
-            <div className="relative overflow-hidden rounded-3xl border border-slate-200 bg-gradient-to-br from-white via-slate-50/70 to-emerald-50/40 p-3 md:p-5">
-              <div className="relative mb-4 flex items-center justify-between rounded-2xl border border-slate-200 bg-white/90 px-4 py-3 backdrop-blur">
+            <div className={`relative overflow-hidden rounded-3xl border p-3 md:p-5 ${
+              isDarkMode
+                ? "border-slate-700/70 bg-gradient-to-br from-slate-900 via-slate-900/85 to-emerald-950/30"
+                : "border-slate-200 bg-white"
+            }`}>
+              <div className={`relative mb-4 flex items-center justify-between rounded-2xl border px-4 py-3 backdrop-blur ${
+                isDarkMode ? "border-slate-700 bg-slate-900/80" : "border-slate-200 bg-white"
+              }`}>
                 <div>
                   <p className="text-[11px] font-semibold tracking-[0.1em] text-emerald-600">Match Spotlight</p>
-                  <p className="text-sm text-slate-600">
+                  <p className="text-sm text-black dark:text-slate-300">
                     {upcomingSchedules.length > 0
                       ? `${upcomingSchedules.length} fixture${upcomingSchedules.length > 1 ? "s" : ""} scheduled soon`
                       : "No upcoming fixtures yet"}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">Upcoming</span>
-                  <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-600">Top 3</span>
+                  <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 dark:border-emerald-700/60 dark:bg-emerald-900/30 dark:text-emerald-300">Upcoming</span>
+                  <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-black dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">Top 3</span>
                 </div>
               </div>
 
@@ -375,10 +390,10 @@ export default function Dashboard() {
                   initial={{ opacity: 0 }}
                   whileInView={{ opacity: 1 }}
                   viewport={{ once: true, amount: 0.35 }}
-                  className="col-span-full rounded-2xl border border-slate-200 bg-white px-6 py-12 text-center"
+                  className="col-span-full rounded-2xl border border-slate-200 bg-white px-6 py-12 text-center dark:border-slate-700 dark:bg-slate-900/70"
                 >
                   <div className="mb-3 text-4xl">🏟️</div>
-                  <p className="font-medium text-slate-600">No upcoming matches</p>
+                  <p className="font-medium text-black dark:text-slate-200">No upcoming matches</p>
                   <Link to="/schedules" className="mt-1 inline-block text-sm font-semibold text-emerald-600 hover:text-emerald-700">
                     View schedules →
                   </Link>
@@ -403,11 +418,15 @@ export default function Dashboard() {
                     key={schedule.id}
                     custom={idx}
                     variants={cardVariants}
-                    initial="hidden"
+                    initial="visible"
                     whileInView="visible"
                     viewport={{ once: true, amount: 0.3 }}
                     whileHover={{ y: -6, scale: 1.012, transition: { duration: 0.22 } }}
-                    className="group relative flex min-h-[300px] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-emerald-200 hover:shadow-[0_16px_42px_rgba(15,23,42,0.14)]"
+                    className={`group relative flex min-h-[300px] flex-col overflow-hidden rounded-2xl border p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_16px_42px_rgba(15,23,42,0.14)] ${
+                      isDarkMode
+                        ? "border-slate-700 bg-slate-900/85 hover:border-emerald-700/70"
+                        : "border-slate-200 bg-white hover:border-emerald-200"
+                    }`}
                   >
                     <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100 bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.2),transparent_52%)]" />
                     <div className="pointer-events-none absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-emerald-300 via-teal-400 to-cyan-400 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
@@ -415,55 +434,79 @@ export default function Dashboard() {
 
                     <div className="mb-5 flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <div className="grid h-14 w-14 place-content-center rounded-xl border border-slate-200 bg-slate-50 text-center">
-                          <p className="text-lg font-bold leading-none text-slate-900">{matchDay}</p>
-                          <p className="text-[10px] font-semibold tracking-wide text-slate-500">{matchMonth}</p>
+                        <div className={`grid h-14 w-14 place-content-center rounded-xl border text-center ${
+                          isDarkMode ? "border-slate-700 bg-slate-800" : "border-slate-200 bg-slate-50"
+                        }`}>
+                          <p className="text-lg font-bold leading-none text-black dark:text-slate-100">{matchDay}</p>
+                          <p className="text-[10px] font-semibold tracking-wide text-black dark:text-slate-300">{matchMonth}</p>
                         </div>
                         <div>
-                          <div className="flex items-center gap-1.5 text-xs font-medium text-slate-500">
+                          <div className="flex items-center gap-1.5 text-xs font-medium text-black dark:text-slate-300">
                             <CalendarDays size={13} />
                             <span>{formatScheduleDate(schedule.date)}</span>
                           </div>
-                          <p className="mt-0.5 text-xs font-['Outfit'] font-semibold tracking-[0.04em] text-emerald-700">Kickoff window</p>
+                          <p className="mt-0.5 text-xs font-['Outfit'] font-semibold tracking-[0.04em] text-emerald-700 dark:text-emerald-300">Kickoff window</p>
                         </div>
                       </div>
-                      <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
+                      <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 dark:border-emerald-700/60 dark:bg-emerald-900/30 dark:text-emerald-300">
                         Upcoming
                       </span>
                     </div>
 
-                    <div className="mb-5 flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50/75 px-3 py-3">
+                    <div className={`mb-5 flex items-center justify-between rounded-xl border px-3 py-3 ${
+                      isDarkMode ? "border-slate-700 bg-slate-800/80" : "border-slate-100 bg-slate-50/75"
+                    }`}>
                       <div className="flex flex-col items-center gap-2 flex-1">
-                        <div className="h-12 w-12 overflow-hidden rounded-xl border border-slate-200 bg-slate-100 flex items-center justify-center text-slate-700 font-bold text-lg">
+                        <div className={`h-12 w-12 overflow-hidden rounded-xl border flex items-center justify-center font-bold text-lg ${
+                          isDarkMode
+                            ? "border-slate-700 bg-slate-900 text-slate-100"
+                            : "border-slate-200 bg-slate-100 text-black"
+                        }`}>
                           {teamOneLogo ? (
                             <img src={teamOneLogo} alt={teamOne} className="w-full h-full object-cover" />
                           ) : (
                             teamOne.charAt(0)
                           )}
                         </div>
-                        <span className="w-full truncate text-center text-sm font-semibold text-slate-900">{teamOne}</span>
+                        <span className="w-full truncate text-center text-sm font-semibold text-black dark:text-slate-100">{teamOne}</span>
                       </div>
                       <div className="px-2">
-                        <span className="inline-flex h-8 items-center rounded-full border border-slate-200 bg-white px-3 text-[11px] font-extrabold tracking-[0.1em] text-slate-500">vs</span>
+                        <span className={`inline-flex h-8 items-center rounded-full border px-3 text-[11px] font-extrabold tracking-[0.1em] ${
+                          isDarkMode
+                            ? "border-slate-700 bg-slate-900 text-slate-300"
+                            : "border-slate-200 bg-white text-black"
+                        }`}>vs</span>
                       </div>
                       <div className="flex flex-col items-center gap-2 flex-1">
-                        <div className="h-12 w-12 overflow-hidden rounded-xl border border-emerald-400/40 bg-emerald-50 flex items-center justify-center text-emerald-700 font-bold text-lg">
+                        <div className={`h-12 w-12 overflow-hidden rounded-xl border flex items-center justify-center font-bold text-lg ${
+                          isDarkMode
+                            ? "border-emerald-600/60 bg-emerald-900/40 text-emerald-300"
+                            : "border-emerald-400/40 bg-emerald-50 text-emerald-700"
+                        }`}>
                           {teamTwoLogo ? (
                             <img src={teamTwoLogo} alt={teamTwo} className="w-full h-full object-cover" />
                           ) : (
                             teamTwo.charAt(0)
                           )}
                         </div>
-                        <span className="w-full truncate text-center text-sm font-semibold text-slate-900">{teamTwo}</span>
+                        <span className="w-full truncate text-center text-sm font-semibold text-black dark:text-slate-100">{teamTwo}</span>
                       </div>
                     </div>
 
                     <div className="mb-4 grid grid-cols-2 gap-2 text-sm">
-                      <div className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-slate-600">
+                      <div className={`flex items-center gap-1.5 rounded-lg border px-3 py-2 ${
+                        isDarkMode
+                          ? "border-slate-700 bg-slate-800 text-slate-300"
+                          : "border-slate-200 bg-slate-50 text-black"
+                      }`}>
                         <Clock size={14} />
                         <span>{formatScheduleTime(schedule.date)}</span>
                       </div>
-                      <div className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-slate-600">
+                      <div className={`flex items-center gap-1.5 rounded-lg border px-3 py-2 ${
+                        isDarkMode
+                          ? "border-slate-700 bg-slate-800 text-slate-300"
+                          : "border-slate-200 bg-slate-50 text-black"
+                      }`}>
                         <MapPin size={14} />
                         <span className="truncate">{schedule.location || "TBD"}</span>
                       </div>
@@ -474,7 +517,11 @@ export default function Dashboard() {
                       whileTap={{ scale: 0.98 }}
                       type="button"
                       onClick={() => openDashboardScheduleDetails(schedule)}
-                      className="mt-auto w-full rounded-xl border border-emerald-300 bg-gradient-to-r from-emerald-50 to-cyan-50 py-2.5 text-sm font-semibold text-emerald-800 transition-colors hover:from-emerald-100 hover:to-cyan-100"
+                      className={`mt-auto w-full rounded-xl border py-2.5 text-sm font-semibold transition-colors ${
+                        isDarkMode
+                          ? "border-emerald-700/60 bg-gradient-to-r from-emerald-900/45 to-cyan-900/35 text-emerald-300 hover:from-emerald-900/65 hover:to-cyan-900/55"
+                          : "border-emerald-300 bg-gradient-to-r from-emerald-50 to-cyan-50 text-emerald-800 hover:from-emerald-100 hover:to-cyan-100"
+                      }`}
                     >
                       View Details
                     </motion.button>
@@ -492,22 +539,24 @@ export default function Dashboard() {
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true, amount: 0.25 }}
               transition={{ delay: 0.3, duration: 0.5 }}
-              className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100/80"
+              className={`p-6 rounded-2xl shadow-sm border ${
+                isDarkMode ? "bg-slate-900/80 border-slate-700" : "bg-white border-slate-100/80"
+              }`}
             >
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-xl font-bold text-slate-900 font-['Outfit'] flex items-center gap-2">
+                <h3 className="text-xl font-bold text-black dark:text-slate-100 font-['Outfit'] flex items-center gap-2">
                   <TrendingUp size={20} className="text-emerald-500" />
                   Performance Snapshot
                 </h3>
-                <span className="text-xs font-semibold px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">Season Form</span>
+                <span className="text-xs font-semibold px-3 py-1.5 rounded-full bg-emerald-50 text-black border border-emerald-100 dark:border-emerald-700/60 dark:bg-emerald-900/30 dark:text-emerald-300">Season Form</span>
               </div>
               <div className="space-y-5">
                 <div>
                   <div className="flex items-center justify-between text-sm mb-2">
-                    <span className="text-slate-600 font-medium">Win Rate</span>
-                    <span className="text-slate-900 font-bold">{winRate}%</span>
+                    <span className="text-black dark:text-slate-300 font-medium">Win Rate</span>
+                    <span className="text-black dark:text-slate-100 font-bold">{winRate}%</span>
                   </div>
-                  <div className="h-3 rounded-full bg-slate-100 overflow-hidden">
+                  <div className="h-3 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
                     <motion.div
                       initial={{ width: 0 }}
                       whileInView={{ width: `${Math.max(0, Math.min(100, Number(winRate) || 0))}%` }}
@@ -519,21 +568,33 @@ export default function Dashboard() {
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="rounded-2xl border border-slate-100 bg-gradient-to-br from-emerald-50/50 to-white p-4">
-                    <div className="text-xs uppercase tracking-wide text-slate-500 font-semibold">Goal Contributions</div>
-                    <div className="mt-1 text-2xl font-bold text-slate-900">{goalsCount + assistsCount}</div>
-                    <div className="text-xs text-slate-500 mt-1">{goalsCount} goals + {assistsCount} assists</div>
+                  <div className={`rounded-2xl border p-4 ${
+                    isDarkMode
+                      ? "border-emerald-800/60 bg-gradient-to-br from-emerald-950/45 to-slate-900"
+                      : "border-slate-200 bg-gradient-to-br from-emerald-100 to-white"
+                  }`}>
+                    <div className="text-xs uppercase tracking-wide text-black dark:text-slate-300 font-semibold">Goal Contributions</div>
+                    <div className="mt-1 text-2xl font-bold text-black dark:text-slate-100">{goalsCount + assistsCount}</div>
+                    <div className="text-xs text-black dark:text-slate-300 mt-1">{goalsCount} goals + {assistsCount} assists</div>
                   </div>
-                  <div className="rounded-2xl border border-slate-100 bg-gradient-to-br from-amber-50/50 to-white p-4">
-                    <div className="text-xs uppercase tracking-wide text-slate-500 font-semibold">Discipline</div>
-                    <div className="mt-1 text-2xl font-bold text-slate-900">{yellowCards + redCards}</div>
-                    <div className="text-xs text-slate-500 mt-1">{yellowCards} yellow, {redCards} red</div>
+                  <div className={`rounded-2xl border p-4 ${
+                    isDarkMode
+                      ? "border-amber-800/60 bg-gradient-to-br from-amber-950/35 to-slate-900"
+                      : "border-slate-200 bg-gradient-to-br from-amber-100 to-white"
+                  }`}>
+                    <div className="text-xs uppercase tracking-wide text-black dark:text-slate-300 font-semibold">Discipline</div>
+                    <div className="mt-1 text-2xl font-bold text-black dark:text-slate-100">{yellowCards + redCards}</div>
+                    <div className="text-xs text-black dark:text-slate-300 mt-1">{yellowCards} yellow, {redCards} red</div>
                   </div>
                 </div>
 
-                <div className="rounded-2xl border border-emerald-100 bg-gradient-to-br from-emerald-50 to-emerald-50/30 p-4">
-                  <div className="text-xs uppercase tracking-wide text-emerald-700 font-semibold">Next Steps</div>
-                  <p className="text-sm text-emerald-900 mt-1">
+                <div className={`rounded-2xl border p-4 ${
+                  isDarkMode
+                    ? "border-emerald-700/60 bg-gradient-to-br from-emerald-900/30 to-slate-900"
+                    : "border-emerald-200 bg-gradient-to-br from-emerald-100 to-emerald-50"
+                }`}>
+                  <div className="text-xs uppercase tracking-wide text-black dark:text-emerald-300 font-semibold">Next Steps</div>
+                  <p className="text-sm text-black dark:text-emerald-200 mt-1">
                     {upcomingSchedules.length > 0
                       ? `You have ${upcomingSchedules.length} upcoming match${upcomingSchedules.length > 1 ? "es" : ""}. Stay sharp and check venue/time details.`
                       : "No upcoming matches. Create or accept a schedule to keep your momentum going."}
@@ -549,7 +610,7 @@ export default function Dashboard() {
               transition={{ delay: 0.4, duration: 0.5 }}
               className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100/80"
             >
-              <h3 className="text-xl font-bold text-slate-900 mb-6 font-['Outfit']">Action Center</h3>
+              <h3 className="text-xl font-bold text-black mb-6 font-['Outfit']">Action Center</h3>
               <div className="space-y-3">
                 {[
                   { to: "/profile", title: "Profile Insights", desc: "Review stats, clubs, and achievements", badge: "Open" },
@@ -563,8 +624,8 @@ export default function Dashboard() {
                       <div className="absolute left-0 right-0 top-0 h-px bg-gradient-to-r from-transparent via-emerald-300 to-transparent" />
 
                       <div>
-                        <p className="font-semibold text-slate-900">{action.title}</p>
-                        <p className="text-xs text-slate-500 mt-0.5">{action.desc}</p>
+                        <p className="font-semibold text-black">{action.title}</p>
+                        <p className="text-xs text-black mt-0.5">{action.desc}</p>
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">{action.badge}</span>
@@ -577,8 +638,6 @@ export default function Dashboard() {
             </motion.div>
           </div>
           </div>
-        </main>
-      </div>
-    </div>
+    </main>
   );
 }

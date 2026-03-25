@@ -3,8 +3,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import Sidebar from "../../components/Global/Sidebar";
-import Topbar from "../../components/Global/Topbar";
 import { getClubById, updateClub, getClubMembers, removeClubMember, updateMemberRole, updateMemberPosition, leaveClub, uploadClubLogo } from "../../services/api.clubs";
 import { getClubSchedules } from "../../services/api.schedules";
 import { getAllClubs } from "../../services/api.clubs";
@@ -445,19 +443,13 @@ export default function ClubDetails() {
   };
 
   return (
-    <div className="flex min-h-screen bg-gray-50 exclude-link-pointer">
-      <Sidebar />
-
-      <div className="flex-1 flex flex-col">
-        <Topbar />
-
-        <motion.main
+    <motion.main
           variants={pageVariants}
           initial="initial"
           animate="animate"
           exit="exit"
-          className="relative flex-1 p-6 md:p-8 overflow-auto bg-[#eef1f6]"
-        >
+          className="relative flex-1 p-6 md:p-8 overflow-auto bg-[#eef1f6] exclude-link-pointer"
+    >
           <DynamicBackground
             className="z-0"
             patternType="grid"
@@ -651,8 +643,6 @@ export default function ClubDetails() {
           </>
           )}
           </div>
-        </motion.main>
-      </div>
-    </div>
+    </motion.main>
   );
 }

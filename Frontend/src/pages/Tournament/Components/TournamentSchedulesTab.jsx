@@ -45,7 +45,7 @@ export default function TournamentSchedulesTab({
                 </div>
                 {schedule.match && (
                   <div className="mt-2 text-sm font-bold text-gray-900 font-['Outfit']">
-                    Score: {schedule.match.teamOneGoals} - {schedule.match.teamTwoGoals}
+                    Score: {schedule.match?.teamOneGoals ?? 0} - {schedule.match?.teamTwoGoals ?? 0}
                   </div>
                 )}
                 <p className="mt-2 text-xs font-semibold text-primary-700">Open Schedule Details -&gt;</p>

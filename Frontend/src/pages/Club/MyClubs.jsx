@@ -1,8 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import Sidebar from "../../components/Global/Sidebar";
-import Topbar from "../../components/Global/Topbar";
 import DynamicBackground from "../../components/ui/DynamicBackground";
 import ClubListCard from "../../components/Club/ClubListCard";
 import CreateClub from "./Components/CreateClub";
@@ -129,13 +127,8 @@ export default function MyClubs() {
   };
 
   return (
-    <div className="flex min-h-screen bg-gray-50 exclude-link-pointer">
-      <Sidebar />
-
-      <div className="flex-1 flex flex-col">
-        <Topbar />
-
-        <main className="relative flex-1 p-6 md:p-8 overflow-auto bg-[#eef1f6]">
+    <>
+      <main className="relative flex-1 p-6 md:p-8 overflow-auto bg-[#eef1f6] exclude-link-pointer">
           <DynamicBackground
             className="z-0"
             patternType="grid"
@@ -322,14 +315,13 @@ export default function MyClubs() {
             )}
           </AnimatePresence>
           </div>
-        </main>
-      </div>
+      </main>
 
       <CreateClub
         isOpen={isCreateClubOpen}
         onClose={() => setIsCreateClubOpen(false)}
         onCreateClub={handleCreateClub}
       />
-    </div>
+    </>
   );
 }

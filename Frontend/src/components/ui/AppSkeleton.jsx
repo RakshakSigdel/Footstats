@@ -1,6 +1,8 @@
-export default function AppSkeleton() {
+export default function AppSkeleton({ mode = "full" }) {
+  const shellClass = mode === "content" ? "h-full p-6 md:p-8" : "min-h-screen p-6 md:p-8";
+
   return (
-    <div className="app-shell min-h-screen p-6 md:p-8">
+    <div className={`app-shell ${shellClass}`}>
       <div className="mx-auto max-w-6xl space-y-5">
         <div className="skeleton h-8 w-52" />
         <div className="skeleton h-4 w-80" style={{ opacity: 0.6 }} />

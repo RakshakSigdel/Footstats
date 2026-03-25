@@ -3,8 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
-import Sidebar from "../../components/Global/Sidebar";
-import Topbar from "../../components/Global/Topbar";
 import CreateTournament from "./Components/HostTournament";
 import EditTournament from "./Components/EditTournament";
 import {
@@ -189,18 +187,13 @@ export default function Tournaments() {
         : "Browse";
 
   return (
-    <div className="flex min-h-screen bg-gray-50 exclude-link-pointer">
-      <Sidebar />
-
-      <div className="flex-1 flex flex-col">
-        <Topbar />
-
-        <motion.main
+    <>
+      <motion.main
           variants={pageVariants}
           initial="initial"
           animate="animate"
           exit="exit"
-          className="relative flex-1 overflow-auto p-6 md:p-8 bg-[#eef1f6]"
+          className="relative flex-1 overflow-auto p-6 md:p-8 bg-[#eef1f6] exclude-link-pointer"
         >
           <DynamicBackground
             className="z-0"
@@ -482,8 +475,7 @@ export default function Tournaments() {
             </div>
           )}
           </div>
-        </motion.main>
-      </div>
+      </motion.main>
 
       <CreateTournament
         isOpen={isCreateTournamentOpen}
@@ -498,6 +490,6 @@ export default function Tournaments() {
         onEditTournament={handleEditTournament}
         tournamentData={selectedTournamentData}
       />
-    </div>
+    </>
   );
 }

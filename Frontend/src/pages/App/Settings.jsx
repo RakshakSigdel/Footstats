@@ -1,7 +1,5 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import Sidebar from "../../components/Global/Sidebar";
-import Topbar from "../../components/Global/Topbar";
 import DynamicBackground from "../../components/ui/DynamicBackground";
 import { getMyProfile, updatePlayerById } from "../../services/api.player";
 import { resendVerificationCode, verifyEmail } from "../../services/api.auth";
@@ -190,13 +188,7 @@ export default function Settings() {
   };
 
   return (
-    <div className="flex min-h-screen">
-      <Sidebar />
-
-      <div className="flex-1 flex flex-col">
-        <Topbar />
-
-        <main className="relative flex-1 p-6 md:p-8 overflow-auto bg-[#eef1f6]">
+    <main className="relative flex-1 p-6 md:p-8 overflow-auto bg-[#eef1f6]">
           <DynamicBackground
             className="z-0"
             patternType="grid"
@@ -420,8 +412,6 @@ export default function Settings() {
             </div>
           </motion.div>
           </div>
-        </main>
-      </div>
-    </div>
+    </main>
   );
 }

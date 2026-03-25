@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import Sidebar from "../../components/Global/Sidebar";
-import Topbar from "../../components/Global/Topbar";
 import { getScheduleById } from '../../services/api.schedules'
 import { getClubMembers } from '../../services/api.clubs'
 import { createMatch } from '../../services/api.matches'
@@ -198,16 +196,13 @@ export default function ScheduleDetails() {
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-50 exclude-link-pointer">
-      <Sidebar />
-      <div className="flex-1 flex flex-col">
-        <Topbar />
-        <motion.main
+    <>
+      <motion.main
           variants={pageVariants}
           initial="initial"
           animate="animate"
           exit="exit"
-          className="relative flex-1 p-4 md:p-8 overflow-auto bg-[#eef1f6]"
+          className="relative flex-1 p-4 md:p-8 overflow-auto bg-[#eef1f6] exclude-link-pointer"
         >
           <DynamicBackground
             className="z-0"
@@ -423,8 +418,7 @@ export default function ScheduleDetails() {
             </>
           )}
           </div>
-        </motion.main>
-      </div>
+      </motion.main>
 
       {/* Add/Edit Event Modal */}
       {showEventModal && (
@@ -546,6 +540,6 @@ export default function ScheduleDetails() {
         </div>
       )}
 
-    </div>
+    </>
   )
 }

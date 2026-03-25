@@ -1,11 +1,11 @@
 import { lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
-import { AnimatePresence } from "framer-motion";
 import { SidebarProvider } from "./context/SidebarContext";
 import { ThemeProvider } from "./context/ThemeContext";
 import ProtectedRoute from "./components/Global/ProtectedRoute";
+import ProtectedShell from "./components/Global/ProtectedShell";
 import AppSkeleton from "./components/ui/AppSkeleton";
-import PageTransition from "./components/ui/PageTransition";
+import PageTransition, { PageTransitionItem } from "./components/ui/PageTransition";
 import ParticlesBackground from "./pages/Player/Components/ParticlesBackground";
 
 const Register = lazy(() => import("./pages/Authentication/register"));
@@ -26,35 +26,46 @@ const PaymentComponent = lazy(() => import("./components/payment/paymentForm"));
 const Success = lazy(() => import("./components/payment/success"));
 const Failure = lazy(() => import("./components/payment/failure"));
 
+function PublicRouteElement({ children }) {
+  return (
+    <Suspense fallback={<AppSkeleton />}>
+      <PageTransition>
+        <PageTransitionItem>{children}</PageTransitionItem>
+      </PageTransition>
+    </Suspense>
+  );
+}
+
 function AnimatedRoutes() {
   const location = useLocation();
   return (
-    <Suspense fallback={<AppSkeleton />}>
-      <AnimatePresence mode="wait">
-        <Routes location={location} key={location.pathname}>
-          <Route path="/" element={<Navigate to="/login" replace />} />
-          <Route path="/register" element={<PageTransition><Register /></PageTransition>} />
-          <Route path="/login" element={<PageTransition><Login /></PageTransition>} />
-          <Route path="/forgot-password" element={<PageTransition><ForgotPassword /></PageTransition>} />
-          <Route path="/reset-password" element={<PageTransition><ResetPassword /></PageTransition>} />
-          <Route path="/payment" element={<PageTransition><PaymentComponent /></PageTransition>} />
-          <Route path="/payment-success" element={<PageTransition><Success /></PageTransition>} />
-          <Route path="/payment-failure" element={<PageTransition><Failure /></PageTransition>} />
-          <Route path="/clubs" element={<ProtectedRoute><MyClubs /></ProtectedRoute>} />
-          <Route path="/club/:clubId" element={<ProtectedRoute><ClubDetails /></ProtectedRoute>} />
-          <Route path="/tournaments" element={<ProtectedRoute><Tournaments /></ProtectedRoute>} />
-          <Route path="/tournament/:tournamentId" element={<ProtectedRoute><TournamentDetails /></ProtectedRoute>} />
-          <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-          <Route path="/discover" element={<ProtectedRoute><Discover /></ProtectedRoute>} />
-          <Route path="/schedules" element={<ProtectedRoute><Schedule /></ProtectedRoute>} />
-          <Route path="/schedule" element={<ProtectedRoute><Schedule /></ProtectedRoute>} />
-          <Route path="/schedule/:scheduleId" element={<ProtectedRoute><ScheduleDetails /></ProtectedRoute>} />
-          <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-          <Route path="/player/:playerId" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-          <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-        </Routes>
-      </AnimatePresence>
-    </Suspense>
+    <Routes location={location}>
+      <Route path="/" element={<Navigate to="/login" replace />} />
+
+      <Route path="/register" element={<PublicRouteElement><Register /></PublicRouteElement>} />
+      <Route path="/login" element={<PublicRouteElement><Login /></PublicRouteElement>} />
+      <Route path="/forgot-password" element={<PublicRouteElement><ForgotPassword /></PublicRouteElement>} />
+      <Route path="/reset-password" element={<PublicRouteElement><ResetPassword /></PublicRouteElement>} />
+      <Route path="/payment" element={<PublicRouteElement><PaymentComponent /></PublicRouteElement>} />
+      <Route path="/payment-success" element={<PublicRouteElement><Success /></PublicRouteElement>} />
+      <Route path="/payment-failure" element={<PublicRouteElement><Failure /></PublicRouteElement>} />
+
+      <Route element={<ProtectedRoute><ProtectedShell /></ProtectedRoute>}>
+        <Route path="/clubs" element={<MyClubs />} />
+        <Route path="/club/:clubId" element={<ClubDetails />} />
+        <Route path="/tournaments" element={<Tournaments />} />
+        <Route path="/tournament/:tournamentId" element={<TournamentDetails />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/discover" element={<Discover />} />
+        <Route path="/schedules" element={<Schedule />} />
+        <Route path="/schedule" element={<Schedule />} />
+        <Route path="/schedule/:scheduleId" element={<ScheduleDetails />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/player/:playerId" element={<Profile />} />
+        <Route path="/settings" element={<Settings />} />
+        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+      </Route>
+    </Routes>
   );
 }
 
@@ -65,7 +76,7 @@ function App() {
         <SidebarProvider>
           <div className="relative min-h-screen">
             <ParticlesBackground
-              className="pointer-events-none fixed inset-0 z-30 opacity-70"
+              className="pointer-events-none fixed inset-0 z-40 opacity-75"
               quantity={110}
               staticity={55}
               ease={60}
@@ -74,7 +85,7 @@ function App() {
               vx={0.01}
               vy={0.01}
             />
-            <div className="relative z-20">
+            <div className="relative z-10">
               <AnimatedRoutes />
             </div>
           </div>

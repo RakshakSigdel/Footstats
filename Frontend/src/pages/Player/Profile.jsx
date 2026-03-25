@@ -1,8 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import Sidebar from "../../components/Global/Sidebar";
-import Topbar from "../../components/Global/Topbar";
 import DynamicBackground from "../../components/ui/DynamicBackground";
 import {
   getMyProfile,
@@ -266,11 +264,8 @@ export default function Profile() {
   };
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
-      <Sidebar />
-      <div className="flex-1 flex flex-col">
-        <Topbar />
-        <main className="relative flex-1 p-6 md:p-8 overflow-auto bg-[#eef1f6]">
+    <>
+      <main className="relative flex-1 p-6 md:p-8 overflow-auto bg-[#eef1f6]">
           <DynamicBackground
             className="z-0"
             patternType="grid"
@@ -617,8 +612,7 @@ export default function Profile() {
             </>
           )}
           </div>
-        </main>
-      </div>
+      </main>
 
       {/* Edit Profile Modal */}
       <AnimatePresence>
@@ -704,6 +698,6 @@ export default function Profile() {
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
+    </>
   );
 }

@@ -102,7 +102,7 @@ export default function Register() {
         gradient="linear-gradient(135deg, rgba(240,253,244,0.95) 0%, rgba(241,245,249,0.92) 50%, rgba(236,254,255,0.9) 100%)"
         showAccents
       />
-      <div className="relative z-10 flex flex-row min-h-screen" style={{ background: "linear-gradient(135deg, #f0fdf4 0%, #f1f5f9 50%, #ecfeff 100%)" }}>
+      <div className="relative z-10 flex flex-row min-h-screen">
       <AuthenticationSideImage 
         image={sidebg}
         title="Join the FootStats squad"

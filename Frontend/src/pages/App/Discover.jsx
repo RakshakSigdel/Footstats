@@ -1,9 +1,8 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import Sidebar from "../../components/Global/Sidebar";
-import Topbar from "../../components/Global/Topbar";
 import DynamicBackground from "../../components/ui/DynamicBackground";
+import { PageTransitionItem, pageSectionStaggerVariants } from "../../components/ui/PageTransition";
 import { getAllClubs, getMyClubs } from "../../services/api.clubs";
 import { getAllTournaments } from "../../services/api.tournaments";
 import { getLocationRecommendations } from "../../services/api.locations";
@@ -94,13 +93,7 @@ export default function Discover() {
   }, [tournaments, activeFilter, searchQuery]);
 
   return (
-    <div className="flex min-h-screen">
-      <Sidebar />
-
-      <div className="flex-1 flex flex-col">
-        <Topbar />
-
-        <main className="relative flex-1 p-6 md:p-8 overflow-auto bg-[#eef1f6]">
+    <main className="relative flex-1 p-6 md:p-8 overflow-auto bg-[#eef1f6]">
           <DynamicBackground
             className="z-0"
             patternType="grid"
@@ -109,31 +102,32 @@ export default function Discover() {
             gradient="linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(241,245,249,0.92) 55%, rgba(236,253,245,0.88) 100%)"
             showAccents
           />
-          <div className="relative z-10">
-          {error && <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mb-6 p-4 rounded-2xl bg-red-50 border border-red-200 text-red-700">{error}</motion.div>}
+          <motion.div variants={pageSectionStaggerVariants} className="relative z-10">
+          {error && (
+            <PageTransitionItem className="mb-6">
+              <div className="p-4 rounded-2xl bg-red-50 border border-red-200 text-red-700">{error}</div>
+            </PageTransitionItem>
+          )}
           {loading && (
-            <div className="mb-6 flex items-center gap-3 text-slate-500">
-              <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: "linear" }} className="w-5 h-5 rounded-full border-2 border-slate-200 border-t-emerald-500" />
-              Loading...
-            </div>
+            <PageTransitionItem className="mb-6">
+              <div className="flex items-center gap-3 text-slate-500">
+                <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: "linear" }} className="w-5 h-5 rounded-full border-2 border-slate-200 border-t-emerald-500" />
+                Loading...
+              </div>
+            </PageTransitionItem>
           )}
 
-          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
+          <PageTransitionItem className="mb-8">
             <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2 font-['Outfit']">Discover</h1>
             <p className="text-slate-500">
               {recommendationMode
                 ? "Nearest clubs and tournaments based on your location"
                 : "Find clubs and tournaments near you"}
             </p>
-          </motion.div>
+          </PageTransitionItem>
 
           {/* Search and Filter Section */}
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="bg-white rounded-2xl shadow-sm border border-slate-100/80 p-6 mb-8"
-          >
+          <PageTransitionItem className="bg-white rounded-2xl shadow-sm border border-slate-100/80 p-6 mb-8">
             <div className="flex gap-4 mb-5">
               <div className="flex-1 relative">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
@@ -169,11 +163,11 @@ export default function Discover() {
                 </motion.button>
               ))}
             </div>
-          </motion.div>
+          </PageTransitionItem>
 
           {/* Clubs Near You Section */}
           {(activeFilter === "All" || activeFilter === "Clubs") && (
-            <div className="mb-8">
+            <PageTransitionItem className="mb-8">
               <div className="flex items-center gap-2.5 mb-5">
                 <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center">
                   <Users size={18} className="text-emerald-600" />
@@ -225,12 +219,12 @@ export default function Discover() {
                   </motion.div>
                 ))}
               </div>
-            </div>
+            </PageTransitionItem>
           )}
 
           {/* Upcoming Tournaments Section */}
           {(activeFilter !== "Clubs") && (
-            <div>
+            <PageTransitionItem>
               <div className="flex items-center gap-2.5 mb-5">
                 <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center">
                   <Trophy size={18} className="text-amber-600" />
@@ -290,11 +284,9 @@ export default function Discover() {
                   </motion.div>
                 ))}
               </div>
-            </div>
+            </PageTransitionItem>
           )}
-          </div>
-        </main>
-      </div>
-    </div>
+          </motion.div>
+    </main>
   );
 }
