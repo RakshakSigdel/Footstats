@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import Sidebar from "../../components/Global/Sidebar";
 import Topbar from "../../components/Global/Topbar";
+import DynamicBackground from "../../components/ui/DynamicBackground";
 import { getMyProfile, updatePlayerById } from "../../services/api.player";
 import { resendVerificationCode, verifyEmail } from "../../services/api.auth";
 import { useTheme } from "../../context/ThemeContext";
@@ -195,7 +196,16 @@ export default function Settings() {
       <div className="flex-1 flex flex-col">
         <Topbar />
 
-        <main className="flex-1 p-6 md:p-8 overflow-auto bg-[#eef1f6]">
+        <main className="relative flex-1 p-6 md:p-8 overflow-auto bg-[#eef1f6]">
+          <DynamicBackground
+            className="z-0"
+            patternType="grid"
+            patternSize={50}
+            patternColor="rgba(15,23,42,0.035)"
+            gradient="linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(241,245,249,0.92) 55%, rgba(236,253,245,0.88) 100%)"
+            showAccents
+          />
+          <div className="relative z-10">
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
             <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-1 font-['Outfit']">Settings</h1>
             <p className="text-sm text-slate-500">Manage your account preferences</p>
@@ -409,6 +419,7 @@ export default function Settings() {
               ))}
             </div>
           </motion.div>
+          </div>
         </main>
       </div>
     </div>

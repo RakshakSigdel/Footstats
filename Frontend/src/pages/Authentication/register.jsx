@@ -9,6 +9,7 @@ import {
   register,
 } from "../../services/api.auth";
 import AuthenticationSideImage from "./components/Authenticationsideimage";
+import DynamicBackground from "../../components/ui/DynamicBackground";
 
 const fieldVariants = {
   hidden: { opacity: 0, y: 16 },
@@ -92,7 +93,16 @@ export default function Register() {
   };
 
   return (
-    <div className="flex flex-row min-h-screen" style={{ background: "linear-gradient(135deg, #f0fdf4 0%, #f1f5f9 50%, #ecfeff 100%)" }}>
+    <div className="relative min-h-screen overflow-hidden">
+      <DynamicBackground
+        className="z-0"
+        patternType="grid"
+        patternSize={48}
+        patternColor="rgba(15,23,42,0.03)"
+        gradient="linear-gradient(135deg, rgba(240,253,244,0.95) 0%, rgba(241,245,249,0.92) 50%, rgba(236,254,255,0.9) 100%)"
+        showAccents
+      />
+      <div className="relative z-10 flex flex-row min-h-screen" style={{ background: "linear-gradient(135deg, #f0fdf4 0%, #f1f5f9 50%, #ecfeff 100%)" }}>
       <AuthenticationSideImage 
         image={sidebg}
         title="Join the FootStats squad"
@@ -226,6 +236,7 @@ export default function Register() {
             </Link>
           </p>
         </motion.div>
+      </div>
       </div>
     </div>
   );

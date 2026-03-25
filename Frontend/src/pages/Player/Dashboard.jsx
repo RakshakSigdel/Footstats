@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import Sidebar from "../../components/Global/Sidebar";
 import Topbar from "../../components/Global/Topbar";
 import { AnimatedBeam, Circle } from "./Components/animated-beam";
+import DynamicBackground from "../../components/ui/DynamicBackground";
 import { getMyProfile, getMyStats } from "../../services/api.player";
 import { getMySchedules } from "../../services/api.schedules";
 import { getMyClubs } from "../../services/api.clubs";
@@ -205,6 +206,7 @@ export default function Dashboard() {
   const openDashboardScheduleDetails = (schedule) => {
     navigate(`/schedule/${schedule.scheduleId}`, { state: { schedule } });
   };
+  const scrollRevealViewport = { once: true, amount: 0.2 };
 
   return (
     <div className="flex min-h-screen bg-gray-50">
@@ -214,6 +216,16 @@ export default function Dashboard() {
         <Topbar />
 
         <main className="relative flex-1 overflow-auto bg-[#eef1f6] p-6 md:p-8">
+          <DynamicBackground
+            className="z-0"
+            patternType="grid"
+            patternSize={50}
+            patternColor="rgba(15,23,42,0.035)"
+            gradient="linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(241,245,249,0.92) 55%, rgba(236,253,245,0.88) 100%)"
+            showAccents
+          />
+
+          <div className="relative z-10">
           {error && (
             <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="mb-4 p-4 rounded-2xl bg-red-50 border border-red-200 text-red-700">
               {error}
@@ -227,7 +239,13 @@ export default function Dashboard() {
           )}
 
           {/* Welcome Header */}
-          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="mb-8">
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={scrollRevealViewport}
+            transition={{ duration: 0.5 }}
+            className="mb-8"
+          >
             <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-1 font-['Outfit']">
               Welcome back, <span className="gradient-text">{profile?.firstName ?? storedUser?.firstName ?? "Player"}</span>! ⚽
             </h2>
@@ -239,7 +257,8 @@ export default function Dashboard() {
           {/* Animated Stats Network */}
           <motion.section
             initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={scrollRevealViewport}
             transition={{ duration: 0.45, delay: 0.1 }}
             className="mb-8"
           >
@@ -289,7 +308,8 @@ export default function Dashboard() {
                         key={node.key}
                         className={`absolute ${node.className}`}
                         initial={{ opacity: 0, scale: 0.7 }}
-                        animate={{ opacity: 1, scale: 1 }}
+                        whileInView={{ opacity: 1, scale: 1 }}
+                        viewport={{ once: true, amount: 0.55 }}
                         transition={{ delay: 0.12 + idx * 0.06, duration: 0.35 }}
                       >
                         <Circle ref={node.ref} className="h-full w-full border-slate-200 bg-white/95">
@@ -312,7 +332,13 @@ export default function Dashboard() {
           </motion.section>
 
           {/* Upcoming Matches Section */}
-          <div className="mb-8">
+          <motion.div
+            initial={{ opacity: 0, y: 18 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={scrollRevealViewport}
+            transition={{ duration: 0.45 }}
+            className="mb-8"
+          >
             <div className="flex items-center justify-between mb-5">
               <h3 className="text-xl font-bold text-slate-900 font-['Outfit'] flex items-center gap-2">
                 <Zap size={20} className="text-emerald-500" />
@@ -327,12 +353,33 @@ export default function Dashboard() {
               </button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            <div className="relative overflow-hidden rounded-3xl border border-slate-200 bg-gradient-to-br from-white via-slate-50/70 to-emerald-50/40 p-3 md:p-5">
+              <div className="relative mb-4 flex items-center justify-between rounded-2xl border border-slate-200 bg-white/90 px-4 py-3 backdrop-blur">
+                <div>
+                  <p className="text-[11px] font-semibold tracking-[0.1em] text-emerald-600">Match Spotlight</p>
+                  <p className="text-sm text-slate-600">
+                    {upcomingSchedules.length > 0
+                      ? `${upcomingSchedules.length} fixture${upcomingSchedules.length > 1 ? "s" : ""} scheduled soon`
+                      : "No upcoming fixtures yet"}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">Upcoming</span>
+                  <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-600">Top 3</span>
+                </div>
+              </div>
+
+              <div className="relative grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
               {upcomingSchedules.length === 0 && !loading && (
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="col-span-full text-center py-12 bg-white rounded-2xl border border-slate-100">
-                  <div className="text-4xl mb-3">🏟️</div>
-                  <p className="text-slate-500 font-medium">No upcoming matches</p>
-                  <Link to="/schedules" className="text-sm text-emerald-600 hover:text-emerald-700 font-semibold mt-1 inline-block">
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  whileInView={{ opacity: 1 }}
+                  viewport={{ once: true, amount: 0.35 }}
+                  className="col-span-full rounded-2xl border border-slate-200 bg-white px-6 py-12 text-center"
+                >
+                  <div className="mb-3 text-4xl">🏟️</div>
+                  <p className="font-medium text-slate-600">No upcoming matches</p>
+                  <Link to="/schedules" className="mt-1 inline-block text-sm font-semibold text-emerald-600 hover:text-emerald-700">
                     View schedules →
                   </Link>
                 </motion.div>
@@ -344,81 +391,106 @@ export default function Dashboard() {
                 const teamTwo = teamTwoData.name;
                 const teamOneLogo = toMediaUrl(teamOneData.logo);
                 const teamTwoLogo = toMediaUrl(teamTwoData.logo);
+                const matchDate = schedule?.date ? new Date(schedule.date) : null;
+                const matchDay = matchDate
+                  ? matchDate.toLocaleDateString("en-GB", { day: "2-digit" })
+                  : "--";
+                const matchMonth = matchDate
+                  ? matchDate.toLocaleDateString("en-GB", { month: "short" })
+                  : "TBD";
                 return (
                   <motion.div
                     key={schedule.id}
                     custom={idx}
                     variants={cardVariants}
                     initial="hidden"
-                    animate="visible"
-                    whileHover={{ y: -4, scale: 1.01, transition: { duration: 0.2 } }}
-                    className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100/80 group relative overflow-hidden"
+                    whileInView="visible"
+                    viewport={{ once: true, amount: 0.3 }}
+                    whileHover={{ y: -6, scale: 1.012, transition: { duration: 0.22 } }}
+                    className="group relative flex min-h-[300px] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-emerald-200 hover:shadow-[0_16px_42px_rgba(15,23,42,0.14)]"
                   >
-                    <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-400 to-teal-500" />
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center gap-2 text-sm text-slate-500">
-                        <CalendarDays size={14} />
-                        <span>{formatScheduleDate(schedule.date)}</span>
+                    <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100 bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.2),transparent_52%)]" />
+                    <div className="pointer-events-none absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-emerald-300 via-teal-400 to-cyan-400 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+                    <div className="absolute left-0 right-0 top-0 h-px bg-gradient-to-r from-transparent via-emerald-300 to-transparent" />
+
+                    <div className="mb-5 flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="grid h-14 w-14 place-content-center rounded-xl border border-slate-200 bg-slate-50 text-center">
+                          <p className="text-lg font-bold leading-none text-slate-900">{matchDay}</p>
+                          <p className="text-[10px] font-semibold tracking-wide text-slate-500">{matchMonth}</p>
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-1.5 text-xs font-medium text-slate-500">
+                            <CalendarDays size={13} />
+                            <span>{formatScheduleDate(schedule.date)}</span>
+                          </div>
+                          <p className="mt-0.5 text-xs font-['Outfit'] font-semibold tracking-[0.04em] text-emerald-700">Kickoff window</p>
+                        </div>
                       </div>
-                      <span className="text-xs text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full font-semibold border border-emerald-100">
-                        UPCOMING
+                      <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
+                        Upcoming
                       </span>
                     </div>
-                    <div className="flex items-center justify-between mb-4">
+
+                    <div className="mb-5 flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50/75 px-3 py-3">
                       <div className="flex flex-col items-center gap-2 flex-1">
-                        <div className="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center text-slate-700 font-bold text-lg overflow-hidden">
+                        <div className="h-12 w-12 overflow-hidden rounded-xl border border-slate-200 bg-slate-100 flex items-center justify-center text-slate-700 font-bold text-lg">
                           {teamOneLogo ? (
                             <img src={teamOneLogo} alt={teamOne} className="w-full h-full object-cover" />
                           ) : (
                             teamOne.charAt(0)
                           )}
                         </div>
-                        <span className="text-sm font-semibold text-slate-900 text-center truncate w-full">{teamOne}</span>
+                        <span className="w-full truncate text-center text-sm font-semibold text-slate-900">{teamOne}</span>
                       </div>
-                      <div className="px-4">
-                        <span className="text-slate-300 font-extrabold text-sm tracking-wider">VS</span>
+                      <div className="px-2">
+                        <span className="inline-flex h-8 items-center rounded-full border border-slate-200 bg-white px-3 text-[11px] font-extrabold tracking-[0.1em] text-slate-500">vs</span>
                       </div>
                       <div className="flex flex-col items-center gap-2 flex-1">
-                        <div className="w-12 h-12 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-700 font-bold text-lg overflow-hidden">
+                        <div className="h-12 w-12 overflow-hidden rounded-xl border border-emerald-400/40 bg-emerald-50 flex items-center justify-center text-emerald-700 font-bold text-lg">
                           {teamTwoLogo ? (
                             <img src={teamTwoLogo} alt={teamTwo} className="w-full h-full object-cover" />
                           ) : (
                             teamTwo.charAt(0)
                           )}
                         </div>
-                        <span className="text-sm font-semibold text-slate-900 text-center truncate w-full">{teamTwo}</span>
+                        <span className="w-full truncate text-center text-sm font-semibold text-slate-900">{teamTwo}</span>
                       </div>
                     </div>
-                    <div className="flex items-center justify-between text-sm text-slate-500 mb-4 pb-4 border-t border-slate-100 pt-4">
-                      <div className="flex items-center gap-1.5">
+
+                    <div className="mb-4 grid grid-cols-2 gap-2 text-sm">
+                      <div className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-slate-600">
                         <Clock size={14} />
                         <span>{formatScheduleTime(schedule.date)}</span>
                       </div>
-                      <div className="flex items-center gap-1.5">
+                      <div className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-slate-600">
                         <MapPin size={14} />
-                        <span>{schedule.location || "TBD"}</span>
+                        <span className="truncate">{schedule.location || "TBD"}</span>
                       </div>
                     </div>
+
                     <motion.button
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                       type="button"
                       onClick={() => openDashboardScheduleDetails(schedule)}
-                      className="w-full btn-primary py-2.5 rounded-xl text-sm font-semibold"
+                      className="mt-auto w-full rounded-xl border border-emerald-300 bg-gradient-to-r from-emerald-50 to-cyan-50 py-2.5 text-sm font-semibold text-emerald-800 transition-colors hover:from-emerald-100 hover:to-cyan-100"
                     >
                       View Details
                     </motion.button>
                   </motion.div>
                 );
               })}
+              </div>
             </div>
-          </div>
+          </motion.div>
 
           {/* Bottom Section - performance and actions */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <motion.div
               initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true, amount: 0.25 }}
               transition={{ delay: 0.3, duration: 0.5 }}
               className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100/80"
             >
@@ -438,7 +510,8 @@ export default function Dashboard() {
                   <div className="h-3 rounded-full bg-slate-100 overflow-hidden">
                     <motion.div
                       initial={{ width: 0 }}
-                      animate={{ width: `${Math.max(0, Math.min(100, Number(winRate) || 0))}%` }}
+                      whileInView={{ width: `${Math.max(0, Math.min(100, Number(winRate) || 0))}%` }}
+                      viewport={{ once: true, amount: 0.85 }}
                       transition={{ duration: 1, delay: 0.5, ease: "easeOut" }}
                       className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-teal-500"
                     />
@@ -471,26 +544,30 @@ export default function Dashboard() {
 
             <motion.div
               initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true, amount: 0.25 }}
               transition={{ delay: 0.4, duration: 0.5 }}
               className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100/80"
             >
               <h3 className="text-xl font-bold text-slate-900 mb-6 font-['Outfit']">Action Center</h3>
               <div className="space-y-3">
                 {[
-                  { to: "/profile", title: "Profile Insights", desc: "Review stats, clubs, and achievements", color: "emerald", badge: "Open" },
-                  { to: "/schedules", title: "Schedule Board", desc: "Track fixtures and match outcomes", color: "blue", badge: `${upcomingSchedules.length} upcoming` },
-                  { to: "/clubs", title: "Club Hub", desc: "Manage your clubs and lineups", color: "amber", badge: `${clubsCount} clubs` },
-                  { to: "/tournaments", title: "Tournament Zone", desc: "Join, manage, and compete", color: "purple", badge: `${tournamentsCount} active` },
-                ].map((action, idx) => (
-                  <motion.div key={action.to} whileHover={{ x: 4 }} transition={{ type: "spring", stiffness: 400, damping: 25 }}>
-                    <Link to={action.to} className={`flex items-center justify-between p-4 rounded-2xl border border-slate-100 hover:border-${action.color}-200 hover:bg-${action.color}-50/30 transition-all group`}>
+                  { to: "/profile", title: "Profile Insights", desc: "Review stats, clubs, and achievements", badge: "Open" },
+                  { to: "/schedules", title: "Schedule Board", desc: "Track fixtures and match outcomes", badge: `${upcomingSchedules.length} upcoming` },
+                  { to: "/clubs", title: "Club Hub", desc: "Manage your clubs and lineups", badge: `${clubsCount} clubs` },
+                  { to: "/tournaments", title: "Tournament Zone", desc: "Join, manage, and compete", badge: `${tournamentsCount} active` },
+                ].map((action) => (
+                  <motion.div key={action.to} whileHover={{ y: -3, scale: 1.01 }} transition={{ duration: 0.2 }}>
+                    <Link to={action.to} className="group relative flex items-center justify-between overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-all hover:border-emerald-200 hover:shadow-md">
+                      <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100 bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.18),transparent_52%)]" />
+                      <div className="absolute left-0 right-0 top-0 h-px bg-gradient-to-r from-transparent via-emerald-300 to-transparent" />
+
                       <div>
                         <p className="font-semibold text-slate-900">{action.title}</p>
                         <p className="text-xs text-slate-500 mt-0.5">{action.desc}</p>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className={`text-${action.color}-700 text-sm font-semibold`}>{action.badge}</span>
+                        <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">{action.badge}</span>
                         <ChevronRight size={16} className="text-slate-300 group-hover:text-slate-500 transition-colors" />
                       </div>
                     </Link>
@@ -498,6 +575,7 @@ export default function Dashboard() {
                 ))}
               </div>
             </motion.div>
+          </div>
           </div>
         </main>
       </div>

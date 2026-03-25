@@ -21,6 +21,7 @@ import {
   MotionButton,
   MotionCard,
 } from "../../components/ui/motion";
+import DynamicBackground from "../../components/ui/DynamicBackground";
 
 export default function Tournaments() {
   const navigate = useNavigate();
@@ -199,8 +200,17 @@ export default function Tournaments() {
           initial="initial"
           animate="animate"
           exit="exit"
-          className="flex-1 overflow-auto p-6 md:p-8"
+          className="relative flex-1 overflow-auto p-6 md:p-8 bg-[#eef1f6]"
         >
+          <DynamicBackground
+            className="z-0"
+            patternType="grid"
+            patternSize={50}
+            patternColor="rgba(15,23,42,0.035)"
+            gradient="linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(241,245,249,0.92) 55%, rgba(236,253,245,0.88) 100%)"
+            showAccents
+          />
+          <div className="relative z-10">
           {error && (
             <motion.div initial={{ x: -8, opacity: 0 }} animate={{ x: 0, opacity: 1 }} className="mb-6 rounded-xl border border-red-200 bg-red-50 p-4 text-red-700 text-sm">
               {error?.message || "Failed to load tournaments"}
@@ -471,6 +481,7 @@ export default function Tournaments() {
               </MotionButton>
             </div>
           )}
+          </div>
         </motion.main>
       </div>
 

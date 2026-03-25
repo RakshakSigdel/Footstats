@@ -25,6 +25,7 @@ import ClubChat from './Components/ClubChat';
 import ClubDetailHeader from './Components/ClubDetailHeader';
 import { getClubMessages } from '../../services/api.messages';
 import { pageVariants, MotionButton } from "../../components/ui/motion";
+import DynamicBackground from "../../components/ui/DynamicBackground";
 
 
 // Main ClubDetails Component
@@ -455,8 +456,17 @@ export default function ClubDetails() {
           initial="initial"
           animate="animate"
           exit="exit"
-          className="flex-1 p-6 md:p-8 overflow-auto"
+          className="relative flex-1 p-6 md:p-8 overflow-auto bg-[#eef1f6]"
         >
+          <DynamicBackground
+            className="z-0"
+            patternType="grid"
+            patternSize={50}
+            patternColor="rgba(15,23,42,0.035)"
+            gradient="linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(241,245,249,0.92) 55%, rgba(236,253,245,0.88) 100%)"
+            showAccents
+          />
+          <div className="relative z-10">
           <MotionButton
             onClick={() => navigate(-1)}
             className="flex items-center gap-2 text-primary-600 hover:text-primary-700 mb-6 font-semibold text-sm"
@@ -640,6 +650,7 @@ export default function ClubDetails() {
           />
           </>
           )}
+          </div>
         </motion.main>
       </div>
     </div>

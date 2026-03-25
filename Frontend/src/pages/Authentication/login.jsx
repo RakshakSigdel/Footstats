@@ -5,6 +5,7 @@ import sidebg from "/images/sidebg.jpg";
 import { GoogleLogin } from "@react-oauth/google";
 import { googleLogin, login } from "../../services/api.auth";
 import AuthenticationSideImage from "./components/Authenticationsideimage";
+import DynamicBackground from "../../components/ui/DynamicBackground";
 import { Eye, EyeOff, ArrowRight } from "lucide-react";
 
 const fieldVariants = {
@@ -75,16 +76,25 @@ export default function Login() {
   };
 
   return (
-    <div className="flex flex-row min-h-screen" style={{ background: "linear-gradient(135deg, #f0fdf4 0%, #f1f5f9 50%, #ecfeff 100%)" }}>
-      {/* Left Side - Image with Text Overlay */}
-      <AuthenticationSideImage 
-        image={sidebg}
-        title="Welcome back to FootStats"
-        subtitle="Time to log in and check if your goals still count "
+    <div className="relative min-h-screen overflow-hidden">
+      <DynamicBackground
+        className="z-0"
+        patternType="grid"
+        patternSize={48}
+        patternColor="rgba(15,23,42,0.03)"
+        gradient="linear-gradient(135deg, rgba(240,253,244,0.95) 0%, rgba(241,245,249,0.92) 50%, rgba(236,254,255,0.9) 100%)"
+        showAccents
       />
+      <div className="relative z-10 flex flex-row min-h-screen" style={{ background: "linear-gradient(135deg, #f0fdf4 0%, #f1f5f9 50%, #ecfeff 100%)" }}>
+        {/* Left Side - Image with Text Overlay */}
+        <AuthenticationSideImage 
+          image={sidebg}
+          title="Welcome back to FootStats"
+          subtitle="Time to log in and check if your goals still count "
+        />
 
-      {/* Right Side - Login Form */}
-      <div className="flex-1 flex items-center justify-center p-6">
+        {/* Right Side - Login Form */}
+        <div className="flex-1 flex items-center justify-center p-6">
         <motion.div 
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
@@ -216,6 +226,7 @@ export default function Login() {
             </Link>
           </p>
         </motion.div>
+        </div>
       </div>
     </div>
   );

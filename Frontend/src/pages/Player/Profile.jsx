@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import Sidebar from "../../components/Global/Sidebar";
 import Topbar from "../../components/Global/Topbar";
+import DynamicBackground from "../../components/ui/DynamicBackground";
 import {
   getMyProfile,
   getPlayerById,
@@ -269,7 +270,16 @@ export default function Profile() {
       <Sidebar />
       <div className="flex-1 flex flex-col">
         <Topbar />
-        <main className="flex-1 p-6 md:p-8 overflow-auto bg-[#eef1f6]">
+        <main className="relative flex-1 p-6 md:p-8 overflow-auto bg-[#eef1f6]">
+          <DynamicBackground
+            className="z-0"
+            patternType="grid"
+            patternSize={50}
+            patternColor="rgba(15,23,42,0.035)"
+            gradient="linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(241,245,249,0.92) 55%, rgba(236,253,245,0.88) 100%)"
+            showAccents
+          />
+          <div className="relative z-10">
           {error && (
             <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="mb-6 p-4 rounded-2xl bg-red-50 border border-red-200 text-red-700">
               {error}
@@ -606,6 +616,7 @@ export default function Profile() {
               </AnimatePresence>
             </>
           )}
+          </div>
         </main>
       </div>
 

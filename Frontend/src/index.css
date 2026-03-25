@@ -370,6 +370,11 @@ textarea:focus {
   50% { box-shadow: 0 0 24px -3px rgba(16, 185, 129, 0.6); }
 }
 
+@keyframes rotate-beam {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
 .animate-shimmer {
   background: linear-gradient(90deg, transparent 30%, rgba(255,255,255,0.4) 50%, transparent 70%);
   background-size: 200% 100%;
@@ -382,6 +387,47 @@ textarea:focus {
 
 .animate-pulse-glow {
   animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.spotlight-beam-card {
+  position: relative;
+  isolation: isolate;
+  overflow: visible;
+}
+
+.spotlight-beam-card::before {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  border-radius: inherit;
+  padding: 2px;
+  pointer-events: none;
+  z-index: 5;
+  opacity: 0;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    transparent 248deg,
+    rgba(16, 185, 129, 0.95) 286deg,
+    rgba(45, 212, 191, 0.9) 307deg,
+    rgba(14, 165, 233, 0.95) 328deg,
+    transparent 356deg,
+    transparent 360deg
+  );
+  transition: opacity 0.25s ease;
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+}
+
+.spotlight-beam-card:hover::before {
+  opacity: 1;
+  animation: rotate-beam 2.1s linear infinite;
+}
+
+.card-action-btn:hover {
+  transform: none;
 }
 
 /* ─── SKELETON LOADER ─── */
