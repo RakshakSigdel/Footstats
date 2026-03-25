@@ -20,8 +20,10 @@ import {
   MotionCard,
 } from "../../components/ui/motion";
 import DynamicBackground from "../../components/ui/DynamicBackground";
+import { useTheme } from "../../context/ThemeContext";
 
 export default function Tournaments() {
+  const { isDarkMode } = useTheme();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("browse");
   const [isCreateTournamentOpen, setIsCreateTournamentOpen] = useState(false);
@@ -237,15 +239,15 @@ export default function Tournaments() {
               </MotionButton>
             </div>
             <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
-              <div className="rounded-2xl border border-surface-200 bg-surface-50 px-4 py-3">
+              <div className={`rounded-2xl border px-4 py-3 ${isDarkMode ? "border-slate-700 bg-slate-800/80" : "border-surface-200 bg-white"}`}>
                 <p className="text-xs text-surface-500">Visible Tournaments</p>
                 <p className="text-xl font-bold text-gray-900 font-['Outfit']">{tournaments.length}</p>
               </div>
-              <div className="rounded-2xl border border-surface-200 bg-surface-50 px-4 py-3">
+              <div className={`rounded-2xl border px-4 py-3 ${isDarkMode ? "border-slate-700 bg-slate-800/80" : "border-surface-200 bg-white"}`}>
                 <p className="text-xs text-surface-500">Status Filter</p>
                 <p className="text-xl font-bold text-gray-900 capitalize font-['Outfit']">{statusFilter}</p>
               </div>
-              <div className="rounded-2xl border border-surface-200 bg-surface-50 px-4 py-3">
+              <div className={`rounded-2xl border px-4 py-3 ${isDarkMode ? "border-slate-700 bg-slate-800/80" : "border-surface-200 bg-white"}`}>
                 <p className="text-xs text-surface-500">Current View</p>
                 <p className="text-xl font-bold text-gray-900 font-['Outfit']">{currentViewLabel}</p>
               </div>

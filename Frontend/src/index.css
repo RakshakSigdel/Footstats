@@ -153,6 +153,25 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--color-dark-text-muted);
 }
 
+.dark .achievement-card {
+  border-color: rgba(30, 64, 175, 0.45);
+  background-image: linear-gradient(135deg, rgba(8, 47, 73, 0.88) 0%, rgba(23, 37, 84, 0.78) 55%, rgba(8, 145, 178, 0.7) 100%);
+}
+
+.dark .achievement-tier {
+  background-color: rgba(12, 74, 110, 0.45);
+  color: #bae6fd;
+  border-color: rgba(56, 189, 248, 0.45);
+}
+
+.dark .achievement-title {
+  color: #e0f2fe;
+}
+
+.dark .achievement-description {
+  color: rgba(186, 230, 253, 0.85);
+}
+
 /* ─── INTERACTIVE ELEMENTS ─── */
 
 a:hover {

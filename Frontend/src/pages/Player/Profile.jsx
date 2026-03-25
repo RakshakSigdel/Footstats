@@ -586,16 +586,16 @@ export default function Profile() {
                             <motion.div
                               key={achievement.id || `${achievement.title}-${idx}`}
                               whileHover={{ y: -3, scale: 1.01, transition: { duration: 0.2 } }}
-                              className="rounded-2xl border border-slate-200 bg-gradient-to-br from-white to-sky-50/30 p-5 group"
+                              className="achievement-card rounded-2xl border border-slate-200 bg-gradient-to-br from-white to-sky-50/30 p-5 group"
                             >
                               <div className="flex items-center justify-between gap-3 mb-3">
                                 <div className="text-2xl">{achievement.icon || "🏅"}</div>
-                                <span className="text-[11px] uppercase tracking-wide px-2.5 py-1 rounded-full bg-sky-50 text-sky-700 font-semibold border border-sky-100">
+                                <span className="achievement-tier text-[11px] uppercase tracking-wide px-2.5 py-1 rounded-full bg-sky-50 text-sky-700 font-semibold border border-sky-100">
                                   {achievement.tier || "Unlocked"}
                                 </span>
                               </div>
-                              <h3 className="font-bold text-slate-900 mb-1">{achievement.title}</h3>
-                              <p className="text-sm text-slate-500">{achievement.description}</p>
+                              <h3 className="achievement-title font-bold text-slate-900 mb-1">{achievement.title}</h3>
+                              <p className="achievement-description text-sm text-slate-500">{achievement.description}</p>
                             </motion.div>
                           ))}
                         </div>

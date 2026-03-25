@@ -1,4 +1,5 @@
 import { MotionButton } from "../../../components/ui/motion";
+import { useTheme } from "../../../context/ThemeContext";
 
 export default function TournamentOverviewTab({
   tournament,
@@ -14,6 +15,8 @@ export default function TournamentOverviewTab({
   statusOptions,
   enrollmentOptions,
 }) {
+  const { isDarkMode } = useTheme();
+
   return (
     <div className="space-y-6">
       <section className="app-card p-6">
@@ -23,13 +26,13 @@ export default function TournamentOverviewTab({
         </p>
 
         <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="rounded-2xl border border-surface-200 bg-surface-50 p-4">
+          <div className={`rounded-2xl border p-4 ${isDarkMode ? "border-slate-700 bg-slate-800/80" : "border-surface-200 bg-white"}`}>
             <p className="text-xs font-semibold uppercase tracking-wide text-surface-500">Start Date</p>
             <p className="mt-1 text-sm font-semibold text-gray-900">
               {tournament.startDate ? new Date(tournament.startDate).toLocaleString() : "TBD"}
             </p>
           </div>
-          <div className="rounded-2xl border border-surface-200 bg-surface-50 p-4">
+          <div className={`rounded-2xl border p-4 ${isDarkMode ? "border-slate-700 bg-slate-800/80" : "border-surface-200 bg-white"}`}>
             <p className="text-xs font-semibold uppercase tracking-wide text-surface-500">End Date</p>
             <p className="mt-1 text-sm font-semibold text-gray-900">
               {tournament.endDate ? new Date(tournament.endDate).toLocaleString() : "TBD"}

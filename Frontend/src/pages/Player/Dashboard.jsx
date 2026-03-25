@@ -127,6 +127,17 @@ export default function Dashboard() {
   const tournamentsCount = myTournamentsCount;
   const contributionCount = goalsCount + assistsCount;
 
+  // Use explicit theme-driven text colors instead of relying only on Tailwind `dark:*`.
+  // This prevents "stuck white text" issues when theme class application/order differs per page.
+  const textHeading = isDarkMode ? "text-white" : "text-black";
+  const textPrimary = isDarkMode ? "text-slate-100" : "text-black";
+  const textMuted = isDarkMode ? "text-slate-300" : "text-black";
+  const textMuted200 = isDarkMode ? "text-slate-200" : "text-black";
+  const textSkyMuted300 = isDarkMode ? "text-sky-300" : "text-black";
+  const textSky200 = isDarkMode ? "text-sky-200" : "text-black";
+  const kickoffWindowText = isDarkMode ? "text-sky-300" : "text-sky-700";
+  const chevronRightText = isDarkMode ? "text-slate-500 group-hover:text-slate-300" : "text-slate-300 group-hover:text-slate-500";
+
   const metricNodes = [
     {
       key: "matches",
@@ -240,10 +251,10 @@ export default function Dashboard() {
             transition={{ duration: 0.5 }}
             className="mb-8"
           >
-            <h2 className="text-2xl md:text-3xl font-bold text-black dark:text-white mb-1 font-['Outfit']">
-              Welcome back, <span className="gradient-text">{profile?.firstName ?? storedUser?.firstName ?? "Player"}</span>! ⚽
+            <h2 className={`text-2xl md:text-3xl font-bold ${textHeading} mb-1 font-['Outfit']`}>
+              Welcome back, <span className="gradient-text">{profile?.firstName ?? storedUser?.firstName ?? "Player"}</span>! 
             </h2>
-            <p className="text-sm md:text-base text-black dark:text-slate-300">
+            <p className={`text-sm md:text-base ${textMuted}`}>
               Here's what's happening with your football journey
             </p>
           </motion.div>
@@ -257,8 +268,14 @@ export default function Dashboard() {
             className="mb-8"
           >
             <div className="mb-4 flex items-center justify-between gap-2">
-              <h3 className="text-xl font-bold text-black dark:text-slate-100 font-['Outfit']">Live Performance Network</h3>
-              <span className="rounded-full border border-sky-300 bg-sky-100 px-3 py-1 text-xs font-semibold text-sky-800 dark:border-sky-700/60 dark:bg-sky-900/30 dark:text-sky-300">
+              <h3 className={`text-xl font-bold ${textPrimary} font-['Outfit']`}>Live Performance Network</h3>
+              <span
+                className={`rounded-full border px-3 py-1 text-xs font-semibold ${
+                  isDarkMode
+                    ? "border-sky-700/60 bg-sky-900/30 text-sky-300"
+                    : "border-sky-300 bg-sky-100 text-sky-800"
+                }`}
+              >
                 Real-time season metrics
               </span>
             </div>
@@ -291,15 +308,15 @@ export default function Dashboard() {
                     ref={centerRef}
                     className={`absolute left-1/2 top-1/2 h-40 w-40 -translate-x-1/2 -translate-y-1/2 ${
                       isDarkMode
-                        ? "!border-sky-700/60 !bg-gradient-to-br !from-slate-900 !to-sky-900/40"
+                        ? "!border-sky-500/55 !bg-gradient-to-br !from-[#0b1b34] !via-[#102a4a] !to-[#0a2338] !ring-1 !ring-cyan-300/25 !shadow-2xl !shadow-cyan-900/35"
                         : "border-sky-200 bg-white"
                     }`}
                   >
                     <div className="text-center px-3">
-                      <p className="text-[11px] font-semibold uppercase tracking-wide text-black dark:text-slate-300">Contribution</p>
-                      <p className="text-3xl font-bold text-black dark:text-slate-100">{contributionCount}</p>
-                      <p className="text-xs text-black dark:text-slate-300">Goals + Assists</p>
-                      <p className="mt-1 text-xs font-semibold text-black dark:text-sky-300">Win Rate {winRate}%</p>
+                      <p className={`text-[11px] font-semibold uppercase tracking-wide ${isDarkMode ? "text-sky-200" : textMuted}`}>Contribution</p>
+                      <p className={`text-3xl font-bold ${isDarkMode ? "text-white" : textPrimary}`}>{contributionCount}</p>
+                      <p className={`text-xs ${isDarkMode ? "text-slate-200" : textMuted}`}>Goals + Assists</p>
+                      <p className={`mt-1 text-xs font-semibold ${isDarkMode ? "text-cyan-300" : textSkyMuted300}`}>Win Rate {winRate}%</p>
                     </div>
                   </Circle>
 
@@ -324,16 +341,16 @@ export default function Dashboard() {
                         >
                           <div className="text-center">
                             <NodeIcon size={16} className={`mx-auto mb-1 ${node.iconClass}`} />
-                            <p className="text-[10px] font-semibold uppercase tracking-wide text-black dark:text-slate-300">{node.label}</p>
-                            <p className="text-lg md:text-xl font-bold text-black dark:text-slate-100 leading-none mt-1">{node.value}</p>
+                            <p className={`text-[10px] font-semibold uppercase tracking-wide ${textMuted}`}>{node.label}</p>
+                            <p className={`text-lg md:text-xl font-bold ${textPrimary} leading-none mt-1`}>{node.value}</p>
                           </div>
                         </Circle>
                       </motion.div>
                     );
                   })}
 
-                  <div className="absolute right-3 top-3 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-black dark:border-slate-700 dark:bg-slate-900/85 dark:text-slate-300">
-                    Clubs: <span className="font-semibold text-black dark:text-slate-100">{clubsCount}</span>
+                  <div className={`absolute right-3 top-3 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium ${textMuted} dark:border-slate-700 dark:bg-slate-900/85`}>
+                    Clubs: <span className={`font-semibold ${textPrimary}`}>{clubsCount}</span>
                   </div>
                 </div>
               </div>
@@ -349,7 +366,7 @@ export default function Dashboard() {
             className="mb-8"
           >
             <div className="flex items-center justify-between mb-5">
-              <h3 className="text-xl font-bold text-black dark:text-slate-100 font-['Outfit'] flex items-center gap-2">
+              <h3 className={`text-xl font-bold ${textPrimary} font-['Outfit'] flex items-center gap-2`}>
                 <Zap size={20} className="text-sky-500" />
                 Upcoming Matches
               </h3>
@@ -372,15 +389,23 @@ export default function Dashboard() {
               }`}>
                 <div>
                   <p className="text-[11px] font-semibold tracking-[0.1em] text-sky-600">Match Spotlight</p>
-                  <p className="text-sm text-black dark:text-slate-300">
+                  <p className={`text-sm ${textMuted}`}>
                     {upcomingSchedules.length > 0
                       ? `${upcomingSchedules.length} fixture${upcomingSchedules.length > 1 ? "s" : ""} scheduled soon`
                       : "No upcoming fixtures yet"}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-700 dark:border-sky-700/60 dark:bg-sky-900/30 dark:text-sky-300">Upcoming</span>
-                  <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-black dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">Top 3</span>
+                  <span
+                    className={`rounded-full border px-3 py-1 text-xs font-semibold ${
+                      isDarkMode
+                        ? "border-sky-700/60 bg-sky-900/30 text-sky-300"
+                        : "border-sky-200 bg-sky-50 text-sky-700"
+                    }`}
+                  >
+                    Upcoming
+                  </span>
+                  <span className={`rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold ${textMuted} dark:border-slate-700 dark:bg-slate-800`}>Top 3</span>
                 </div>
               </div>
 
@@ -393,7 +418,7 @@ export default function Dashboard() {
                   className="col-span-full rounded-2xl border border-slate-200 bg-white px-6 py-12 text-center dark:border-slate-700 dark:bg-slate-900/70"
                 >
                   <div className="mb-3 text-4xl">🏟️</div>
-                  <p className="font-medium text-black dark:text-slate-200">No upcoming matches</p>
+                    <p className={`font-medium ${textMuted200}`}>No upcoming matches</p>
                   <Link to="/schedules" className="mt-1 inline-block text-sm font-semibold text-sky-600 hover:text-sky-700">
                     View schedules →
                   </Link>
@@ -437,18 +462,24 @@ export default function Dashboard() {
                         <div className={`grid h-14 w-14 place-content-center rounded-xl border text-center ${
                           isDarkMode ? "border-slate-700 bg-slate-800" : "border-slate-200 bg-slate-50"
                         }`}>
-                          <p className="text-lg font-bold leading-none text-black dark:text-slate-100">{matchDay}</p>
-                          <p className="text-[10px] font-semibold tracking-wide text-black dark:text-slate-300">{matchMonth}</p>
+                          <p className={`text-lg font-bold leading-none ${textPrimary}`}>{matchDay}</p>
+                          <p className={`text-[10px] font-semibold tracking-wide ${textMuted}`}>{matchMonth}</p>
                         </div>
                         <div>
-                          <div className="flex items-center gap-1.5 text-xs font-medium text-black dark:text-slate-300">
+                          <div className={`flex items-center gap-1.5 text-xs font-medium ${textMuted}`}>
                             <CalendarDays size={13} />
                             <span>{formatScheduleDate(schedule.date)}</span>
                           </div>
-                          <p className="mt-0.5 text-xs font-['Outfit'] font-semibold tracking-[0.04em] text-sky-700 dark:text-sky-300">Kickoff window</p>
+                          <p className={`mt-0.5 text-xs font-['Outfit'] font-semibold tracking-[0.04em] ${kickoffWindowText}`}>Kickoff window</p>
                         </div>
                       </div>
-                      <span className="rounded-full border border-sky-200 bg-sky-50 px-2.5 py-1 text-xs font-semibold text-sky-700 dark:border-sky-700/60 dark:bg-sky-900/30 dark:text-sky-300">
+                      <span
+                        className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${
+                          isDarkMode
+                            ? "border-sky-700/60 bg-sky-900/30 text-sky-300"
+                            : "border-sky-200 bg-sky-50 text-sky-700"
+                        }`}
+                      >
                         Upcoming
                       </span>
                     </div>
@@ -468,7 +499,7 @@ export default function Dashboard() {
                             teamOne.charAt(0)
                           )}
                         </div>
-                        <span className="w-full truncate text-center text-sm font-semibold text-black dark:text-slate-100">{teamOne}</span>
+                        <span className={`w-full truncate text-center text-sm font-semibold ${textPrimary}`}>{teamOne}</span>
                       </div>
                       <div className="px-2">
                         <span className={`inline-flex h-8 items-center rounded-full border px-3 text-[11px] font-extrabold tracking-[0.1em] ${
@@ -489,7 +520,7 @@ export default function Dashboard() {
                             teamTwo.charAt(0)
                           )}
                         </div>
-                        <span className="w-full truncate text-center text-sm font-semibold text-black dark:text-slate-100">{teamTwo}</span>
+                        <span className={`w-full truncate text-center text-sm font-semibold ${textPrimary}`}>{teamTwo}</span>
                       </div>
                     </div>
 
@@ -544,17 +575,25 @@ export default function Dashboard() {
               }`}
             >
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-xl font-bold text-black dark:text-slate-100 font-['Outfit'] flex items-center gap-2">
+                <h3 className={`text-xl font-bold ${textPrimary} font-['Outfit'] flex items-center gap-2`}>
                   <TrendingUp size={20} className="text-sky-500" />
                   Performance Snapshot
                 </h3>
-                <span className="text-xs font-semibold px-3 py-1.5 rounded-full bg-sky-50 text-black border border-sky-100 dark:border-sky-700/60 dark:bg-sky-900/30 dark:text-sky-300">Season Form</span>
+                <span
+                  className={`text-xs font-semibold px-3 py-1.5 rounded-full border ${
+                    isDarkMode
+                      ? "bg-sky-900/30 border-sky-700/60 text-sky-300"
+                      : "bg-sky-50 border-sky-100 text-black"
+                  }`}
+                >
+                  Season Form
+                </span>
               </div>
               <div className="space-y-5">
                 <div>
                   <div className="flex items-center justify-between text-sm mb-2">
-                    <span className="text-black dark:text-slate-300 font-medium">Win Rate</span>
-                    <span className="text-black dark:text-slate-100 font-bold">{winRate}%</span>
+                    <span className={`font-medium ${textMuted}`}>Win Rate</span>
+                    <span className={`font-bold ${textPrimary}`}>{winRate}%</span>
                   </div>
                   <div className="h-3 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
                     <motion.div
@@ -573,18 +612,18 @@ export default function Dashboard() {
                       ? "border-sky-800/60 bg-gradient-to-br from-sky-950/45 to-slate-900"
                       : "border-slate-200 bg-gradient-to-br from-sky-100 to-white"
                   }`}>
-                    <div className="text-xs uppercase tracking-wide text-black dark:text-slate-300 font-semibold">Goal Contributions</div>
-                    <div className="mt-1 text-2xl font-bold text-black dark:text-slate-100">{goalsCount + assistsCount}</div>
-                    <div className="text-xs text-black dark:text-slate-300 mt-1">{goalsCount} goals + {assistsCount} assists</div>
+                    <div className={`text-xs uppercase tracking-wide ${textMuted} font-semibold`}>Goal Contributions</div>
+                    <div className={`mt-1 text-2xl font-bold ${textPrimary}`}>{goalsCount + assistsCount}</div>
+                    <div className={`text-xs ${textMuted} mt-1`}>{goalsCount} goals + {assistsCount} assists</div>
                   </div>
                   <div className={`rounded-2xl border p-4 ${
                     isDarkMode
                       ? "border-amber-800/60 bg-gradient-to-br from-amber-950/35 to-slate-900"
                       : "border-slate-200 bg-gradient-to-br from-amber-100 to-white"
                   }`}>
-                    <div className="text-xs uppercase tracking-wide text-black dark:text-slate-300 font-semibold">Discipline</div>
-                    <div className="mt-1 text-2xl font-bold text-black dark:text-slate-100">{yellowCards + redCards}</div>
-                    <div className="text-xs text-black dark:text-slate-300 mt-1">{yellowCards} yellow, {redCards} red</div>
+                    <div className={`text-xs uppercase tracking-wide ${textMuted} font-semibold`}>Discipline</div>
+                    <div className={`mt-1 text-2xl font-bold ${textPrimary}`}>{yellowCards + redCards}</div>
+                    <div className={`text-xs ${textMuted} mt-1`}>{yellowCards} yellow, {redCards} red</div>
                   </div>
                 </div>
 
@@ -593,8 +632,8 @@ export default function Dashboard() {
                     ? "border-sky-700/60 bg-gradient-to-br from-sky-900/30 to-slate-900"
                     : "border-sky-200 bg-gradient-to-br from-sky-100 to-sky-50"
                 }`}>
-                  <div className="text-xs uppercase tracking-wide text-black dark:text-sky-300 font-semibold">Next Steps</div>
-                  <p className="text-sm text-black dark:text-sky-200 mt-1">
+                  <div className={`text-xs uppercase tracking-wide ${textSkyMuted300} font-semibold`}>Next Steps</div>
+                  <p className={`text-sm ${textSky200} mt-1`}>
                     {upcomingSchedules.length > 0
                       ? `You have ${upcomingSchedules.length} upcoming match${upcomingSchedules.length > 1 ? "es" : ""}. Stay sharp and check venue/time details.`
                       : "No upcoming matches. Create or accept a schedule to keep your momentum going."}
@@ -612,7 +651,7 @@ export default function Dashboard() {
                 isDarkMode ? "bg-slate-900/80 border-slate-700" : "bg-white border-slate-100/80"
               }`}
             >
-              <h3 className="text-xl font-bold text-black dark:text-slate-100 mb-6 font-['Outfit']">Action Center</h3>
+              <h3 className={`text-xl font-bold ${textPrimary} mb-6 font-['Outfit']`}>Action Center</h3>
               <div className="space-y-3">
                 {[
                   { to: "/profile", title: "Profile Insights", desc: "Review stats, clubs, and achievements", badge: "Open" },
@@ -633,12 +672,12 @@ export default function Dashboard() {
                       <div className="absolute left-0 right-0 top-0 h-px bg-gradient-to-r from-transparent via-sky-300 to-transparent" />
 
                       <div>
-                        <p className="font-semibold text-black dark:text-slate-100">{action.title}</p>
-                        <p className="text-xs text-black dark:text-slate-300 mt-0.5">{action.desc}</p>
+                        <p className={`font-semibold ${textPrimary}`}>{action.title}</p>
+                        <p className={`text-xs ${textMuted} mt-0.5`}>{action.desc}</p>
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="rounded-full border border-sky-200 bg-sky-50 px-2.5 py-1 text-xs font-semibold text-sky-700">{action.badge}</span>
-                        <ChevronRight size={16} className="text-slate-300 group-hover:text-slate-500 dark:text-slate-500 dark:group-hover:text-slate-300 transition-colors" />
+                        <ChevronRight size={16} className={`${chevronRightText} transition-colors`} />
                       </div>
                     </Link>
                   </motion.div>
