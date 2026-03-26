@@ -1,170 +1,91 @@
-# Footstat Test Zone
+# Footstats
 
-A full-stack application with React frontend and Express backend.
+## About Project
+Footstats is a full-stack football management platform where players, clubs, and tournament organizers can manage teams, fixtures, tournaments, communication, and match data in one place.
 
-## Prerequisites
+## Functionalities
+- User authentication with email/password login and JWT-based authorization.
+- Email verification flow with code verification and resend verification support.
+- Google login support.
+- Player profile management (view, update, delete, upload profile photo).
+- Player stats and club-wise player listing.
+- Club management (create, update, delete, upload club logo, search clubs).
+- Club member management with role controls (add member, remove member, update role, leave club).
+- Club join request workflow (request, review, approve, reject, status tracking).
+- Tournament management (create, update, delete, list, my tournaments, enrolled tournaments).
+- Tournament enrollment workflow (club join requests, admin review, registration status updates).
+- Tournament status and enrollment status control.
+- Schedule management for clubs and tournaments (create, view, update, delete).
+- Schedule request flow (create request, approve/reject requests).
+- Match management (create, list, update, delete, schedule-based retrieval).
+- Match lineup management (single and bulk lineup operations).
+- Match events tracking (create, update, delete, fetch by match).
+- Club messaging module (list messages, send message, delete message).
+- Notification system (fetch notifications, unread count, mark one/all as read).
+- Payment integration endpoints (initiate payment, check payment status, fetch transaction by product).
+- Location search and location recommendation endpoints.
+- File uploads support for user profiles and club logos.
 
-- Node.js (v14 or higher)
-- npm or yarn
-- PostgreSQL database (for Prisma)
+## How To Run
 
-## Getting Started
+### Prerequisites
+- Node.js (LTS recommended)
+- npm
+- PostgreSQL database
 
-### Quick Start (Recommended)
+### 1. Install dependencies
+From project root:
 
-The project uses `concurrently` to run both frontend and backend simultaneously from the root directory.
-
-1. Install all dependencies (root, backend, and frontend):
-   ```bash
-   npm install
-   ```
-
-2. Set up environment variables:
-   - Create a `.env` file in the Backend directory
-   - Add required environment variables:
-     ```
-     DATABASE_URL="your_database_connection_string"
-     JWT_SECRET="your_jwt_secret"
-     PORT=5555
-     ```
-
-3. Run Prisma migrations (from Backend directory):
-   ```bash
-   cd Backend
-   npx prisma migrate dev
-   npx prisma generate
-   cd ..
-   ```
-4. Seed the data
-   4.1 Migrations + seed + start server
-      ```bash
-      npm run dev:full
-    ```
-   4.2 Fresh sample data
-      ```bash
-      npm run seed
-      ```
-
-4. Start both frontend and backend in development mode:
-   ```bash
-   npm run dev
-   ```
-   
-   Or for production:
-   ```bash
-   npm run start
-   ```
-
-The backend will run on `http://localhost:5555` and the frontend on `http://localhost:5173`.
-
-### Manual Setup (Alternative)
-
-If you prefer to run the frontend and backend separately:
-
-#### Backend Setup
-
-1. Navigate to the Backend directory:
-   ```bash
-   cd Backend
-   ```
-
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-
-3. Set up environment variables (same as above)
-
-4. Run Prisma migrations:
-   ```bash
-   npx prisma migrate dev
-   npx prisma generate
-   ```
-
-5. Start the server:
-   ```bash
-   npm run dev
-   ```
-
-#### Frontend Setup
-
-1. Navigate to the Frontend directory:
-   ```bash
-   cd Frontend
-   ```
-
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-
-3. Start the development server:
-   ```bash
-   npm run dev
-   ```
-
-## Available Scripts
-
-### Root Directory
-- `npm run dev` - Start both frontend and backend in development mode
-- `npm run start` - Start both frontend (preview) and backend in production mode
-- `npm install` - Install dependencies for all workspaces (root, backend, and frontend)
-
-### Backend
-- `npm start` - Run the server in production mode
-- `npm run dev` - Run the server in development mode with nodemon (auto-restart on changes)
-
-### Frontend
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm run preview` - Preview production build
-- `npm run lint` - Run ESLint
-
-## Tech Stack
-
-### Backend
-- Express.js
-- Prisma ORM
-- PostgreSQL
-- JWT Authentication
-- bcrypt for password hashing
-
-### Frontend
-- React 19
-- Vite
-- Tailwind CSS
-- Axios for API calls
-
-## Project Structure
-
-```
-├── Backend/
-│   ├── src/
-│   │   ├── server.js
-│   │   ├── controllers/
-│   │   ├── routes/
-│   │   ├── services/
-│   │   ├── middleware/
-│   │   └── utils/
-│   ├── prisma/
-│   │   └── schema.prisma
-│   └── package.json
-│
-└── Frontend/
-    ├── src/
-    │   ├── App.jsx
-    │   ├── main.jsx
-    │   ├── Component/
-    │   └── Pages/
-    └── package.json
+```bash
+npm install
 ```
 
-## Contributing
+### 2. Configure environment variables
+Create `Backend/.env` and set at least:
 
-1. Create a new branch for your feature
-2. Make your changes
-3. Submit a pull request
+```env
+DATABASE_URL="your_postgresql_connection_string"
+DIRECT_URL="your_direct_postgresql_connection_string"
+JWT_SECRET="your_jwt_secret"
+PORT=5555
+FRONTEND_URL="http://localhost:5173"
+EMAIL_USER="your_email"
+EMAIL_PASSWORD="your_email_app_password"
+GOOGLE_CLIENT_ID="your_google_client_id"
+```
 
-## License
+### 3. Run database migration and generate Prisma client
 
-ISC
+```bash
+cd Backend
+npx prisma migrate dev
+npx prisma generate
+cd ..
+```
+
+### 4. (Optional) Seed database
+
+```bash
+cd Backend
+npm run seed
+cd ..
+```
+
+### 5. Start development servers (frontend + backend)
+From project root:
+
+```bash
+npm run dev
+```
+
+Frontend: `http://localhost:5173`  
+Backend API: `http://localhost:5555`
+
+## Deployment
+Frontend is deployed at: `https://footstatsnp.vercel.app`
+
+## Developed By
+- Rakshak Sigdel
+- Rojash Thapa
+- Smana Upreti
+- Bibek Chaudhary
