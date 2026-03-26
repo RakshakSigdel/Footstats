@@ -1,6 +1,5 @@
-import { PrismaClient } from "@prisma/client";
 import { hasValidCoordinates, parseCoordinate } from "../utils/geo.js";
-const prisma = new PrismaClient();
+import prisma from "../utils/prisma.js";
 
 const buildVerifiedLocationData = (data) => {
   const latitude = parseCoordinate(data.locationLatitude);

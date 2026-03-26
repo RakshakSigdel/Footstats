@@ -2,7 +2,10 @@ const { Server } = require("socket.io");
 const jwt = require("jsonwebtoken");
 const MessageService = require("../services/messageService");
 const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
+const prisma = global.prisma || new PrismaClient();
+if (process.env.NODE_ENV !== "production") {
+  global.prisma = prisma;
+}
 
 let io;
 

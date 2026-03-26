@@ -1,8 +1,6 @@
-import { PrismaClient } from "@prisma/client";
 import NotificationService from "./notificationService.js";
 import { hasValidCoordinates, parseCoordinate } from "../utils/geo.js";
-
-const prisma = new PrismaClient();
+import prisma from "../utils/prisma.js";
 
 const STATUS_MAP = {
   UPCOMING: "UPCOMING",

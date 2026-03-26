@@ -1,6 +1,5 @@
 import '../config/env.js';
-import { PrismaClient } from "@prisma/client";
-const prisma = new PrismaClient();
+import prisma from "../utils/prisma.js";
 import jwt from "jsonwebtoken";
 import { OAuth2Client } from "google-auth-library";
 import { hashPassword, comparePassword } from "../utils/hashPassword.js";

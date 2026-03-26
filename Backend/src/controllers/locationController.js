@@ -1,9 +1,7 @@
-import { PrismaClient } from "@prisma/client";
 import LocationService from "../services/locationService.js";
 import RecommendationService from "../services/recommendationService.js";
 import { parseCoordinate } from "../utils/geo.js";
-
-const prisma = new PrismaClient();
+import prisma from "../utils/prisma.js";
 
 export const searchPlaces = async (req, res) => {
   try {

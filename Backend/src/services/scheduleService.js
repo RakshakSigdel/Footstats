@@ -1,7 +1,6 @@
-import { PrismaClient } from "@prisma/client";
 import NotificationService from "./notificationService.js";
 import EmailService from "./emailService.js";
-const prisma = new PrismaClient();
+import prisma from "../utils/prisma.js";
 
 class ScheduleService {
   //Create a new Schedule

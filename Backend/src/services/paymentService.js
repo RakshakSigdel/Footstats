@@ -1,8 +1,6 @@
-import { PrismaClient } from "@prisma/client";
 import axios from "axios";
 import { generateHmacSha256Hash } from "../utils/helper.js";
-
-const prisma = new PrismaClient();
+import prisma from "../utils/prisma.js";
 
 const ensureEnvVars = (keys, gateway) => {
   const missing = keys.filter((key) => !process.env[key]);

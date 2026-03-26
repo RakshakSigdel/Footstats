@@ -1,7 +1,5 @@
-import { PrismaClient } from "@prisma/client";
 import { haversineDistanceKm, hasValidCoordinates } from "../utils/geo.js";
-
-const prisma = new PrismaClient();
+import prisma from "../utils/prisma.js";
 
 const withDistance = (items, userLatitude, userLongitude) =>
   items
