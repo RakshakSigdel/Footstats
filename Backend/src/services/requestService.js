@@ -1,7 +1,5 @@
-import { PrismaClient } from '@prisma/client';
+import prisma from '../utils/prisma.js';
 import NotificationService from './notificationService.js';
-
-const prisma = new PrismaClient();
 
 class RequestService {
     static async createJoinRequest(data) {

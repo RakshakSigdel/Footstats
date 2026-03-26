@@ -1,11 +1,14 @@
-import { PrismaClient } from "@prisma/client";
 import { RequestService } from "../services/requestService.js";
-
-const prisma = new PrismaClient();
+import prisma from "../utils/prisma.js";
 
 export const createJoinRequest = async (req, res) => {
   const userId = req.user.userId;
-  const { clubId, preferredPosition, whyJoin, additionalMessage } = req.body;
+  const { preferredPosition, whyJoin, additionalMessage } = req.body;
+  const clubId = Number(req.body.clubId);
+
+  if (!Number.isInteger(clubId) || clubId <= 0) {
+    return res.status(400).json({ message: "Valid clubId is required" });
+  }
 
   if (!preferredPosition || !preferredPosition.trim()) {
     return res.status(400).json({ message: "Preferred position is required" });

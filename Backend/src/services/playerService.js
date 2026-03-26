@@ -1,8 +1,6 @@
-import {PrismaClient} from "@prisma/client";
+import prisma from "../utils/prisma.js";
 import { hashPassword } from "../utils/hashPassword.js";
 import { hasValidCoordinates, parseCoordinate } from "../utils/geo.js";
-
-const prisma = new PrismaClient();
 
 class PlayerService {
   static async getAllPlayers(filters = {}) {
