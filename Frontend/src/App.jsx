@@ -82,6 +82,8 @@ function App() {
               ease={60}
               size={0.6}
               color="#0ea5e9"
+              // darkColor="#fbbf24"
+              darkColor="#0ea5e9"
               vx={0.01}
               vy={0.01}
             />

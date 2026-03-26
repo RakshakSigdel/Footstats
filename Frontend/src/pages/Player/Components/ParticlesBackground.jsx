@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useTheme } from "../../../context/ThemeContext";
 
 const cn = (...classes) => classes.filter(Boolean).join(" ");
 
@@ -43,9 +44,14 @@ export default function ParticlesBackground({
   size = 0.4,
   refresh = false,
   color = "#0f172a",
+  darkColor = "#fbbf24",
+  adaptiveTheme = true,
   vx = 0,
   vy = 0,
 }) {
+  const { isDarkMode } = useTheme();
+  const resolvedColor = adaptiveTheme && isDarkMode ? darkColor : color;
+
   const canvasRef = useRef(null);
   const canvasContainerRef = useRef(null);
   const context = useRef(null);
@@ -76,7 +82,7 @@ export default function ParticlesBackground({
       }
     };
     // color is intentionally included so a color change redraws particles.
-  }, [color]);
+  }, [resolvedColor]);
 
   useEffect(() => {
     onMouseMove();
@@ -146,7 +152,7 @@ export default function ParticlesBackground({
     };
   };
 
-  const rgb = hexToRgb(color);
+  const rgb = hexToRgb(resolvedColor);
 
   const drawCircle = (circle, update = false) => {
     if (!context.current) return;

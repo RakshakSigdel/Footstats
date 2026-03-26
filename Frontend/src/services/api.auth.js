@@ -7,7 +7,7 @@ const getErrorMessage = (error) => {
   }
   // Network error, server not running, or empty response (e.g. backend crashed)
   if (error.code === "ERR_NETWORK" || error.message === "Network Error" || !error.response) {
-    return "Cannot connect to server. Make sure the backend is running at http://localhost:5555";
+    return "Cannot connect to server. This is most likely an internal issue";
   }
   return error.message || "Something went wrong";
 };
