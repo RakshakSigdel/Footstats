@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class AuthService {
-  static const String baseUrl = "http://192.168.18.49:5555/api";
+  static const String baseUrl = "http://192.168.1.4:5555/api";
   final storage = const FlutterSecureStorage();
 
   //Register
