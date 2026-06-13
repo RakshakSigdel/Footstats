@@ -13,7 +13,7 @@ class _BottomNavState extends State<BottomNavBar> {
   Widget build(BuildContext context) {
     return BottomNavigationBar(
       backgroundColor: Colors.green.shade600,
-      selectedItemColor: Colors.blue,
+      selectedItemColor: Colors.green.shade200,
       unselectedItemColor: Colors.grey,
       currentIndex: selectedIndex,
       onTap: (index) {

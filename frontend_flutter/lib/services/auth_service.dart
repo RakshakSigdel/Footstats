@@ -4,7 +4,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class AuthService {
   static const String baseUrl = "http://192.168.1.4:5555/api";
-  final storage = const FlutterSecureStorage();
+  final _storage = const FlutterSecureStorage();
 
   //Register
   Future<http.Response> register({
@@ -52,25 +52,20 @@ class AuthService {
         return null;
       }
 
-      await storage.write(key: 'jwt', value: token);
+      await _storage.write(key: 'jwt', value: token);
       return token;
     }
 
     return null;
   }
 
-  //Save Token
-  Future<void> saveToken(String token) async {
-    await storage.write(key: 'jwt', value: token);
-  }
-
   //get token
   Future<String?> getToken() async {
-    return await storage.read(key: 'jwt');
+    return await _storage.read(key: 'jwt');
   }
 
   //logout - delete token
   Future<void> logout() async {
-    await storage.delete(key: 'jwt');
+    await _storage.delete(key: 'jwt');
   }
 }
