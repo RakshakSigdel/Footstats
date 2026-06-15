@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:frontend_flutter/core/routes/route_constants.dart';
-import 'package:frontend_flutter/features/player/screens/dashboard_screen.dart';
-import 'package:frontend_flutter/features/auth/screens/register_screen.dart';
-import 'package:frontend_flutter/services/auth_service.dart';
+import 'package:frontend_flutter/core/services/auth_service.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -12,12 +11,13 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final authService = AuthService();
+  // final authService = AuthService();
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
+    final authService = context.read<AuthService>();
     return Scaffold(
       body: Center(
         child: Column(

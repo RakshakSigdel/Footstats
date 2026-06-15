@@ -1,14 +1,24 @@
-import 'package:frontend_flutter/features/app/screens/settings_screen.dart';
-import 'package:frontend_flutter/features/auth/screens/login_screen.dart';
-import 'package:frontend_flutter/features/auth/screens/register_screen.dart';
-import 'package:frontend_flutter/features/club/screens/clubs_screen.dart';
-import 'package:frontend_flutter/features/player/screens/dashboard_screen.dart';
-import 'package:frontend_flutter/features/schedule/screens/schedule_screen.dart';
-import 'package:frontend_flutter/features/tournament/screens/tournaments_screen.dart';
+import 'package:frontend_flutter/core/widgets/scaffold_with_nav_bar.dart';
+import 'package:frontend_flutter/pages/home/screens/notification_screen.dart';
+import 'package:frontend_flutter/pages/home/screens/profile_screen.dart';
+import 'package:frontend_flutter/pages/settings/screens/settings_screen.dart';
+import 'package:frontend_flutter/pages/auth/screens/login_screen.dart';
+import 'package:frontend_flutter/pages/auth/screens/register_screen.dart';
+import 'package:frontend_flutter/pages/club/screens/clubs_screen.dart';
+import 'package:frontend_flutter/pages/home/screens/dashboard_screen.dart';
+import 'package:frontend_flutter/pages/schedule/screens/schedule_screen.dart';
+import 'package:frontend_flutter/pages/tournament/screens/tournaments_screen.dart';
 import 'package:go_router/go_router.dart';
-import 'package:frontend_flutter/services/auth_service.dart';
+import 'package:frontend_flutter/core/services/auth_service.dart';
 
 import 'route_constants.dart';
+
+//statefulshellroute
+//branch 0: Home tab/dashboard
+//branch 1: Schedules tab
+//branch 2: clubs tab
+//branch 3: tournaments tab
+//branch 4: settings tab
 
 class AppRouter {
   AppRouter._();
@@ -43,34 +53,80 @@ class AppRouter {
           name: 'register',
           builder: (context, state) => const RegisterScreen(),
         ),
-        //User Routes
-        GoRoute(
-          path: RouteConstants.dashboard,
-          name: 'dashboard',
-          builder: (context, state) => const DashboardScreen(),
-        ),
-        GoRoute(
-          path: RouteConstants.settings,
-          name: 'settings',
-          builder: (context, state) => const SettingsScreen(),
-        ),
-        //Schedule Routes
-        GoRoute(
-          path: RouteConstants.schedules,
-          name: 'schedules',
-          builder: (context, state) => const ScheduleScreen(),
-        ),
-        //Club Routes
-        GoRoute(
-          path: RouteConstants.club,
-          name: 'clubs',
-          builder: (context, state) => const ClubsScreen(),
-        ),
-        //Tournamnets Route
-        GoRoute(
-          path: RouteConstants.tournament,
-          name: 'tournaments',
-          builder: (context, state) => const TournamentsScreen(),
+        //THe shell: Wrapping five main navigation points in bottom navbar
+        StatefulShellRoute.indexedStack(
+          builder: (context, state, navigationShell) {
+            return ScaffoldWithNavBar(
+              currentIndex: navigationShell.currentIndex,
+              onTap: (index) => navigationShell.goBranch(
+                index,
+                initialLocation: index == navigationShell.currentIndex,
+              ),
+              child: navigationShell,
+            );
+          },
+          branches: [
+            StatefulShellBranch(
+              routes: [
+                GoRoute(
+                  path: RouteConstants.dashboard,
+                  name: 'dashboard',
+                  builder: (context, state) => const DashboardScreen(),
+                ),
+                GoRoute(
+                  path: RouteConstants.profile,
+                  name: 'profile',
+                  builder: (context, state) => const ProfileScreen(),
+                ),
+                GoRoute(
+                  path: RouteConstants.notifications,
+                  name: 'notifications',
+                  builder: (context, state) => const NotificationScreen(),
+                ),
+              ],
+            ),
+
+            //Schedule Routes
+            StatefulShellBranch(
+              routes: [
+                GoRoute(
+                  path: RouteConstants.schedules,
+                  name: 'schedules',
+                  builder: (context, state) => const ScheduleScreen(),
+                ),
+              ],
+            ),
+            //Club Routes
+            StatefulShellBranch(
+              routes: [
+                GoRoute(
+                  path: RouteConstants.club,
+                  name: 'clubs',
+                  builder: (context, state) => const ClubsScreen(),
+                ),
+              ],
+            ),
+
+            StatefulShellBranch(
+              routes: [
+                //Tournamnets Route
+                GoRoute(
+                  path: RouteConstants.tournament,
+                  name: 'tournaments',
+                  builder: (context, state) => const TournamentsScreen(),
+                ),
+              ],
+            ),
+            StatefulShellBranch(
+              routes: [
+                GoRoute(
+                  path: RouteConstants.settings,
+                  name: 'settings',
+                  builder: (context, state) => const SettingsScreen(),
+                ),
+              ],
+            ),
+          ],
         ),
       ],
     );

@@ -6,11 +6,14 @@ class RouteConstants {
   static const String register = '/register';
   static const String forgotPassword = '/forgotpassword';
 
-  //User Routes
+  //App Routes
   static const String dashboard = '/dashboard';
+  static const String notifications = '/notification';
   static const String settings = '/settings';
 
   //Player Routes
+  static const String profile = '/profile/me';
+  static const String playerProfile = '/profile/:id';
   // static const String dashboard = 'player/dashboard';
 
   //Club Routes

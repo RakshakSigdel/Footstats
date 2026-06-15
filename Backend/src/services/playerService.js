@@ -52,10 +52,6 @@ class PlayerService {
         locationLongitude: true,
         locationPlaceId: true,
         profilePhoto: true,
-        // position: true,
-        // matchesPlayed: true,
-        // goalsScored: true,
-        // assist: true,
         createdAt: true,
       },
     });

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:frontend_flutter/features/auth/screens/login_screen.dart';
-import 'package:frontend_flutter/services/auth_service.dart';
+import 'package:frontend_flutter/pages/auth/screens/login_screen.dart';
+import 'package:frontend_flutter/core/services/auth_service.dart';
+import 'package:provider/provider.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -10,7 +11,8 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreen extends State<SettingsScreen> {
-  final _authService = AuthService();
+  // final _authService = context.read<AuthService>();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -38,7 +40,7 @@ class _SettingsScreen extends State<SettingsScreen> {
             //Logout Button
             ElevatedButton(
               onPressed: () {
-                _authService.logout();
+                context.read<AuthService>().logout();
                 Navigator.pushAndRemoveUntil(
                   context,
                   MaterialPageRoute(builder: (_) => const LoginScreen()),
