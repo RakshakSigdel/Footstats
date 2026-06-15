@@ -4,14 +4,14 @@ import 'package:frontend_flutter/widget/global/app_bottom_nav.dart';
 import 'package:frontend_flutter/widget/global/app_top_bar.dart';
 import 'package:frontend_flutter/features/auth/screens/login_screen.dart';
 
-class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+class DashboardScreen extends StatefulWidget {
+  const DashboardScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  State<DashboardScreen> createState() => _DashboardScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _DashboardScreenState extends State<DashboardScreen> {
   final _authService = AuthService();
 
   int selectedIndex = 0;

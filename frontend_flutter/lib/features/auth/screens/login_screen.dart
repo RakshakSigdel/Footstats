@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:frontend_flutter/features/app/screens/home_screen.dart';
+import 'package:frontend_flutter/core/routes/route_constants.dart';
+import 'package:frontend_flutter/features/player/screens/dashboard_screen.dart';
 import 'package:frontend_flutter/features/auth/screens/register_screen.dart';
 import 'package:frontend_flutter/services/auth_service.dart';
+import 'package:go_router/go_router.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -51,10 +53,13 @@ class _LoginScreenState extends State<LoginScreen> {
                       duration: Duration(seconds: 2),
                     ),
                   );
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const HomeScreen()),
-                  );
+                  context.go(RouteConstants.dashboard);
+                  // Navigator.push(
+                  //   context,
+                  //   MaterialPageRoute(
+                  //     builder: (context) => const DashboardScreen(),
+                  //   ),
+                  // );
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
@@ -72,12 +77,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 Text("Don't Have an account?"),
                 InkWell(
                   onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const RegisterScreen(),
-                      ),
-                    );
+                    context.push(RouteConstants.register);
                   },
                   child: Text(" Register Here"),
                 ),
