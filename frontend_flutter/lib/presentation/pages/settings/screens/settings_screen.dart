@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:frontend_flutter/pages/auth/screens/login_screen.dart';
-import 'package:frontend_flutter/core/services/auth_service.dart';
+import 'package:frontend_flutter/presentation/pages/auth/screens/login_screen.dart';
+import 'package:frontend_flutter/data/datasources/auth_service.dart';
 import 'package:provider/provider.dart';
 
 class SettingsScreen extends StatefulWidget {

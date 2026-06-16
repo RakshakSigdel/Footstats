@@ -1,15 +1,15 @@
 import 'package:frontend_flutter/core/widgets/scaffold_with_nav_bar.dart';
-import 'package:frontend_flutter/pages/home/screens/notification_screen.dart';
-import 'package:frontend_flutter/pages/home/screens/profile_screen.dart';
-import 'package:frontend_flutter/pages/settings/screens/settings_screen.dart';
-import 'package:frontend_flutter/pages/auth/screens/login_screen.dart';
-import 'package:frontend_flutter/pages/auth/screens/register_screen.dart';
-import 'package:frontend_flutter/pages/club/screens/clubs_screen.dart';
-import 'package:frontend_flutter/pages/home/screens/dashboard_screen.dart';
-import 'package:frontend_flutter/pages/schedule/screens/schedule_screen.dart';
-import 'package:frontend_flutter/pages/tournament/screens/tournaments_screen.dart';
+import 'package:frontend_flutter/presentation/pages/home/screens/notification_screen.dart';
+import 'package:frontend_flutter/presentation/pages/home/screens/profile_screen.dart';
+import 'package:frontend_flutter/presentation/pages/settings/screens/settings_screen.dart';
+import 'package:frontend_flutter/presentation/pages/auth/screens/login_screen.dart';
+import 'package:frontend_flutter/presentation/pages/auth/screens/register_screen.dart';
+import 'package:frontend_flutter/presentation/pages/club/screens/clubs_screen.dart';
+import 'package:frontend_flutter/presentation/pages/home/screens/dashboard_screen.dart';
+import 'package:frontend_flutter/presentation/pages/schedule/screens/schedule_screen.dart';
+import 'package:frontend_flutter/presentation/pages/tournament/screens/tournaments_screen.dart';
 import 'package:go_router/go_router.dart';
-import 'package:frontend_flutter/core/services/auth_service.dart';
+import 'package:frontend_flutter/data/datasources/auth_service.dart';
 
 import 'route_constants.dart';
 
