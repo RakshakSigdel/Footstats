@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend_flutter/presentation/pages/home/widgets/app_top_bar.dart';
 import 'package:frontend_flutter/presentation/providers/player_provider.dart';
 import 'package:provider/provider.dart';
 
@@ -19,58 +20,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
     });
   }
 
-  //   @override
-  //   Widget build(BuildContext context) {
-  //     return Consumer<PlayerProvider>(
-  //       builder: (context, playerProvider, child) {
-  //         switch (playerProvider.statsStatus) {
-  //           case LoadStatus.initial:
-  //           case LoadStatus.loading:
-  //             return const Center(child: CircularProgressIndicator());
-  //           case LoadStatus.error:
-  //             return Center(child: Text('Error: ${playerProvider.profileError}'));
-  //           case LoadStatus.loaded:
-  //             final player = playerProvider.player!;
-  //             // print("Player Provider: ${playerProvider.player}");
-  //             final stats = playerProvider.stats!;
-  //             // print("Stats Provider ${playerProvider.stats}");
-  //             return Scaffold(
-  //               appBar: AppBar(title: Text('Welcome, ${player.firstName}')),
-  //               body: Center(
-  //                 child: Column(
-  //                   children: [
-  //                     Text("Welcome Back, ${player.firstName}"),
-  //                     Text("Total Goals: ${stats.goalsScored}"),
-  //                     Text("Personal Stats"),
-  //                     // PersonalInformationCard(player: player),
-  //                   ],
-  //                 ),
-  //               ),
-  //               // body: PersonalInformationCard(player: player),
-  //             );
-  //         }
-  //       },
-  //     );
-  //   }
-  // }
-
   @override
   Widget build(BuildContext context) {
     return Consumer<PlayerProvider>(
       builder: (context, provider, _) {
-        if (provider.isLoading) {
+        if (!provider.isFullyLoaded) {
+          if (provider.hasError) {
+            return Scaffold(
+              body: Center(
+                child: ElevatedButton(
+                  onPressed: () => provider.fetchPlayerData(),
+                  child: const Text("Retry"),
+                ),
+              ),
+            );
+          }
           return const Scaffold(
             body: Center(child: CircularProgressIndicator()),
-          );
-        }
-        if (provider.hasError) {
-          return Scaffold(
-            body: Center(
-              child: ElevatedButton(
-                onPressed: () => provider.fetchPlayerData(),
-                child: const Text("Retry"),
-              ),
-            ),
           );
         }
 
@@ -78,6 +44,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         final stats = provider.stats!;
 
         return Scaffold(
+          appBar: AppTopBar(),
           body: Center(
             child: Column(
               children: [

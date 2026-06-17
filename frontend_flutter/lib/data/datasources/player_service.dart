@@ -24,8 +24,8 @@ class PlayerService {
       headers: await _authHeaders(),
     );
 
-    print("Status: ${response.statusCode}");
-    print("Response: ${response.body}");
+    // print("Status: ${response.statusCode}");
+    // print("Response: ${response.body}");
 
     if (response.statusCode == 200) {
       final json = jsonDecode(response.body) as Map<String, dynamic>;
@@ -41,8 +41,8 @@ class PlayerService {
       Uri.parse("$baseUrl/players/me/stats"),
       headers: await _authHeaders(),
     );
-    print("Status: ${response.statusCode}");
-    print("Response: ${response.body}");
+    // print("Status: ${response.statusCode}");
+    // print("Response: ${response.body}");
 
     if (response.statusCode == 200) {
       final json = jsonDecode(response.body) as Map<String, dynamic>;

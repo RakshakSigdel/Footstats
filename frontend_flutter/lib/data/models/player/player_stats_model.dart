@@ -30,22 +30,20 @@ class PlayerStats {
   });
 
   factory PlayerStats.fromJson(Map<String, dynamic> json) {
-    final s = json['stats'] as Map<String, dynamic>;
-
     return PlayerStats(
-      userId: s['userId'],
-      firstname: s['firstname'],
-      lastname: s['lastname'],
-      profilePhoto: s['profilePhoto'],
-      matchesplayed: s['matchesplayed'],
-      goalsScored: s['goalsScored'],
-      assists: s['assists'],
-      yellowCards: s['yellowCards'],
-      redCards: s['redCards'],
-      wins: s['wins'],
-      draws: s['draws'],
-      loses: s['loses'],
-      winRate: s['winRate'],
+      userId: json['userId'],
+      firstname: json['firstName'],
+      lastname: json['lastName'],
+      profilePhoto: json['profilePhoto'],
+      matchesplayed: json['matchesPlayed'],
+      goalsScored: json['goalsScored'],
+      assists: json['assists'],
+      yellowCards: json['yellowCards'],
+      redCards: json['redCards'],
+      wins: json['wins'],
+      draws: json['draws'],
+      loses: json['losses'],
+      winRate: (json['winRate'] as num).toDouble(),
     );
   }
 }
