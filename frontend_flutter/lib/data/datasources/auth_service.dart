@@ -8,7 +8,7 @@ class AuthService extends ChangeNotifier {
 
   String? get token => _token;
   bool get isLoggedIn => _token != null;
-  static const String baseUrl = "http://192.168.1.5:5555/api";
+  static const String baseUrl = "http://192.168.88.67:5555/api";
   final _storage = const FlutterSecureStorage();
 
   //Register

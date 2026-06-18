@@ -30,13 +30,15 @@ class AppRouter {
 
       redirect: (context, state) {
         final isLoggedIn = authService.isLoggedIn;
-        final isGoingToLogin = state.matchedLocation == RouteConstants.login;
+        final isAuthRoute =
+            state.matchedLocation == RouteConstants.login ||
+            state.matchedLocation == RouteConstants.register;
 
-        if (!isLoggedIn && !isGoingToLogin) {
+        if (!isLoggedIn && !isAuthRoute) {
           return RouteConstants.login;
         }
 
-        if (isLoggedIn && isGoingToLogin) {
+        if (isLoggedIn && isAuthRoute) {
           return RouteConstants.dashboard;
         }
         return null;

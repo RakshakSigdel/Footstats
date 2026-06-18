@@ -6,7 +6,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:frontend_flutter/data/models/player/player_model.dart';
 
 class PlayerService {
-  static const String baseUrl = "http://192.168.1.5:5555/api";
+  static const String baseUrl = "http://192.168.88.67:5555/api";
   final _storage = const FlutterSecureStorage();
   //Single Auth Header for all the methods
   Future<Map<String, String>> _authHeaders() async {
