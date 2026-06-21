@@ -39,7 +39,7 @@ class PlayerProvider extends ChangeNotifier {
 
   Future<void> fetchPlayerData() async {
     //Skip if data is already loaded
-    if (isFullyLoaded) {
+    if (isFullyLoaded || isLoading) {
       return;
     }
     //Set the status to loading as the data starts to get fetched
@@ -56,6 +56,7 @@ class PlayerProvider extends ChangeNotifier {
             _profileStatus = LoadStatus.loaded;
           })
           .catchError((e) {
+            print('Profile Error: ${e}');
             _profileError = e.toString();
             _profileStatus = LoadStatus.error;
           }),
@@ -66,6 +67,7 @@ class PlayerProvider extends ChangeNotifier {
             _statsStatus = LoadStatus.loaded;
           })
           .catchError((e) {
+            print('Stats Error: ${e}');
             _statsError = e.toString();
             _statsStatus = LoadStatus.error;
           }),

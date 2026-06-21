@@ -10,15 +10,10 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   final authservice = AuthService();
-  await authservice.getToken();
+  // await authservice.getToken();
 
   final router = AppRouter.createRouter(authService: authservice);
-  // runApp(
-  //   ChangeNotifierProvider.value(
-  //     value: authservice,
-  //     child: MyApp(router: router),
-  //   ),
-  // );
+
   runApp(
     MultiProvider(
       providers: [

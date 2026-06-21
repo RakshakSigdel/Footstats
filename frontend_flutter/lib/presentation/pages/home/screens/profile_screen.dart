@@ -32,7 +32,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             final statsItems = <StatItem>[
               StatItem(
                 label: "Matches Played",
-                value: stats.matchesplayed.toString(),
+                value: stats.matchesPlayed.toString(),
                 icon: Icons.sports_football,
               ),
               StatItem(

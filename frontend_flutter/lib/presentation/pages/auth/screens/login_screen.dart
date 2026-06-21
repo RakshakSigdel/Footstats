@@ -76,7 +76,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                   const Text(
-                    "Statistically Superior",
+                    "Gully To Glory",
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 12,
@@ -171,31 +171,30 @@ class _LoginScreenState extends State<LoginScreen> {
                   // Sign In Button
                   GestureDetector(
                     onTap: () async {
-                      final token = await authService.login(
+                      final result = await authService.login(
                         email: emailController.text,
                         password: passwordController.text,
                       );
-                      if (token != null) {
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text("Logged in Successfully"),
-                              duration: Duration(seconds: 2),
-                              backgroundColor: AppColors.success,
-                            ),
-                          );
-                          context.go(RouteConstants.dashboard);
-                        }
+                      if (!context.mounted) return;
+                      if (result.isSuccess) {
+                        // print("Message after success :${result.isSuccess}");
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text("Logged in Successfully"),
+                            duration: Duration(seconds: 2),
+                            backgroundColor: AppColors.success,
+                          ),
+                        );
+                        context.go(RouteConstants.dashboard);
                       } else {
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text("Error during login"),
-                              duration: Duration(seconds: 2),
-                              backgroundColor: AppColors.error,
-                            ),
-                          );
-                        }
+                        //print("################################################################Message after failure :${result.errorMessage}");
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text("Error during login: ${result.errorMessage}"),
+                            duration: const Duration(seconds: 2),
+                            backgroundColor: AppColors.error,
+                          ),
+                        );
                       }
                     },
                     child: Container(

@@ -33,9 +33,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: AppGradients.background,
-        ),
+        decoration: const BoxDecoration(gradient: AppGradients.background),
         child: SafeArea(
           child: Center(
             child: SingleChildScrollView(
@@ -59,7 +57,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             color: AppColors.primary.withValues(alpha: 0.1),
                             blurRadius: 24,
                             spreadRadius: 4,
-                          )
+                          ),
                         ],
                       ),
                       child: const Icon(
@@ -99,7 +97,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       color: AppColors.textSecondary,
                     ),
                   ),
-                  
+
                   AppSpacing.verticalXL,
 
                   // First & Last Name side-by-side
@@ -170,8 +168,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ),
                       suffixIcon: IconButton(
                         icon: Icon(
-                          _obscurePassword 
-                              ? Icons.visibility_off_outlined 
+                          _obscurePassword
+                              ? Icons.visibility_off_outlined
                               : Icons.visibility_outlined,
                           color: AppColors.textSecondary,
                         ),
@@ -189,37 +187,37 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   // Register Button
                   GestureDetector(
                     onTap: () async {
-                      final response = await authService.register(
+                      final result = await authService.register(
                         firstName: firstNameController.text,
                         lastName: lastNameController.text,
                         email: emailcontroller.text,
                         password: passwordController.text,
                       );
-                      if (response.statusCode == 200 || response.statusCode == 201) {
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text("Registered Successfully"),
-                              duration: Duration(seconds: 2),
-                              backgroundColor: AppColors.success,
-                            ),
-                          );
-                          context.go(RouteConstants.login);
-                        }
+                      if (!context.mounted) return;
+                      if (result.isSuccess) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text("Registered Successfully"),
+                            duration: Duration(seconds: 2),
+                            backgroundColor: AppColors.success,
+                          ),
+                        );
+                        context.go(RouteConstants.login);
                       } else {
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text("Error during registration"),
-                              duration: Duration(seconds: 2),
-                              backgroundColor: AppColors.error,
-                            ),
-                          );
-                        }
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text("Error during registration"),
+                            duration: Duration(seconds: 2),
+                            backgroundColor: AppColors.error,
+                          ),
+                        );
+
                         debugPrint(
                           "*************************************************************************Error while creating account",
                         );
-                        debugPrint(response.body);
+                        debugPrint(
+                          "Registration Error: ${result.errorMessage}",
+                        );
                       }
                     },
                     child: Container(
@@ -257,16 +255,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     children: [
                       const Text(
                         "Already a Member?",
-                        style: TextStyle(
-                          color: AppColors.textSecondary,
-                        ),
+                        style: TextStyle(color: AppColors.textSecondary),
                       ),
                       GestureDetector(
                         onTap: () {
                           context.go(RouteConstants.login);
                         },
                         child: const Padding(
-                          padding: EdgeInsets.symmetric(horizontal: AppSpacing.xs),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: AppSpacing.xs,
+                          ),
                           child: Text(
                             "Login",
                             style: TextStyle(

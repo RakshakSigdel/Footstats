@@ -48,18 +48,18 @@ class Player {
 
   factory Player.fromJson(Map<String, dynamic> json) {
     return Player(
-      userId: json['userId'] ?? 'User Id',
-      firstName: json['firstName'] ?? 'Player Name',
-      lastName: json['lastName'],
-      email: json['email'],
-      dateOfBirth: json['dateOfBirth'],
-      gender: json['gender'],
-      phone: json['Phone'],
-      location: json['location'],
-      locationLatitude: (json['locationLatitude'] as num).toDouble(),
-      locationLongitude: (json['locationLongitude'] as num).toDouble(),
-      locationPlaceId: json['locationPlaceId'],
-      profilephoto: json['profilePhoto'],
+      userId: json['userId'] ?? 0,
+      firstName: json['firstName'] ?? 'Player First Name',
+      lastName: json['lastName'] ?? 'Player Last Name',
+      email: json['email'] ?? 'Player Email',
+      dateOfBirth: json['dateOfBirth'] ?? 'Player Date of Birth',
+      gender: json['gender'] ?? 'Player Gender',
+      phone: json['Phone'] ?? 'Player Phone Number',
+      location: json['location'] ?? 'Player Location',
+      locationLatitude: (json['locationLatitude'] as num).toDouble() ?? 0.00,
+      locationLongitude: (json['locationLongitude'] as num).toDouble() ?? 0.00,
+      locationPlaceId: json['locationPlaceId'] ?? 'Player Place ID',
+      profilephoto: json['profilePhoto'] ?? 'Player Profile Photo',
     );
   }
 }

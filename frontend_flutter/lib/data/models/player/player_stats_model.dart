@@ -3,7 +3,7 @@ class PlayerStats {
   final String firstname;
   final String lastname;
   final String? profilePhoto;
-  final int matchesplayed;
+  final int matchesPlayed;
   final int goalsScored;
   final int assists;
   final int yellowCards;
@@ -11,14 +11,14 @@ class PlayerStats {
   final int wins;
   final int draws;
   final int loses;
-  final double winRate;
+  final int winRate;
 
   PlayerStats({
     required this.userId,
     required this.firstname,
     required this.lastname,
     required this.profilePhoto,
-    required this.matchesplayed,
+    required this.matchesPlayed,
     required this.goalsScored,
     required this.assists,
     required this.yellowCards,
@@ -35,7 +35,7 @@ class PlayerStats {
       firstname: json['firstName'],
       lastname: json['lastName'],
       profilePhoto: json['profilePhoto'],
-      matchesplayed: json['matchesPlayed'],
+      matchesPlayed: json['matchesPlayed'],
       goalsScored: json['goalsScored'],
       assists: json['assists'],
       yellowCards: json['yellowCards'],
@@ -43,7 +43,7 @@ class PlayerStats {
       wins: json['wins'],
       draws: json['draws'],
       loses: json['losses'],
-      winRate: (json['winRate'] as num).toDouble(),
+      winRate: json['winRate'],
     );
   }
 }
