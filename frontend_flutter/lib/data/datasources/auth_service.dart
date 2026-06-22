@@ -3,8 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:frontend_flutter/core/network/api_result.dart';
 import 'package:frontend_flutter/core/network/dio_client.dart';
 import 'package:frontend_flutter/data/helper/dio_error_handler.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class AuthService extends ChangeNotifier {
@@ -75,11 +73,9 @@ class AuthService extends ChangeNotifier {
       _token = token;
       notifyListeners();
       return ApiResult.success(token);
-    }
-    on DioException catch (e) {
+    } on DioException catch (e) {
       return ApiResult.failure(dioErrorHandler(e));
     }
-
   }
 
   //   //logout - delete token

@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:frontend_flutter/core/widgets/app_top_bar.dart';
 import 'package:frontend_flutter/data/models/player/player_model.dart';
-import 'package:frontend_flutter/data/models/player/player_stats_model.dart';
+import 'package:frontend_flutter/presentation/pages/home/screens/profile_achievements_screen.dart';
+import 'package:frontend_flutter/presentation/pages/home/screens/profile_clubs_screen.dart';
+import 'package:frontend_flutter/presentation/pages/home/screens/profile_details_Screen.dart';
+import 'package:frontend_flutter/presentation/pages/home/screens/profile_matches_screen.dart';
 import 'package:frontend_flutter/presentation/pages/home/widgets/player_individual_stat_card.dart';
+import 'package:frontend_flutter/presentation/pages/home/widgets/profile_tab_bar.dart';
 import 'package:frontend_flutter/presentation/providers/player_provider.dart';
 import 'package:provider/provider.dart';
 
 class ProfileScreen extends StatefulWidget {
-  // final String name;
 
   const ProfileScreen({super.key});
 
@@ -33,57 +37,65 @@ class _ProfileScreenState extends State<ProfileScreen> {
               StatItem(
                 label: "Matches Played",
                 value: stats.matchesPlayed.toString(),
-                icon: Icons.sports_football,
+                icon: Icons.sports_soccer,
               ),
               StatItem(
                 label: "Goals",
                 value: stats.goalsScored.toString(),
-                icon: Icons.sports_baseball,
+                icon: Icons.sports_soccer,
               ),
               StatItem(
-                label: "Assits",
+                label: "Assists",
                 value: stats.assists.toString(),
-                icon: Icons.people_outline,
+                icon: Icons.handshake_outlined,
               ),
               StatItem(
                 label: "Win Rate",
                 value: "${stats.winRate.toString()} %",
-                icon: Icons.sports_football,
+                icon: Icons.analytics_outlined,
               ),
               StatItem(
                 label: "Wins",
                 value: stats.wins.toString(),
-                icon: Icons.sports_football,
+                icon: Icons.emoji_events_outlined,
               ),
               StatItem(
                 label: "Draws",
                 value: stats.draws.toString(),
-                icon: Icons.sports_football,
+                icon: Icons.compare_arrows_outlined,
               ),
               StatItem(
                 label: "Losses",
                 value: stats.loses.toString(),
-                icon: Icons.sports_football,
+                icon: Icons.trending_down_outlined,
               ),
               StatItem(
                 label: "Yellow Cards",
                 value: stats.yellowCards.toString(),
-                icon: Icons.sports_football,
+                icon: Icons.crop_portrait_outlined,
               ),
             ];
-            return Scaffold(
-              appBar: AppBar(title: Text('Welcome, ${player.firstName}')),
-              body: SingleChildScrollView(
-                child: Column(
+            return DefaultTabController(
+              length: 4,
+              child: Scaffold(
+                appBar: AppTopBar(),
+                body: Column(
                   children: [
-                    Text("Banner Card"),
-                    Text("Navigation Bar"),
-                    PlayerProfileStats(stats: statsItems),
-                    PersonalInformationCard(player: player),
+                    Text("Profile Banner Goes Here"),
+                    ProfileTabBar(),
+                    Expanded(
+                      child: TabBarView(
+                        children: [
+                          ProfileDetailsScreen(stats: statsItems, player: player),
+                          ProfileClubsScreen(),
+                          ProfileMatchesScreen(),
+                          ProfileAchievementsScreen(),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
               ),
-              // body: PersonalInformationCard(player: player),
             );
         }
       },
@@ -91,67 +103,3 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 }
 
-//Details Tab -> Stats Cards
-class StatItem {
-  final String label;
-  final String value;
-  final IconData? icon;
-
-  StatItem({required this.label, required this.value, this.icon});
-}
-
-class PlayerProfileStats extends StatelessWidget {
-  final List<StatItem> stats;
-  const PlayerProfileStats({super.key, required this.stats});
-
-  @override
-  Widget build(BuildContext context) {
-    return GridView.builder(
-      itemCount: stats.length,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        crossAxisSpacing: 16,
-        // mainAxisSpacing: 0,
-        childAspectRatio: 0.7,
-      ),
-      itemBuilder: (context, index) {
-        final item = stats[index];
-        return PlayerIndividualStatCard(
-          icon: item.icon,
-          value: item.value,
-          label: item.label,
-        );
-      },
-    );
-  }
-}
-
-//Details Tab -> Personal Information Section
-class PersonalInformationCard extends StatelessWidget {
-  final Player player;
-  const PersonalInformationCard({super.key, required this.player});
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            Text("Personal Information"),
-            Text("Full Name: ${player.firstName} ${player.lastName}"),
-            Text("Age: ${player.age} Years Old"),
-            Text("Date of Birth: ${player.formattedDob}"),
-            Text("Gender: ${player.gender}"),
-            Text("Location: ${player.location}"),
-            Text("Preferred Foot: To be Implemented"),
-            Text("Clubs: To be implemented"),
-            Text("Member Since: To be Implemented"),
-          ],
-        ),
-      ),
-    );
-  }
-}
