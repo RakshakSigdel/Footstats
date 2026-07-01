@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:frontend_flutter/data/models/player/player_model.dart';
 
 class ProfileBanner extends StatelessWidget {
-  const ProfileBanner({super.key});
+
+  final Player player;
+  const ProfileBanner({super.key, required this.player});
 
   @override
   Widget build(BuildContext context) {
@@ -29,15 +32,13 @@ class ProfileBanner extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                "Rakshak Sigdel",
+                                "${player.firstName} ${player.lastName}",
                                 style: Theme.of(context)
                                     .textTheme
                                     .titleLarge,
                               ),
                               const SizedBox(height: 8),
-                              const Text("Sundarharaicha-04"),
-                              const Text("Sundarharaicha, Morang"),
-                              const Text("Koshi Province, Nepal"),
+                              Text("${player.location}"),
                             ],
                           ),
                         ),
@@ -57,10 +58,11 @@ class ProfileBanner extends StatelessWidget {
                     Wrap(
                       spacing: 8,
                       runSpacing: 8,
-                      children: const [
-                        Chip(label: Text("Male")),
-                        Chip(label: Text("Right Foot")),
-                        Chip(label: Text("20 Years Old")),
+                      children: [
+                        if(player.gender.isNotEmpty)
+                          Chip(label: Text('${player.gender}')),
+                        if(player.age > 10)
+                          Chip(label: Text("${player.age} Years Old")),
                       ],
                     ),
                     // const SizedBox(height: 16),

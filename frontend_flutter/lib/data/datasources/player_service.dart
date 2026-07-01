@@ -1,3 +1,13 @@
+//Available Services
+//Get All Players:
+//Get Player By ID:
+//Update Player By ID:
+//Delete Player By ID:
+//Get My Profile: Implemented
+//Get Players By Club ID:
+//Get My Stats: Implemented
+//Upload Profile Photo
+
 import 'dart:convert';
 
 import 'package:dio/dio.dart';

@@ -10,7 +10,7 @@ class Player {
   final double locationLatitude;
   final double locationLongitude;
   final String locationPlaceId;
-  final String profilephoto;
+  final String profilePhoto;
   //final PlayerStatsOverall stats;
 
   Player({
@@ -25,7 +25,7 @@ class Player {
     required this.locationLatitude,
     required this.locationLongitude,
     required this.locationPlaceId,
-    required this.profilephoto,
+    required this.profilePhoto,
   });
 
   DateTime get dobDate => DateTime.parse(dateOfBirth); //From string to datetime
@@ -53,13 +53,13 @@ class Player {
       lastName: json['lastName'] ?? 'Player Last Name',
       email: json['email'] ?? 'Player Email',
       dateOfBirth: json['dateOfBirth'] ?? 'Player Date of Birth',
-      gender: json['gender'] ?? 'Player Gender',
+      gender: json['gender'] ?? '',
       phone: json['Phone'] ?? 'Player Phone Number',
       location: json['location'] ?? 'Player Location',
       locationLatitude: (json['locationLatitude'] as num).toDouble() ?? 0.00,
       locationLongitude: (json['locationLongitude'] as num).toDouble() ?? 0.00,
       locationPlaceId: json['locationPlaceId'] ?? 'Player Place ID',
-      profilephoto: json['profilePhoto'] ?? 'Player Profile Photo',
+      profilePhoto: json['profilePhoto'] ?? 'Player Profile Photo',
     );
   }
 }

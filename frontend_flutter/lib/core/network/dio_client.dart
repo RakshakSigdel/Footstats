@@ -4,7 +4,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 class DioClient {
   DioClient._();
 
-  static const String baseUrl = "http://192.168.1.10:5555/api";
+  static const String baseUrl = "http://192.168.1.7:5555/api";
   static final _storage = const FlutterSecureStorage();
 
   static Dio? _dio;

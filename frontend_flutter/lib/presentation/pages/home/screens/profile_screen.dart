@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:frontend_flutter/core/theme/app_theme.dart';
 import 'package:frontend_flutter/core/widgets/app_top_bar.dart';
-import 'package:frontend_flutter/data/models/player/player_model.dart';
 import 'package:frontend_flutter/presentation/pages/home/screens/profile_achievements_screen.dart';
 import 'package:frontend_flutter/presentation/pages/home/screens/profile_clubs_screen.dart';
 import 'package:frontend_flutter/presentation/pages/home/screens/profile_details_Screen.dart';
 import 'package:frontend_flutter/presentation/pages/home/screens/profile_matches_screen.dart';
-import 'package:frontend_flutter/presentation/pages/home/widgets/player_individual_stat_card.dart';
 import 'package:frontend_flutter/presentation/pages/home/widgets/profile_banner.dart';
 import 'package:frontend_flutter/presentation/providers/player_provider.dart';
 import 'package:provider/provider.dart';
@@ -82,7 +80,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 body: NestedScrollView(
                   headerSliverBuilder: (context, innerBoxIsScrolled) {
                     return [
-                      SliverToBoxAdapter(child: ProfileBanner()),
+                      SliverToBoxAdapter(child: ProfileBanner(player: player,)),
 
                       SliverPersistentHeader(
                         pinned: true,
@@ -108,20 +106,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ProfileAchievementsScreen(),
                     ],
                   ),
-                  // children: [
-                  //   ProfileBanner(),
-                  //   ProfileTabBar(),
-                  //   Expanded(
-                  //     child: TabBarView(
-                  //       children: [
-                  //         ProfileDetailsScreen(stats: statsItems, player: player),
-                  //         ProfileClubsScreen(),
-                  //         ProfileMatchesScreen(),
-                  //         ProfileAchievementsScreen(),
-                  //       ],
-                  //     ),
-                  //   ),
-                  // ],
                 ),
               ),
             );
